@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: True
+  tasks:
+    - name: Build Playframework Dist package
+      command: chdir=../ sbt "project likeBot" dist
+
+- hosts: [like_bot_server]
+  sudo: True
+  serial: 1
+  vars:
+    app_name: 'like-bot'
+    app_version: '1.0.0'
+    app_port: 9000
+    extra_configs: "-Dhttp.port={{ app_port }} "
+    test_tag: "-test"
+  tasks:
+    - debug: msg="port={{ app_port }}"
+  roles:
+    - { role: 'ansible-sbt-native-package', tags: ['play'] }
+
+

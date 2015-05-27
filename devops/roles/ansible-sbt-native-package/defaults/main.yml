@@ -1,0 +1,8 @@
+---
+dist_pkg_path : ../{{app_name}}/target/universal/{{app_name}}-{{app_version}}.zip
+root_path : "/home/ubuntu/"
+app_description : "{{ app_name }}"
+timeout : 300
+jvm_opts : -J-Xmx512m -J-Xms512m -J-XX:MaxPermSize=512m -J-XX:-UsePerfData -J-XX:+AggressiveOpts -J-XX:+OptimizeStringConcat -J-XX:+UseFastAccessorMethods -J-XX:+UseParNewGC -J-XX:+UseConcMarkSweepGC -J-XX:+CMSParallelRemarkEnabled -J-XX:+CMSClassUnloadingEnabled -J-XX:SurvivorRatio=8 -J-XX:MaxTenuringThreshold=1 -J-XX:CMSInitiatingOccupancyFraction=75 -J-XX:+UseCMSInitiatingOccupancyOnly
+extra_configs : ""
+test_tag : ""

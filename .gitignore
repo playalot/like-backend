@@ -1,0 +1,39 @@
+*.class
+*.log
+
+# sbt specific
+.cache/
+*/.cache
+.history/
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+workspace
+*/workspace
+public/assets/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+.classpath
+.project
+*~
+
+# Idea-IDE specific
+.idea/
+*.iml
+*.iws
+
+.DS_Store
+
+api-browser-client/src/main/resources/public/ci.js
+api-browser-client/src/main/resources/public/p.js
+api-browser-client/src/main/resources/public/core-compiled.js
+
+snippets-*.html
+
+.DS_Store

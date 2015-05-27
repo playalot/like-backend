@@ -1,0 +1,11 @@
+[like_bot_server]
+ec2-54-223-171-74.cn-north-1.compute.amazonaws.com.cn ansible_connection=ssh ansible_ssh_private_key_file=~/Keys/beijing.pem ansible_ssh_user=ubuntu
+
+[like_api_v1]
+120.26.201.254
+
+[like_api_v1:vars]
+root_path=/root/
+ansible_connection=ssh
+ansible_ssh_private_key_file=~/Keys/pub_like_api.pem
+ansible_ssh_user=root

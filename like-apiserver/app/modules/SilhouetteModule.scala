@@ -16,6 +16,7 @@ import models.User
 
 import play.api.Play
 import play.api.Play.current
+import play.api.libs.concurrent.Execution.Implicits._
 
 /**
  * The Guice module which wires all Silhouette dependencies.

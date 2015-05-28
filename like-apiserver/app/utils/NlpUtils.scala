@@ -1,6 +1,6 @@
 package utils
 
-import org.ansj.splitWord.analysis.NlpAnalysis
+import org.ansj.splitWord.analysis.BaseAnalysis
 import scala.collection.JavaConversions._
 
 /**
@@ -10,6 +10,6 @@ import scala.collection.JavaConversions._
 object NlpUtils {
 
   def tokenize(str: String): Seq[String] = {
-    NlpAnalysis.parse(str).map(t => t.getName).toSeq
+    BaseAnalysis.parse(str).map(t => t.getName).toSeq
   }
 }

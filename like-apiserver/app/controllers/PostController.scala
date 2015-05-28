@@ -20,18 +20,49 @@ class PostController @Inject() (
     postService: PostService) extends BaseController {
 
   def getPost(id: Long) = UserAwareAction.async { implicit request =>
+    postService.getPostById(id).map {
+      case Some(postAndUser) => {
+        val (post, user) = postAndUser
+        Ok(Json.obj(
+          "code" -> 1,
+          "message" -> "Record(s) Found",
+          "data" -> Json.obj(
+            "post_id" -> id,
+            "type" -> post.`type`,
+            "content" -> QiniuUtil.getPhoto(post.content, "large"),
+            "description" -> post.description,
+            "created" -> post.created,
+            "user" -> Json.obj(
+              "user_id" -> user.id.get.toString,
+              "nickname" -> user.nickname,
+              "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+              "likes" -> user.likes
+            )
+          )
+        ))
+      }
+      case None =>
+        Ok(Json.obj(
+          "code" -> 4020,
+          "field" -> "post_id",
+          "message" -> Messages("postNotFound")
+        ))
+    }
+  }
+
+  def getPostMarks(id: Long, page: Int) = UserAwareAction.async { implicit request =>
     postService.getPostById(id).flatMap {
       case Some(postAndUser) =>
-        val (post, user) = postAndUser
-        postService.getMarksForPost(id, request.userId).map { result =>
+
+        postService.getMarksForPost(id, page, request.userId).map { result =>
 
           val scores = result._3
           val likes = result._2
           val comments = result._4.groupBy(_._1.markId)
 
-          val marksJson = result._1.map { markIdAndTag =>
-            val totalComments = comments.get(markIdAndTag._1).getOrElse(Seq()).length
-            val commentsJson = comments.get(markIdAndTag._1).map { list =>
+          val marksJson = result._1.map { marks =>
+            val totalComments = comments.get(marks._1).getOrElse(Seq()).length
+            val commentsJson = comments.get(marks._1).map { list =>
               list.take(3).map { values =>
                 Json.obj(
                   "comment_id" -> values._1.id,
@@ -55,10 +86,17 @@ class PostController @Inject() (
             }
 
             Json.obj(
-              "mark_id" -> markIdAndTag._1,
-              "tag" -> markIdAndTag._2,
-              "likes" -> scores(markIdAndTag._1),
-              "is_liked" -> likes.contains(markIdAndTag._1),
+              "mark_id" -> marks._1,
+              "tag" -> marks._2,
+              "likes" -> scores(marks._1),
+              "is_liked" -> likes.contains(marks._1),
+              "created" -> marks._3,
+              "user" -> Json.obj(
+                "user_id" -> marks._4.id,
+                "nickname" -> marks._4.nickname,
+                "avatar" -> QiniuUtil.getAvatar(marks._4.avatar, "small"),
+                "likes" -> marks._4.likes
+              ),
               "total_comments" -> totalComments,
               "comments" -> Json.toJson(commentsJson.getOrElse(Seq()))
             )
@@ -68,17 +106,6 @@ class PostController @Inject() (
             "code" -> 1,
             "message" -> "Record(s) Found",
             "data" -> Json.obj(
-              "post_id" -> id,
-              "type" -> post.`type`,
-              "content" -> QiniuUtil.getPhoto(post.content, "large"),
-              "description" -> post.description,
-              "created" -> post.created,
-              "user" -> Json.obj(
-                "user_id" -> user.id.get.toString,
-                "nickname" -> user.nickname,
-                "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
-                "likes" -> user.likes
-              ),
               "marks" -> Json.toJson(marksJson)
             )
           ))

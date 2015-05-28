@@ -14,6 +14,7 @@ PUT     /v2/user/nickname                   controllers.UserController.updateNic
 
 # Post
 GET     /v1/post/$id<[0-9]+>                controllers.PostController.getPost(id: Long)
+GET     /v1/post/$id<[0-9]+>/marks/$page<[0-9]+>  controllers.PostController.getPostMarks(id: Long, page: Int)
 
 # Upload
 GET     /v2/upload                          controllers.AuthController.qiniuUploadToken

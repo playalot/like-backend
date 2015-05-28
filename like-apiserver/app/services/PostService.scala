@@ -16,6 +16,6 @@ trait PostService {
 
   def getPostById(postId: Long): Future[Option[(Post, User)]]
 
-  def getMarksForPost(postId: Long, userId: Option[Long] = None): Future[(Seq[(Long, String)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])]
+  def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])]
 
 }

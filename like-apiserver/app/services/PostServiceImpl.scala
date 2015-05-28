@@ -58,14 +58,14 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(query.result.headOption)
   }
 
-  override def getMarksForPost(postId: Long, userId: Option[Long] = None): Future[(Seq[(Long, String)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])] = {
-    val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postId).map(v => (v._1.toLong, v._2.toInt)).toMap
+  override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])] = {
+    val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postId, offset = page * 10, limit = 10).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
     val marksQuery = for {
-      (mark, tag) <- marks join tags on (_.tagId === _.id)
+      ((mark, tag), user) <- marks join tags on (_.tagId === _.id) join users on (_._1.userId === _.id)
       if (mark.postId === postId) && (mark.id inSet cachedMarks.keySet)
-    } yield (mark.id, tag.tagName)
+    } yield (mark.id, tag.tagName, mark.created, user)
 
     val likesQuery = for {
       like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))

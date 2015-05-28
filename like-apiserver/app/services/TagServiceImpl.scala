@@ -2,7 +2,8 @@ package services
 
 import javax.inject.Inject
 
-import dao.TagsComponent
+import dao.{ TagsComponent, CommentConponent }
+import models.Comment
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
@@ -14,11 +15,12 @@ import scala.concurrent.Future
  * Date: 5/25/15
  */
 class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends TagService
-    with TagsComponent with HasDatabaseConfigProvider[JdbcProfile] {
+    with TagsComponent with CommentConponent with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 
   private val tags = TableQuery[TagsTable]
+  private val comments = TableQuery[CommentsTable]
 
   override def autoComplete(name: String): Future[Seq[models.Tag]] = {
     val query = (for {
@@ -34,5 +36,21 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     } yield (tag)).sortBy(_.likes.desc).take(100)
 
     db.run(query.result).map(tags => scala.util.Random.shuffle(tags).take(15))
+  }
+
+  override def commentTag(comment: Comment): Future[Comment] = {
+    db.run(comments returning comments.map(_.id) += comment).map(id => comment.copy(id = Some(id)))
+  }
+
+  override def commentFromTag(commentId: Long, userId: Long): Future[Boolean] = {
+    db.run(comments.filter(c => c.id === commentId && c.userId === userId).delete).map(_ > 0)
+  }
+
+  override def getCommentsForTag(postId: Long, tagId: Long, created: Option[Long] = None): Future[Seq[Comment]] = {
+    val query = (for {
+      comment <- comments if comment.postId === postId && comment.tagId === tagId
+    } yield (comment)).sortBy(_.created)
+
+    db.run(query.result)
   }
 }

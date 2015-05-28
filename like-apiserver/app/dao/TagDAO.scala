@@ -1,5 +1,6 @@
 package dao
 
+import models.Comment
 import play.api.db.slick.HasDatabaseConfig
 import slick.driver.JdbcProfile
 
@@ -23,25 +24,21 @@ trait TagsComponent { self: HasDatabaseConfig[JdbcProfile] =>
   }
 }
 
-/*
-
-trait TagDAO {
-  def autoComplete(name: String): Future[Seq[String]]
-}
-
-class TagDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends TagDAO with TagsComponent with HasDatabaseConfigProvider[JdbcProfile] {
-
+trait CommentConponent {
+  self: HasDatabaseConfig[JdbcProfile] =>
   import driver.api._
 
-  private val tags = TableQuery[TagsTable]
+  class CommentsTable(tag: Tag) extends Table[Comment](tag, "comment") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def postId = column[Long]("post_id")
+    def tagId = column[Long]("tag_id")
+    def userId = column[Long]("user_id")
+    def replyId = column[Long]("reply_id")
+    def comment = column[String]("comment")
+    def created = column[Long]("created")
+    def location = column[String]("location")
 
-  override def autoComplete(name: String): Future[Seq[String]] = {
-    val query = (for {
-      tag <- tags if tag.tagName startsWith name.toLowerCase
-    } yield (tag.tagName, tag.likes)).sortBy(_._2.desc).take(10)
-
-    db.run(query.result) map (rows => rows.map { case (name, likes) => name })
+    override def * = (id.?, postId, tagId, userId, replyId.?, comment, created, location.?) <> (Comment.tupled, Comment.unapply _)
   }
-
 }
-*/ 
+

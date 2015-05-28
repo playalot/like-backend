@@ -16,13 +16,12 @@ object RedisCacheClient {
   val host = Play.current.configuration.getString("redis.host").get
   val port = Play.current.configuration.getInt("redis.port").get
 
-  val username = Play.current.configuration.getString("redis.username").get
-  val password = Play.current.configuration.getString("redis.password").get
+  val auth = Play.current.configuration.getString("redis.auth").get
 
-  val jedisPool = if (username == "") {
+  val jedisPool = if (auth == "") {
     new JedisPool(new JedisPoolConfig(), host, port, 2000)
   } else {
-    new JedisPool(new JedisPoolConfig(), host, port, 2000, username + ":" + password)
+    new JedisPool(new JedisPoolConfig(), host, port, 2000, auth)
   }
 
   implicit val scalaCache = ScalaCache(RedisCache(jedisPool))
@@ -38,10 +37,10 @@ object RedisCacheClient {
 
   def find[T: ClassTag](key: String): Future[Option[T]] = scalacache.get[T](key)
 
-  def zRevRangeByScore(key: String): Set[(String, Double)] = {
+  def zRevRangeByScore(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
     blocking {
       withJedisClient[Set[(String, Double)]] { client =>
-        client.zrevrangeByScoreWithScores(key, Double.MaxValue, 0, 0, 15).map(x => (x.getElement, x.getScore)).toSet
+        client.zrevrangeByScoreWithScores(key, max, min, offset, limit).map(x => (x.getElement, x.getScore)).toSet
       }
     }
   }

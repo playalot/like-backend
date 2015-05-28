@@ -4,6 +4,7 @@ import javax.inject.Inject
 
 import dao._
 import models.{ Post, User }
+import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import slick.driver.JdbcProfile
@@ -31,14 +32,23 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def searchByTag(page: Int = 0, pageSize: Int = 20, name: String = "%"): Future[Seq[(Post, User)]] = {
     val offset = pageSize * page
+
+    val jian = JianFan.f2J(name)
+    val fan = JianFan.j2F(name)
+
     val query = (for {
       (((tag, mark), posts), users) <- tags join marks on (_.id === _.tagId) join posts on (_._2.postId === _.id) join users on (_._2.userId === _.id)
-      if (tag.tagName.toLowerCase like name.toLowerCase)
+      if (tag.tagName.toLowerCase like jian.toLowerCase) || (tag.tagName.toLowerCase like fan.toLowerCase)
     } yield (posts, users))
       .sortBy(_._1.likes.desc)
       .drop(offset)
       .take(pageSize)
     db.run(query.result)
   }
+
+  override def getPostById(postId: Long): Future[Post] = ???
+  //  {
+  //    posts.filter()
+  //  }
 
 }

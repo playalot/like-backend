@@ -46,9 +46,9 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     db.run(comments.filter(c => c.id === commentId && c.userId === userId).delete).map(_ > 0)
   }
 
-  override def getCommentsForTag(postId: Long, tagId: Long, created: Option[Long] = None): Future[Seq[Comment]] = {
+  override def getCommentsForTag(markId: Long, created: Option[Long] = None): Future[Seq[Comment]] = {
     val query = (for {
-      comment <- comments if comment.postId === postId && comment.tagId === tagId
+      comment <- comments if comment.markId === markId
     } yield (comment)).sortBy(_.created)
 
     db.run(query.result)

@@ -5,7 +5,7 @@ package models
  * Date: 5/21/15
  */
 case class Mark(
-  id: Long,
+  id: Option[Long],
   postId: Long,
   tagId: Long,
   userId: Long,

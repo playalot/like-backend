@@ -18,5 +18,5 @@ trait TagService {
 
   def commentFromTag(commentId: Long, userId: Long): Future[Boolean]
 
-  def getCommentsForTag(postId: Long, tagId: Long, created: Option[Long] = None): Future[Seq[Comment]]
+  def getCommentsForTag(postId: Long, created: Option[Long] = None): Future[Seq[Comment]]
 }

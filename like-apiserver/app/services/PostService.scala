@@ -1,6 +1,6 @@
 package services
 
-import models.{ User, Post }
+import models.{ Comment, User, Post }
 
 import scala.concurrent.Future
 
@@ -14,5 +14,8 @@ trait PostService {
 
   def searchByTag(page: Int = 0, pageSize: Int = 20, name: String): Future[Seq[(Post, User)]]
 
-  def getPostById(postId: Long): Future[Post]
+  def getPostById(postId: Long): Future[Option[(Post, User)]]
+
+  def getMarksForPost(postId: Long, userId: Option[Long] = None): Future[(Seq[(Long, String)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])]
+
 }

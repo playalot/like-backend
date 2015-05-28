@@ -6,10 +6,9 @@ package models
  */
 case class Comment(
   id: Option[Long],
-  postId: Long,
-  tagId: Long,
+  markId: Long,
   userId: Long,
   replyId: Option[Long],
-  comment: String,
+  content: String,
   created: Long,
   location: Option[String])

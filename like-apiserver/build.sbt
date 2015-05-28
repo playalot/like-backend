@@ -8,23 +8,25 @@ resolvers := ("Atlassian Releases" at "https://maven.atlassian.com/public/") +: 
 
 resolvers +=  "NLPChina Releases" at "http://maven.ansj.org/"
 
+resolvers += "nlpcn-mvn-repo" at "http://maven.nlpcn.org/"
+
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
   ws,
   cache,
   filters,
-  "org.ansj"                  %  "ansj_seg"         % "1.4.1",
-  "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.2",
-  "redis.clients"             %  "jedis"            % "2.7.2",
-  "net.spy"                   %  "spymemcached"     % "2.11.4",
-  "mysql"                     %  "mysql-connector-java" % "5.1.32",
+  "org.nlpcn"                 %  "nlp-lang"         % "0.3",
+  "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
+  "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.3",
+  "mysql"                     %  "mysql-connector-java" % "5.1.35",
   "com.typesafe.play"         %% "play-slick"       % "1.0.0-RC3",
   "com.github.nscala-time"    %% "nscala-time"      % "2.0.0",
   "com.mohiva"                %% "play-silhouette"  % "3.0.0-SNAPSHOT",
   "com.typesafe.play"         %% "play-mailer"      % "2.4.1",
-  "net.codingwell"            %% "scala-guice"      % "4.0.0-beta5",
-  "com.github.cb372"          %% "scalacache-redis" % "0.6.2",
+  "net.codingwell"            %% "scala-guice"      % "4.0.0",
+  "com.github.cb372"          %% "scalacache-redis" % "0.6.3",
+  "com.github.cb372"          %% "scalacache-memcached"      % "0.6.3",
   "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0-SNAPSHOT" % "test"
 )
 

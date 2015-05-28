@@ -4,6 +4,6 @@ object BuildSettings{
 
     val json4sVersion = "3.2.11"
 
-    val scalatestVersion = "2.2.4"
+    val scalatestVersion = "2.2.5"
   }
 }

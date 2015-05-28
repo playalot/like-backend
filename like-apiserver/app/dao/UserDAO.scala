@@ -51,11 +51,11 @@ trait CommentConponent {
     def markId = column[Long]("mark_id")
     def userId = column[Long]("user_id")
     def replyId = column[Long]("reply_id")
-    def comment = column[String]("comment")
+    def content = column[String]("content")
     def created = column[Long]("created")
     def location = column[String]("location")
 
-    override def * = (id.?, markId, userId, replyId.?, comment, created, location.?) <> (Comment.tupled, Comment.unapply _)
+    override def * = (id.?, markId, userId, replyId.?, content, created, location.?) <> (Comment.tupled, Comment.unapply _)
   }
 }
 

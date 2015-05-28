@@ -63,19 +63,19 @@ class PostController @Inject() (
           val marksJson = result._1.map { marks =>
             val totalComments = comments.get(marks._1).getOrElse(Seq()).length
             val commentsJson = comments.get(marks._1).map { list =>
-              list.take(3).map { values =>
+              list.take(3).map { row =>
                 Json.obj(
-                  "comment_id" -> values._1.id,
-                  "content" -> values._1.content,
-                  "created" -> values._1.created,
-                  "location" -> values._1.location,
+                  "comment_id" -> row._1.id,
+                  "content" -> row._1.content,
+                  "created" -> row._1.created,
+                  "location" -> row._1.location,
                   "user" -> Json.obj(
-                    "user_id" -> values._2.id,
-                    "nickname" -> values._2.nickname,
-                    "avatar" -> QiniuUtil.getAvatar(values._2.avatar, "small"),
-                    "likes" -> values._2.likes
+                    "user_id" -> row._2.id,
+                    "nickname" -> row._2.nickname,
+                    "avatar" -> QiniuUtil.getAvatar(row._2.avatar, "small"),
+                    "likes" -> row._2.likes
                   ),
-                  "reply" -> values._3.map(reply => Json.obj(
+                  "reply" -> row._3.map(reply => Json.obj(
                     "user_id" -> reply.id,
                     "nickname" -> reply.nickname,
                     "avatar" -> QiniuUtil.getAvatar(reply.avatar, "small"),

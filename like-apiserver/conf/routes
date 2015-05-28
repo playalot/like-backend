@@ -16,6 +16,11 @@ PUT     /v2/user/nickname                   controllers.UserController.updateNic
 GET     /v1/post/$id<[0-9]+>                controllers.PostController.getPost(id: Long)
 GET     /v1/post/$id<[0-9]+>/marks/$page<[0-9]+>  controllers.PostController.getPostMarks(id: Long, page: Int)
 
+# Comment
+POST    /v1/mark/$id<[0-9]+>/comment        controllers.CommentController.commentMark(id: Long)
+DELETE  /v1/comment/$id<[0-9]+>             controllers.CommentController.deleteCommentFromMark(id: Long)
+GET     /v1/mark/$id<[0-9]+>/comment        controllers.CommentController.getCommentsForMark(id: Long)
+
 # Upload
 GET     /v2/upload                          controllers.AuthController.qiniuUploadToken
 

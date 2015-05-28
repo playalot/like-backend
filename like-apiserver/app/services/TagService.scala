@@ -1,6 +1,6 @@
 package services
 
-import models.{ Comment, Tag }
+import models.{ User, Comment, Tag }
 
 import scala.concurrent.Future
 
@@ -14,9 +14,9 @@ trait TagService {
 
   def hotTags: Future[Seq[Tag]]
 
-  def commentTag(comment: Comment): Future[Comment]
+  def commentMark(comment: Comment): Future[Comment]
 
-  def commentFromTag(commentId: Long, userId: Long): Future[Boolean]
+  def deleteCommentFromMark(commentId: Long, userId: Long): Future[Boolean]
 
-  def getCommentsForTag(postId: Long, created: Option[Long] = None): Future[Seq[Comment]]
+  def getCommentsForMark(markId: Long, created: Option[Long] = None): Future[Seq[(Comment, User, Option[User])]]
 }

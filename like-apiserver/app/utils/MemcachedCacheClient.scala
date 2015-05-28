@@ -5,13 +5,15 @@ import java.net.InetSocketAddress
 import net.spy.memcached.{ AddrUtil, ConnectionFactoryBuilder, MemcachedClient }
 import net.spy.memcached.ConnectionFactoryBuilder.Protocol
 import net.spy.memcached.auth.{ AuthDescriptor, PlainCallbackHandler }
-import net.spy.memcached.internal.{ GetCompletionListener, GetFuture, OperationFuture, OperationCompletionListener }
 
 import play.api.Play
 
-import scala.concurrent.{ Promise, Future }
+import scala.concurrent.Future
 import scala.reflect.ClassTag
-import scala.collection.JavaConversions._
+import scala.concurrent.duration._
+
+import scalacache._
+import memcached._
 
 /**
  * Created by Guan Guan
@@ -29,74 +31,25 @@ object MemcachedCacheClient {
 
   val client = if (username == "") {
     new MemcachedClient(
-      new InetSocketAddress(host, port));
+      new InetSocketAddress(host, port))
   } else {
     new MemcachedClient(new ConnectionFactoryBuilder().setProtocol(Protocol.BINARY)
       .setAuthDescriptor(ad)
       .build(), AddrUtil.getAddresses(host + ":" + port))
-
   }
+
+  implicit val scalaCache = ScalaCache(MemcachedCache(client))
 
   def save[T](key: String, value: T, expiration: Int): Boolean = client.set(key, expiration, value).get()
 
   def remove(key: String): Boolean = client.delete(key).get()
 
-  def find[T: ClassTag](key: String): Option[T] = {
-    val r = client.get(key)
-    if (r == null)
-      None
-    else
-      Some(r.asInstanceOf[T])
-  }
+  def find[T: ClassTag](key: String): Option[T] = getSync(key)
 
-  def saveAsync[T](key: String, value: T, expiration: Int): Future[Unit] = {
-    asFutureOp(client.set(key, expiration, value), (result: java.lang.Boolean) => {})
-  }
+  def saveAsync[T](key: String, value: T, expiration: Int): Future[Unit] = put(key)(value, ttl = Some(expiration.seconds))
 
-  def removeAsync(key: String): Future[Boolean] = {
-    asFutureOp(client.delete(key), (result: java.lang.Boolean) => {
-      result
-    })
-  }
+  def removeAsync(key: String): Future[Unit] = scalaCache.cache.remove(key)
 
-  def findAsync[T: ClassTag](key: String): Future[Option[T]] = {
-    asFutureGet(client.asyncGet(key), (r: Any) => {
-      if (r == null)
-        None
-      else
-        Some(r.asInstanceOf[T])
-    })
-  }
+  def findAsync[T: ClassTag](key: String): Future[Option[T]] = get(key)
 
-  private def asFutureOp[A, B](of: OperationFuture[A], f: A => B): Future[B] = {
-    val p = Promise[B]
-    of.addListener(new OperationCompletionListener {
-      def onComplete(future: OperationFuture[_]) = {
-        try {
-          val result = future.get()
-          p.success(f(result.asInstanceOf[A]))
-        } catch {
-          case t: Throwable =>
-            p.failure(t)
-        }
-      }
-    })
-    p.future
-  }
-
-  private def asFutureGet[A, B](of: GetFuture[A], f: A => B): Future[B] = {
-    val p = Promise[B]
-    of.addListener(new GetCompletionListener {
-      def onComplete(future: GetFuture[_]) = {
-        try {
-          val result = future.get()
-          p.success(f(result.asInstanceOf[A]))
-        } catch {
-          case t: Throwable =>
-            p.failure(t)
-        }
-      }
-    })
-    p.future
-  }
 }

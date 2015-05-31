@@ -2,20 +2,21 @@ package controllers
 
 import javax.inject.Inject
 
-import com.mohiva.play.silhouette.api.{ LoginInfo, LoginEvent, Environment, Silhouette }
+import com.mohiva.play.silhouette.api.{ LoginInfo, LoginEvent, Environment }
 import com.mohiva.play.silhouette.impl.authenticators.BearerTokenAuthenticator
+import com.mohiva.play.silhouette.impl.providers.{ CommonSocialProfileBuilder, CommonSocialProfile, SocialProvider, OAuth2Info }
 import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
-import extensions.{ MobileProvider, SmsCode }
+import extensions._
 import play.api.{ Logger, Play }
 import play.api.Play.current
-import play.api.i18n.{ Lang, MessagesApi, Messages }
+import play.api.i18n.{ MessagesApi, Messages }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import com.github.nscala_time.time.Imports._
 import services.UserService
-import utils.{ MemcachedCacheClient, HashUtils, QiniuUtil, GenerateUtils }
+import utils.{ MemcachedCacheClient, HashUtils, GenerateUtils }
 import models.User
 
 import scala.concurrent.Future
@@ -28,6 +29,7 @@ class AuthController @Inject() (
     val messagesApi: MessagesApi,
     userService: UserService,
     implicit val env: Environment[User, BearerTokenAuthenticator],
+    providerEnv: ProviderEnv,
     mobileProvider: MobileProvider) extends BaseController {
 
   implicit val mobileCodeReads = (
@@ -43,19 +45,6 @@ class AuthController @Inject() (
   val TokenExpiry = Play.configuration.getInt("default.tokenExpiry").get
 
   /**
-   * Get Qiniu upload token
-   */
-  def qiniuUploadToken = SecuredAction {
-    Ok(Json.obj(
-      "code" -> 1,
-      "message" -> "Get Upload Token Sucess",
-      "data" -> Json.obj(
-        "upload_token" -> QiniuUtil.getUploadToken()
-      )
-    ))
-  }
-
-  /**
    * Get renewed session token
    * @param id ID of the user
    */
@@ -68,7 +57,7 @@ class AuthController @Inject() (
           for {
             authenticator <- env.authenticatorService.create(loginInfo)
             newToken <- tokenGenerator.generate
-            value <- MemcachedCacheClient.saveAsync[Long](authenticator.id, user.id.get, TokenExpiry)
+            value <- MemcachedCacheClient.saveAsync[String]("session_user:" + authenticator.id, user.id.get.toString, TokenExpiry)
             //env.authenticatorService.init(authenticator)
             unit <- userService.updateRefreshToken(user.id.get, HashUtils.hashPassword(newToken))
           } yield {
@@ -117,7 +106,7 @@ class AuthController @Inject() (
             case Some(user) => // User already exists
               for {
                 // Create new session token
-                value <- MemcachedCacheClient.saveAsync[Long](authenticator.id, user.id.get, TokenExpiry)
+                value <- MemcachedCacheClient.saveAsync[String]("session_user:" + authenticator.id, user.id.get.toString, TokenExpiry)
                 //env.authenticatorService.init(authenticator)
                 // Create new refresh token
                 newToken <- tokenGenerator.generate
@@ -152,7 +141,7 @@ class AuthController @Inject() (
                   0,
                   Some(HashUtils.hashPassword(refreshToken))
                 ))
-                value <- MemcachedCacheClient.saveAsync[Long](authenticator.id, user.id.get, TokenExpiry)
+                value <- MemcachedCacheClient.saveAsync[String]("session_user:" + authenticator.id, user.id.get.toString, TokenExpiry)
               } yield {
                 env.eventBus.publish(LoginEvent(user, request, request2Messages))
                 Ok(Json.obj(
@@ -178,6 +167,79 @@ class AuthController @Inject() (
           ))
       }
     )
+  }
+
+  def socialAuthenticate(provider: String) = Action.async { implicit request =>
+
+    //    val idOpt = (request.body \ "uid").asOpt[String]
+    //    val accessTokenOpt = (request.body \ "access_token").asOpt[String]
+    val idOpt = Some("1")
+    val accessTokenOpt = Some("2")
+
+    (idOpt, accessTokenOpt) match {
+      case (Some(id), Some(accessToken)) =>
+        println("[]" + id + accessToken)
+        //        val authInfo = OAuth2Info(accessToken)
+        //        val params = authInfo.params.getOrElse(Map[String, String]()) + ("uid" -> id)
+        //        val authInfoWithId = authInfo.copy(params = Some(params))
+        providerEnv.providers.get(provider) match {
+          case Some(p: SocialProvider with CommonSocialProfileBuilder) =>
+            println("!!!!" + p.id)
+            p.authenticate().flatMap { r =>
+              println(r); r match {
+                case Left(result) =>
+                  Future.successful(result)
+                case Right(authInfo) =>
+                  for {
+                    profile <- p.retrieveProfile(authInfo)
+                    //                user <- userService.save(profile)
+                    //                authInfo <- authInfoRepository.save(profile.loginInfo, authInfo)
+                    //                authenticator <- env.authenticatorService.create(profile.loginInfo)
+                    //                value <- env.authenticatorService.init(authenticator)
+                    //                result <- env.authenticatorService.embed(value, Redirect(routes.ApplicationController.index()))
+                  } yield {
+                    //                  env.eventBus.publish(LoginEvent(user, request, request2Messages))
+                    //                  result
+                    println(profile)
+                    Ok
+                  }
+              }
+            }
+          case Some(p: WeiboProvider with WeiboProfileBuilder) =>
+            println("####" + p.id)
+            p.authenticate().flatMap { r =>
+              println(r); r match {
+                case Left(result) =>
+                  Future.successful(result)
+                case Right(authInfo) =>
+                  for {
+                    profile <- p.retrieveProfile(authInfo)
+                    //                user <- userService.save(profile)
+                    //                authInfo <- authInfoRepository.save(profile.loginInfo, authInfo)
+                    //                authenticator <- env.authenticatorService.create(profile.loginInfo)
+                    //                value <- env.authenticatorService.init(authenticator)
+                    //                result <- env.authenticatorService.embed(value, Redirect(routes.ApplicationController.index()))
+                  } yield {
+                    //                  env.eventBus.publish(LoginEvent(user, request, request2Messages))
+                    //                  result
+                    println(profile)
+                    Ok
+                  }
+              }
+            }
+          case _ =>
+            println("====")
+            Future.successful(Ok(Json.obj(
+              "code" -> 4052,
+              "message" -> Messages("invalid.socialProvider")
+            )))
+        }
+      case _ => Future.successful(Ok(Json.obj(
+        "code" -> 5051,
+        "message" -> Messages("invalid.authInfo")
+      )))
+    }
+
   }
 
 }

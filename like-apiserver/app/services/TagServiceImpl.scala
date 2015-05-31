@@ -35,7 +35,6 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     val query = (for {
       tag <- tags
     } yield (tag)).sortBy(_.likes.desc).take(100)
-
     db.run(query.result).map(tags => scala.util.Random.shuffle(tags).take(15))
   }
 
@@ -47,13 +46,18 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     db.run(comments.filter(c => c.id === commentId && c.userId === userId).delete).map(_ > 0)
   }
 
-  override def getCommentsForMark(markId: Long, created: Option[Long] = None): Future[Seq[(Comment, User, Option[User])]] = {
-
-    val query = for {
-      ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
-      if comment.markId === markId
-    } yield (comment, user, reply)
-
+  override def getCommentsForMark(markId: Long, pageSize: Int, created: Option[Long] = None): Future[Seq[(Comment, User, Option[User])]] = {
+    val query = if (created.isDefined) {
+      (for {
+        ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
+        if comment.markId === markId && (comment.created < created.get)
+      } yield (comment, user, reply)).sortBy(_._1.created.desc)
+    } else {
+      (for {
+        ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
+        if comment.markId === markId
+      } yield (comment, user, reply)).sortBy(_._1.created.desc)
+    }
     db.run(query.result)
   }
 }

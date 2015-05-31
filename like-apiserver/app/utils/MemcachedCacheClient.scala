@@ -46,6 +46,8 @@ object MemcachedCacheClient {
 
   def find[T: ClassTag](key: String): Option[T] = getSync(key)
 
+  def findUserId(key: String): Option[Long] = getSync[String](key).map(_.toLong)
+
   def saveAsync[T](key: String, value: T, expiration: Int): Future[Unit] = put(key)(value, ttl = Some(expiration.seconds))
 
   def removeAsync(key: String): Future[Unit] = scalaCache.cache.remove(key)

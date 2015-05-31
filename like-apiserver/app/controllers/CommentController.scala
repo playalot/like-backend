@@ -6,6 +6,7 @@ import models.Comment
 import play.api.i18n.MessagesApi
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
+import play.api.mvc.Action
 import services.TagService
 import utils.QiniuUtil
 
@@ -50,9 +51,9 @@ class CommentController @Inject() (
     }
   }
 
-  def getCommentsForMark(markId: Long) = SecuredAction.async { implicit request =>
-    tagService.getCommentsForMark(markId).map { results =>
+  def getCommentsForMark(markId: Long) = Action.async { implicit request =>
 
+    tagService.getCommentsForMark(markId).map { results =>
       val totalComments = results.length
       val commentsJson = results.map { row =>
         Json.obj(

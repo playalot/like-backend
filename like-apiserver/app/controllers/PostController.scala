@@ -19,6 +19,9 @@ class PostController @Inject() (
     tagService: TagService,
     postService: PostService) extends BaseController {
 
+  /**
+   * Get Post summary and author info
+   */
   def getPost(id: Long) = UserAwareAction.async { implicit request =>
     postService.getPostById(id).map {
       case Some(postAndUser) => {
@@ -50,6 +53,9 @@ class PostController @Inject() (
     }
   }
 
+  /**
+   * Get Post marks and comments
+   */
   def getPostMarks(id: Long, page: Int) = UserAwareAction.async { implicit request =>
     postService.getPostById(id).flatMap {
       case Some(postAndUser) =>
@@ -63,7 +69,7 @@ class PostController @Inject() (
           val marksJson = result._1.map { marks =>
             val totalComments = comments.get(marks._1).getOrElse(Seq()).length
             val commentsJson = comments.get(marks._1).map { list =>
-              list.take(3).map { row =>
+              list.reverse.take(3).map { row =>
                 Json.obj(
                   "comment_id" -> row._1.id,
                   "content" -> row._1.content,
@@ -116,6 +122,19 @@ class PostController @Inject() (
         "message" -> Messages("postNotFound")
       )))
     }
+  }
+
+  /**
+   * Get Qiniu upload token
+   */
+  def qiniuUploadToken = SecuredAction {
+    Ok(Json.obj(
+      "code" -> 1,
+      "message" -> "Get Upload Token Sucess",
+      "data" -> Json.obj(
+        "upload_token" -> QiniuUtil.getUploadToken()
+      )
+    ))
   }
 
 }

@@ -21,9 +21,9 @@ trait BaseController extends Controller with I18nSupport {
 
     override def invokeBlock[A](request: Request[A], block: (SecuredRequest[A]) => Future[Result]): Future[Result] = {
       request.headers.get("LIKE-SESSION-TOKEN")
-        .flatMap(MemcachedCacheClient.find[Long](_))
+        .flatMap(token => MemcachedCacheClient.findUserId("session_user:" + token))
         .map(userId => block(new SecuredRequest(userId, request)))
-        .getOrElse(Future.successful(Unauthorized(Json.obj(
+        .getOrElse(Future.successful(Ok(Json.obj(
           "code" -> 4016,
           "field" -> "LIKE-SESSION-TOKEN",
           "message" -> Messages("invalid.sessionToken")
@@ -35,7 +35,7 @@ trait BaseController extends Controller with I18nSupport {
 
     override def invokeBlock[A](request: Request[A], block: (UserAwareRequest[A]) => Future[Result]): Future[Result] = {
       request.headers.get("LIKE-SESSION-TOKEN") match {
-        case Some(token) => block(new UserAwareRequest(MemcachedCacheClient.find[Long](token), request))
+        case Some(token) => block(new UserAwareRequest(MemcachedCacheClient.findUserId("session_user:" + token), request))
         case None        => block(new UserAwareRequest(None, request))
       }
     }

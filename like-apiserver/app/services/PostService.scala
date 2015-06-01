@@ -18,4 +18,6 @@ trait PostService {
 
   def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])]
 
+  def deletePostById(postId: Long, userId: Long): Future[Either[Boolean, String]]
+
 }

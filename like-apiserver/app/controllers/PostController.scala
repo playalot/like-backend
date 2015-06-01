@@ -54,6 +54,22 @@ class PostController @Inject() (
   }
 
   /**
+   * Delete Post by id
+   */
+  def deletePost(id: Long) = SecuredAction.async { implicit request =>
+    postService.deletePostById(id, request.userId).map {
+      case Left(x) => Ok(Json.obj(
+        "code" -> 1,
+        "message" -> "Post Delete Success"
+      ))
+      case Right(ex) => Ok(Json.obj(
+        "code" -> 4023,
+        "message" -> Messages(ex)
+      ))
+    }
+  }
+
+  /**
    * Get Post marks and comments
    */
   def getPostMarks(id: Long, page: Int) = UserAwareAction.async { implicit request =>

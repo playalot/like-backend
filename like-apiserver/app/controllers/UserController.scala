@@ -26,7 +26,7 @@ class UserController @Inject() (
         for {
           countFollowers <- userService.countFollowers(user.id.get)
           countFriends <- userService.countFriends(id)
-          //          countPosts <- postService.countByUserId(id)
+          countPosts <- postService.countByUserId(id)
           isFollowing <- if (request.userId.isDefined) userService.isFollowing(request.userId.get, id) else Future.successful(0)
         } yield {
           Ok(Json.obj(
@@ -41,7 +41,7 @@ class UserController @Inject() (
               "likes" -> user.likes,
               "is_following" -> isFollowing,
               "count" -> Json.obj(
-                "post" -> 0, //countPosts,
+                "post" -> countPosts,
                 "follow" -> countFriends,
                 "fan" -> countFriends
               )

@@ -5,6 +5,11 @@ This file will be packaged with your application, when using `activator dist`.
 
 1. Add refresh_token column to user table
 
+
+alter table mark add CONSTRAINT `post_fk` foreign key(post_id) references post(id) on delete cascade
+
+
+
 ###User
 |错误代码|错误提示|说明|
 |--------|-------|-------|

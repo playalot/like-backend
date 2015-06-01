@@ -45,6 +45,38 @@ object RedisCacheClient {
     }
   }
 
+  def zScore(key: String, member: String): Double = {
+    blocking {
+      withJedisClient[Double] { client =>
+        client.zscore(key, member)
+      }
+    }
+  }
+
+  def del(keys: Seq[String]): Long = {
+    blocking {
+      withJedisClient[Long] { client =>
+        client.del(keys: _*)
+      }
+    }
+  }
+
+  def del(key: String): Long = {
+    blocking {
+      withJedisClient[Long] { client =>
+        client.del(key)
+      }
+    }
+  }
+
+  def zIncrBy(key: String, score: Double, member: String) = {
+    blocking {
+      withJedisClient[Double] { client =>
+        client.zincrby(key: String, score, member)
+      }
+    }
+  }
+
   private def withJedisClient[T](f: Jedis => T): T = {
     val jedis = jedisPool.getResource()
     try {

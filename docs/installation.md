@@ -1,0 +1,12 @@
+##Installation设备安装 推送用
+
+已登陆用户开打app时请求 建议异步请求######URLhttp://api.likeorz.com/v2/installation######支持格式JSON######HTTP请求方式POST######请求参数|参数|必选|类型及范围|说明|
+|--------|-------|-------|
+|LIKE-SESSION-TOKEN|true|string|Header中带用户授权|
+|device_type|true|string|设备类型 ios android|
+|device_token|true|string|设备标识|
+######返回结果######JSON示例<pre>{
+    "code": "1", 
+    "message": "Install Success"
+}
+</pre>

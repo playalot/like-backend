@@ -32,24 +32,38 @@ class NotificationController @Inject() (
     notificationService.getNotifications(request.userId, ts).map { results =>
       val ts = results.lastOption.map(_._1.updated)
       val json = results.map { row =>
-        Json.obj(
-          "type" -> row._1.`type`,
-          "user" -> Json.obj(
-            "user_id" -> row._2.id.get.toString,
-            "nickname" -> row._2.nickname,
-            "avatar" -> QiniuUtil.getAvatar(row._2.avatar, "small")
-          ),
-          "posts" -> Json.arr(row._3.map(post => Json.obj(
-            "post_id" -> post.id.get,
-            "content" -> QiniuUtil.getPhoto(post.content, "small")
-          ))),
-          "post" -> row._3.map(post => Json.obj(
-            "post_id" -> post.id.get,
-            "content" -> QiniuUtil.getPhoto(post.content, "small")
-          )),
-          "tag" -> row._1.tagName,
-          "timestamp" -> row._1.updated
-        )
+        if (row._1.`type` == "FOLLOW") {
+          Json.obj(
+            "type" -> row._1.`type`,
+            "user" -> Json.obj(
+              "user_id" -> row._2.id.get.toString,
+              "nickname" -> row._2.nickname,
+              "avatar" -> QiniuUtil.getAvatar(row._2.avatar, "small")
+            ),
+            "posts" -> Json.arr(),
+            "timestamp" -> row._1.updated
+          )
+        } else {
+          Json.obj(
+            "type" -> row._1.`type`,
+            "user" -> Json.obj(
+              "user_id" -> row._2.id.get.toString,
+              "nickname" -> row._2.nickname,
+              "avatar" -> QiniuUtil.getAvatar(row._2.avatar, "small")
+            ),
+            "posts" -> Json.arr(row._3.map(post => Json.obj(
+              "post_id" -> post.id.get,
+              "content" -> QiniuUtil.getPhoto(post.content, "small")
+            ))),
+            "post" -> row._3.map(post => Json.obj(
+              "post_id" -> post.id.get,
+              "content" -> QiniuUtil.getPhoto(post.content, "small")
+            )),
+            "tag" -> row._1.tagName,
+            "timestamp" -> row._1.updated
+          )
+        }
+
       }
       Ok(Json.obj(
         "code" -> 1,

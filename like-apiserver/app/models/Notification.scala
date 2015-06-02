@@ -1,11 +1,10 @@
 package models
 
 case class Notification(
-  id: Long,
-  `type`: String, // LIKE, COMMENT, FOLLOW, MARK
+  id: Option[Long],
+  `type`: String, // LIKE, COMMENT, FOLLOW, MARK, REPLY
   userId: Long,
-  `new`: Boolean,
-  postIds: Option[String],
-  num: Int,
   fromUserId: Long,
-  updated: Long)
+  updated: Long,
+  tagName: Option[String],
+  postId: Option[Long])

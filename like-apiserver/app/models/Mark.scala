@@ -11,4 +11,4 @@ case class Mark(
   userId: Long,
   created: Long,
   updated: Long,
-  likes: Long)
+  likes: Long) extends Identifier

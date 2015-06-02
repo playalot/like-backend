@@ -11,14 +11,20 @@ GET    /authenticate/:provider              controllers.AuthController.socialAut
 
 # User
 GET     /v1/user/$id<[0-9]+>                controllers.UserController.getInfo(id: Long)
-POST    /v2/user/login                      controllers.AuthController.mobileAuthenticate
+POST    /v1/user/login                      controllers.AuthController.mobileAuthenticate
 PUT     /v2/user/$id<[0-9]+>/refreshtoken   controllers.AuthController.refreshSessionToken(id: Long)
 PUT     /v2/user/nickname                   controllers.UserController.updateNickname
+POST    /v1/user/$id<[0-9]+>/follow         controllers.UserController.follow(id: Long)
 
 # Post
 GET     /v1/post/$id<[0-9]+>                controllers.PostController.getPost(id: Long)
 GET     /v1/post/$id<[0-9]+>/marks/$page<[0-9]+>  controllers.PostController.getPostMarks(id: Long, page: Int)
 DELETE  /v1/post/$id<[0-9]+>                controllers.PostController.deletePost(id: Long)
+
+# Mark
+POST    /v1/mark/$id<[0-9]+>/like           controllers.MarkController.like(id: Long)
+DELETE  /v1/mark/$id<[0-9]+>/unlike         controllers.MarkController.unlike(id: Long)
+GET     /v1/mark/$id<[0-9]+>/likes          controllers.MarkController.getLikes(id: Long)
 
 # Comment
 POST    /v1/mark/$id<[0-9]+>/comment        controllers.CommentController.commentMark(id: Long)
@@ -32,6 +38,10 @@ GET     /v2/upload                          controllers.PostController.qiniuUplo
 GET     /v1/tag/hot                         controllers.SearchController.hotTags
 GET     /v1/tag/guess/:tag                  controllers.SearchController.autoComplete(tag: String)
 GET     /v1/tag/search/:tag/:page           controllers.SearchController.searchTag(page: Int, tag: String)
+
+#Notification
+GET     /v1/notification                    controllers.NotificationController.getNotifications(ts: Option[Long] ?= None)
+GET     /v1/notification/count              controllers.NotificationController.notificationCount
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

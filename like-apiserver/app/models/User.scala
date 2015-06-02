@@ -17,4 +17,4 @@ case class User(
   created: Long,
   updated: Long,
   likes: Long,
-  refreshToken: Option[String] = None) extends Identity
+  refreshToken: Option[String] = None) extends Identity with Identifier

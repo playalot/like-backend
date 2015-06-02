@@ -35,4 +35,6 @@ trait UserService extends IdentityService[User] {
 
   def nicknameExists(nickname: String): Future[Boolean]
 
+  def follow(userId: Long, fromId: Long): Future[Int]
+
 }

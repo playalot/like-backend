@@ -5,8 +5,8 @@ package models
  * Date: 5/21/15
  */
 case class Follow(
-  id: Long,
+  id: Option[Long] = None,
   fromId: Long,
   toId: Long,
   both: Boolean = false,
-  created: Long)
+  created: Long = System.currentTimeMillis / 1000)

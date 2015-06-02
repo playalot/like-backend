@@ -109,4 +109,32 @@ class UserController @Inject() (
     }
   }
 
+  def follow(id: Long) = SecuredAction.async { implicit request =>
+
+    if (id == request.userId) {
+      Future.successful(Ok(Json.obj(
+        "code" -> 4022,
+        "message" -> Messages("forbid.followYourself")
+      )))
+    } else {
+      userService.findById(id).flatMap {
+        case Some(user) =>
+          userService.follow(request.userId, id).map { following =>
+            Ok(Json.obj(
+              "code" -> 1,
+              "message" -> Messages("success.follow"),
+              "data" -> Json.obj(
+                "is_following" -> following
+              )
+            ))
+          }
+        case None =>
+          Future.successful(Ok(Json.obj(
+            "code" -> 4022,
+            "message" -> Messages("user.notFound")
+          )))
+      }
+    }
+  }
+
 }

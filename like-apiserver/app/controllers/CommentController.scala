@@ -3,12 +3,14 @@ package controllers
 import javax.inject.Inject
 
 import models.Comment
-import play.api.i18n.MessagesApi
+import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import play.api.mvc.Action
-import services.TagService
+import services.MarkService
 import utils.QiniuUtil
+
+import scala.concurrent.Future
 
 /**
  * Created by Guan Guan
@@ -16,28 +18,34 @@ import utils.QiniuUtil
  */
 class CommentController @Inject() (
     val messagesApi: MessagesApi,
-    tagService: TagService) extends BaseController {
+    markService: MarkService) extends BaseController {
 
   def commentMark(id: Long) = SecuredAction.async(parse.json) { implicit request =>
-
-    val replyId = (request.body \ "reply_id").asOpt[Long]
-    val content = (request.body \ "content").as[String].trim
-    val location = (request.body \ "location").asOpt[String]
-    val created = System.currentTimeMillis / 1000
-
-    tagService.commentMark(Comment(None, id, request.userId, replyId, content, created, location)).map { comment =>
-      Ok(Json.obj(
-        "code" -> 1,
-        "message" -> "Success",
-        "data" -> Json.obj(
-          "comment_id" -> comment.id
-        )
-      ))
+    markService.getMark(id).flatMap {
+      case Some(mark) =>
+        val replyId = (request.body \ "reply_id").asOpt[Long]
+        val content = (request.body \ "content").as[String].trim
+        val location = (request.body \ "location").asOpt[String]
+        val created = System.currentTimeMillis / 1000
+        markService.commentMark(id, Comment(None, id, request.userId, replyId, content, created, location)).map { comment =>
+          Ok(Json.obj(
+            "code" -> 1,
+            "message" -> "Success",
+            "data" -> Json.obj(
+              "comment_id" -> comment.id
+            )
+          ))
+        }
+      case None =>
+        Future.successful(Ok(Json.obj(
+          "code" -> 4022,
+          "message" -> Messages("mark.notFound")
+        )))
     }
   }
 
   def deleteCommentFromMark(commentId: Long) = SecuredAction.async { implicit request =>
-    tagService.deleteCommentFromMark(commentId, request.userId).map {
+    markService.deleteCommentFromMark(commentId, request.userId).map {
       case true =>
         Ok(Json.obj(
           "code" -> 1,
@@ -53,7 +61,7 @@ class CommentController @Inject() (
 
   def getCommentsForMark(markId: Long) = Action.async { implicit request =>
 
-    tagService.getCommentsForMark(markId).map { results =>
+    markService.getCommentsForMark(markId).map { results =>
       val totalComments = results.length
       val commentsJson = results.map { row =>
         Json.obj(

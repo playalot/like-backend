@@ -1,14 +1,8 @@
 package dao
 
-import javax.inject.Inject
-
 import models._
 import play.api.db.slick.{ HasDatabaseConfig, DatabaseConfigProvider, HasDatabaseConfigProvider }
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import slick.driver.JdbcProfile
-import utils.GenerateUtils
-
-import scala.concurrent.Future
 
 trait FollowsComponent { self: HasDatabaseConfig[JdbcProfile] =>
 
@@ -21,7 +15,7 @@ trait FollowsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def both = column[Boolean]("both")
     def created = column[Long]("created")
 
-    override def * = (id, fromId, toId, both, created) <> (Follow.tupled, Follow.unapply _)
+    override def * = (id.?, fromId, toId, both, created) <> (Follow.tupled, Follow.unapply _)
   }
 }
 
@@ -42,7 +36,7 @@ trait MarksComponent { self: HasDatabaseConfig[JdbcProfile] =>
   }
 }
 
-trait CommentConponent {
+trait CommentsConponent {
   self: HasDatabaseConfig[JdbcProfile] =>
   import driver.api._
 
@@ -91,4 +85,22 @@ trait UsersComponent { self: HasDatabaseConfig[JdbcProfile] =>
 
     override def * = (id.?, mobile, email.?, password, nickname, avatar, cover, created, updated, likes, refreshToken.?) <> (User.tupled, User.unapply _)
   }
+}
+
+trait NotificationsComponent { self: HasDatabaseConfig[JdbcProfile] =>
+
+  import driver.api._
+
+  class NotificationsTable(tag: Tag) extends Table[Notification](tag, "notify") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def `type` = column[String]("type")
+    def userId = column[Long]("user_id")
+    def fromUserId = column[Long]("from_user_id")
+    def updated = column[Long]("updated")
+    def tagName = column[String]("tag_name")
+    def postId = column[Long]("post_id")
+
+    override def * = (id.?, `type`, userId, fromUserId, updated, tagName.?, postId.?) <> (Notification.tupled, Notification.unapply _)
+  }
+
 }

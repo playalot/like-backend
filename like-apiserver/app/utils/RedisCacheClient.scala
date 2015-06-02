@@ -26,8 +26,8 @@ object RedisCacheClient {
 
   implicit val scalaCache = ScalaCache(RedisCache(jedisPool))
 
-  def save[T](key: String, value: T, expiration: Int): Future[T] = {
-    scalacache.put[T](key)(value, ttl = Some(expiration.seconds)).map(_ => value)
+  def save[T](key: String, value: T, expiration: Option[Int] = None): Future[T] = {
+    scalacache.put[T](key)(value, ttl = expiration.map(_.seconds)).map(_ => value)
   }
 
   def remove(key: String): Future[Unit] = {
@@ -45,10 +45,12 @@ object RedisCacheClient {
     }
   }
 
-  def zScore(key: String, member: String): Double = {
+  def zScore(key: String, member: String): Option[Double] = {
     blocking {
-      withJedisClient[Double] { client =>
-        client.zscore(key, member)
+      withJedisClient[Option[Double]] { client =>
+        val score = client.zscore(key, member)
+        if (score == null) None
+        else Some(score.toDouble)
       }
     }
   }
@@ -69,10 +71,26 @@ object RedisCacheClient {
     }
   }
 
+  def zAdd(key: String, score: Double, member: String) = {
+    blocking {
+      withJedisClient[Long] { client =>
+        client.zadd(key: String, score, member)
+      }
+    }
+  }
+
   def zIncrBy(key: String, score: Double, member: String) = {
     blocking {
       withJedisClient[Double] { client =>
         client.zincrby(key: String, score, member)
+      }
+    }
+  }
+
+  def zRem(key: String, member: String) = {
+    blocking {
+      withJedisClient[Long] { client =>
+        client.zrem(key, member)
       }
     }
   }

@@ -19,7 +19,7 @@ import scala.concurrent.Future
  */
 class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends PostService
     with PostsComponent with UsersComponent with TagsComponent
-    with MarksComponent with LikesComponent with CommentConponent
+    with MarksComponent with LikesComponent with CommentsConponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -95,7 +95,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           db.run(marks.filter(_.postId === postId).result).flatMap { markResults =>
             var total: Double = 0
             markResults.foreach { mark =>
-              val likeNum = RedisCacheClient.zScore("post_mark:" + postId, mark.id.getOrElse(0).toString)
+              val likeNum = RedisCacheClient.zScore("post_mark:" + postId, mark.identify).getOrElse(0.0)
               RedisCacheClient.zIncrBy("tag_likes", -likeNum, mark.tagId.toString)
               total += likeNum
             }

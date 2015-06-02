@@ -14,10 +14,4 @@ trait TagService {
 
   def hotTags: Future[Seq[Tag]]
 
-  def commentMark(comment: Comment): Future[Comment]
-
-  def deleteCommentFromMark(commentId: Long, userId: Long): Future[Boolean]
-
-  def getCommentsForMark(markId: Long, pageSize: Int = 1000, created: Option[Long] = None): Future[Seq[(Comment, User, Option[User])]]
-
 }

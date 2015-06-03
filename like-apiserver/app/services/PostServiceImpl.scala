@@ -44,13 +44,19 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val fan = JianFan.j2F(name)
 
     val query = (for {
-      (((tag, mark), post), user) <- tags join marks on (_.id === _.tagId) join posts on (_._2.postId === _.id) join users on (_._2.userId === _.id)
+      ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
       if (tag.tagName.toLowerCase like s"%${jian.toLowerCase}%") || (tag.tagName.toLowerCase like s"%${fan.toLowerCase}%")
-    } yield (post, user))
-      .sortBy(_._1.likes.desc)
+    } yield post)
+      .sortBy(_.likes.desc)
+      .groupBy(_.id).map(_._1)
       .drop(offset)
       .take(pageSize)
-    db.run(query.result)
+    db.run(query.result).flatMap { ids =>
+      val q = for {
+        (post, user) <- posts join users on (_.userId === _.id) if post.id inSet ids
+      } yield (post, user)
+      db.run(q.result)
+    }
   }
 
   override def getPostById(postId: Long): Future[Option[(Post, User)]] = {

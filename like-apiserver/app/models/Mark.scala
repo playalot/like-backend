@@ -9,6 +9,6 @@ case class Mark(
   postId: Long,
   tagId: Long,
   userId: Long,
-  created: Long,
-  updated: Long,
-  likes: Long) extends Identifier
+  created: Long = System.currentTimeMillis / 1000,
+  updated: Long = System.currentTimeMillis / 1000,
+  likes: Long = 1) extends Identifier

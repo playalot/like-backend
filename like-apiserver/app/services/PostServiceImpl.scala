@@ -3,7 +3,7 @@ package services
 import javax.inject.Inject
 
 import dao._
-import models.{ Comment, Post, User }
+import models._
 import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
@@ -18,8 +18,9 @@ import scala.concurrent.Future
  * Date: 5/25/15
  */
 class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends PostService
-    with PostsComponent with UsersComponent with TagsComponent
-    with MarksComponent with LikesComponent with CommentsConponent
+    with PostsComponent with UsersComponent
+    with TagsComponent with MarksComponent
+    with LikesComponent with CommentsConponent with NotificationsComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -30,6 +31,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   private val likes = TableQuery[LikesTable]
   private val users = TableQuery[UsersTable]
   private val comments = TableQuery[CommentsTable]
+  private val notifications = TableQuery[NotificationsTable]
 
   override def countByUserId(userId: Long): Future[Long] = {
     db.run(posts.filter(_.userId === userId).result.map(_.length))
@@ -43,7 +45,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
     val query = (for {
       (((tag, mark), post), user) <- tags join marks on (_.id === _.tagId) join posts on (_._2.postId === _.id) join users on (_._2.userId === _.id)
-      if (tag.tagName.toLowerCase like jian.toLowerCase) || (tag.tagName.toLowerCase like fan.toLowerCase)
+      if (tag.tagName.toLowerCase like s"%${jian.toLowerCase}%") || (tag.tagName.toLowerCase like s"%${fan.toLowerCase}%")
     } yield (post, user))
       .sortBy(_._1.likes.desc)
       .drop(offset)
@@ -62,10 +64,10 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postId, offset = page * 10, limit = 10).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
-    val marksQuery = for {
+    val marksQuery = (for {
       ((mark, tag), user) <- marks join tags on (_.tagId === _.id) join users on (_._1.userId === _.id)
       if (mark.postId === postId) && (mark.id inSet cachedMarks.keySet)
-    } yield (mark.id, tag.tagName, mark.created, user)
+    } yield (mark.id, tag.tagName, mark.created, user)).sortBy(_._3.desc)
 
     val likesQuery = for {
       like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
@@ -117,7 +119,35 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           Future.successful(Right("no.permission"))
       case None => Future.successful(Right("not.found"))
     }
+  }
 
+  override def addMark(postId: Long, authorId: Long, tagName: String, userId: Long): Future[Mark] = {
+    db.run(tags.filter(_.tagName === tagName).result.headOption).flatMap {
+      case Some(tag) => Future.successful(tag.id.get)
+      case None      => db.run(tags returning tags.map(_.id) += Tag(None, tagName, userId))
+    }.flatMap { tagId =>
+      db.run(marks.filter(m => m.postId === postId && m.tagId === tagId).result.headOption).flatMap {
+        case Some(mark) =>
+          if (mark.userId != userId) {
+            db.run(likes += Like(mark.id.get, userId))
+            RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
+            val notifyMarkUser = Notification(None, "LIKE", mark.userId, userId, System.currentTimeMillis / 1000, Some(tagName), Some(postId))
+            db.run(notifications += notifyMarkUser)
+          }
+          Future.successful(mark)
+        case None =>
+          val newMark = Mark(None, postId, tagId, userId)
+          db.run(marks returning marks.map(_.id) += newMark).map(id => newMark.copy(id = Some(id))).map { mark =>
+            RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
+            db.run(likes += Like(mark.id.get, userId))
+            if (authorId != userId) {
+              val notifyMarkUser = Notification(None, "MARK", authorId, userId, System.currentTimeMillis / 1000, Some(tagName), Some(postId))
+              db.run(notifications += notifyMarkUser)
+            }
+            mark
+          }
+      }
+    }
   }
 
 }

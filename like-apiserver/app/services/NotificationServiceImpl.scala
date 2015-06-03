@@ -42,17 +42,17 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
     }
   }
 
-  override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 30): Future[Seq[(Notification, User, Option[Post])]] = {
+  override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 30): Future[Seq[(Notification, User, Option[(Post, User)])]] = {
     val query = if (timestamp.isDefined) {
       (for {
-        ((notification, user), post) <- notifications join users on (_.fromUserId === _.id) joinLeft posts on (_._1.postId === _.id)
+        ((notification, user), (postAndUser)) <- notifications join users on (_.fromUserId === _.id) joinLeft (posts join users on (_.userId === _.id)) on (_._1.postId === _._1.id)
         if notification.userId === userId && notification.updated < timestamp.get
-      } yield (notification, user, post)).sortBy(_._1.updated.desc).take(pageSize)
+      } yield (notification, user, postAndUser)).sortBy(_._1.updated.desc).take(pageSize)
     } else {
       (for {
-        ((notification, user), post) <- notifications join users on (_.fromUserId === _.id) joinLeft posts on (_._1.postId === _.id)
+        ((notification, user), (postAndUser)) <- notifications join users on (_.fromUserId === _.id) joinLeft (posts join users on (_.userId === _.id)) on (_._1.postId === _._1.id)
         if notification.userId === userId
-      } yield (notification, user, post)).sortBy(_._1.updated.desc).take(pageSize)
+      } yield (notification, user, postAndUser)).sortBy(_._1.updated.desc).take(pageSize)
     }
     RedisCacheClient.zAdd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
     db.run(query.result)

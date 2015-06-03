@@ -24,7 +24,7 @@ class PostController @Inject() (
    */
   def getPost(id: Long) = UserAwareAction.async { implicit request =>
     postService.getPostById(id).map {
-      case Some(postAndUser) => {
+      case Some(postAndUser) =>
         val (post, user) = postAndUser
         Ok(Json.obj(
           "code" -> 1,
@@ -43,7 +43,6 @@ class PostController @Inject() (
             )
           )
         ))
-      }
       case None =>
         Ok(Json.obj(
           "code" -> 4020,
@@ -83,7 +82,7 @@ class PostController @Inject() (
           val comments = result._4.groupBy(_._1.markId)
 
           val marksJson = result._1.map { marks =>
-            val totalComments = comments.get(marks._1).getOrElse(Seq()).length
+            val totalComments = comments.getOrElse(marks._1, Seq()).length
             val commentsJson = comments.get(marks._1).map { list =>
               list.reverse.take(3).map { row =>
                 Json.obj(
@@ -151,6 +150,53 @@ class PostController @Inject() (
         "upload_token" -> QiniuUtil.getUploadToken()
       )
     ))
+  }
+
+  def addMark(postId: Long) = SecuredAction.async(parse.json) { implicit request =>
+
+    (request.body \ "tag").asOpt[String] match {
+      case Some(tag) =>
+        if (tag.length > 13)
+          Future.successful(Ok(Json.obj(
+            "code" -> 4022,
+            "field" -> "tag",
+            "message" -> Messages("tag.maxLength")
+          )))
+        else if (tag.length < 1)
+          Future.successful(Ok(Json.obj(
+            "code" -> 4022,
+            "field" -> "tag",
+            "message" -> Messages("tag.minLength")
+          )))
+        else
+          postService.getPostById(postId).flatMap {
+            case Some(post) =>
+              postService.addMark(postId, post._1.userId, tag, request.userId).map { mark =>
+                Ok(Json.obj(
+                  "code" -> 1,
+                  "message" -> "Mark Success",
+                  "data" -> Json.obj(
+                    "mark_id" -> mark.id.get,
+                    "tag" -> tag,
+                    "likes" -> 1,
+                    "is_liked" -> 1
+                  )
+                ))
+              }
+            case None =>
+              Future.successful(Ok(Json.obj(
+                "code" -> 4022,
+                "message" -> Messages("post.notFound")
+              )))
+          }
+      case None =>
+        Future.successful(Ok(Json.obj(
+          "code" -> 4022,
+          "field" -> "tag",
+          "message" -> "Field Not Found"
+        )))
+    }
+
   }
 
 }

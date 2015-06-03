@@ -19,6 +19,7 @@ postNotFound = No Such Post
 tag.inUse = Tag Is In Use
 user.notFound = No Such User
 mark.notFound = No Such Mark
+post.notFound = No Such Post
 no.permission = No Permission
 no.suchPosts = No Such Posts
 no.suchNotification = No Such Notification

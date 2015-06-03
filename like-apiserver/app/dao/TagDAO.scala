@@ -19,7 +19,7 @@ trait TagsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def updated = column[Long]("updated")
     def likes = column[Long]("likes")
 
-    override def * = (id, tagName, userId, created, updated, likes) <> (models.Tag.tupled, models.Tag.unapply _)
+    override def * = (id.?, tagName, userId, created, updated, likes) <> (models.Tag.tupled, models.Tag.unapply _)
   }
 }
 

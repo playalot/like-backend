@@ -38,7 +38,8 @@ class NotificationController @Inject() (
             "user" -> Json.obj(
               "user_id" -> row._2.id.get.toString,
               "nickname" -> row._2.nickname,
-              "avatar" -> QiniuUtil.getAvatar(row._2.avatar, "small")
+              "avatar" -> QiniuUtil.getAvatar(row._2.avatar, "small"),
+              "likes" -> row._2.likes
             ),
             "posts" -> Json.arr(),
             "timestamp" -> row._1.updated
@@ -49,15 +50,28 @@ class NotificationController @Inject() (
             "user" -> Json.obj(
               "user_id" -> row._2.id.get.toString,
               "nickname" -> row._2.nickname,
-              "avatar" -> QiniuUtil.getAvatar(row._2.avatar, "small")
+              "avatar" -> QiniuUtil.getAvatar(row._2.avatar, "small"),
+              "likes" -> row._2.likes
             ),
-            "posts" -> Json.arr(row._3.map(post => Json.obj(
-              "post_id" -> post.id.get,
-              "content" -> QiniuUtil.getPhoto(post.content, "small")
+            "posts" -> Json.arr(row._3.map(postAndUser => Json.obj(
+              "post_id" -> postAndUser._1.id.get,
+              "content" -> QiniuUtil.getPhoto(postAndUser._1.content, "small"),
+              "user" -> Json.obj(
+                "user_id" -> postAndUser._2.identify,
+                "nickname" -> postAndUser._2.nickname,
+                "avatar" -> QiniuUtil.getAvatar(postAndUser._2.avatar, "small"),
+                "likes" -> postAndUser._2.likes
+              )
             ))),
-            "post" -> row._3.map(post => Json.obj(
-              "post_id" -> post.id.get,
-              "content" -> QiniuUtil.getPhoto(post.content, "small")
+            "post" -> row._3.map(postAndUser => Json.obj(
+              "post_id" -> postAndUser._1.id.get,
+              "content" -> QiniuUtil.getPhoto(postAndUser._1.content, "small"),
+              "user" -> Json.obj(
+                "user_id" -> postAndUser._2.identify,
+                "nickname" -> postAndUser._2.nickname,
+                "avatar" -> QiniuUtil.getAvatar(postAndUser._2.avatar, "small"),
+                "likes" -> postAndUser._2.likes
+              )
             )),
             "tag" -> row._1.tagName,
             "timestamp" -> row._1.updated

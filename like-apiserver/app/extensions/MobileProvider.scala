@@ -4,13 +4,11 @@ import MobileProvider._
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.impl.exceptions.AccessDeniedException
 import play.api.libs.concurrent.Execution.Implicits._
-import utils.AVOSUtils
+import utils.MobSmsUtils
 
 import scala.concurrent.Future
 
-case class SmsCode(mobilePhoneNumber: String, code: String)
-
-case class MobileInfo(mobilePhoneNumber: String, password: String, salt: Option[String] = None) extends AuthInfo
+case class SmsCode(mobilePhoneNumber: String, zone: String, code: String)
 
 /**
  * Created by Guan Guan
@@ -29,10 +27,9 @@ class MobileProvider() extends Provider {
     val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
     if (smsCode.mobilePhoneNumber.startsWith("666") && smsCode.code == "666666") {
       // TODO This is a developer backdoor
-      println("!!!")
       Future.successful(loginInfo)
     } else {
-      AVOSUtils.verifySmsCode(smsCode.mobilePhoneNumber, smsCode.code).map {
+      MobSmsUtils.verifySmsCode(smsCode.mobilePhoneNumber, smsCode.zone, smsCode.code).map {
         case true  => loginInfo
         case false => throw new AccessDeniedException("Invalid sms code")
       }

@@ -8,13 +8,14 @@ import play.api.i18n.Messages.Message
 import play.api.i18n.{ Lang, Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc._
-import services.UserService
+import services.{ NotificationService, UserService }
 import play.api.libs.concurrent.Execution.Implicits._
 import utils.MemcachedCacheClient
 
 class Application @Inject() (
     val messagesApi: MessagesApi,
-    userService: UserService) extends BaseController {
+    userService: UserService,
+    notificationService: NotificationService) extends BaseController {
 
   def index = Action { implicit request =>
 
@@ -24,13 +25,13 @@ class Application @Inject() (
 
     userService.findById(1).map(println)
 
-    userService.findByMobile("66666688868").map(println)
+    userService.findByMobileAndZone("66666688868", 86).map(println)
 
     userService.count().map(println)
 
-    MemcachedCacheClient.save[Long]("123456", 1L, 900)
+    //    MemcachedCacheClient.save[Long]("123456", 1L, 900)
 
-    println(MemcachedCacheClient.find[Long]("4a557c5d0e3a01b3dc3a9be42f6c0aa80cc6f1f519340e345ad0eba0e7454793"))
+    //    println(MemcachedCacheClient.find[Long]("4a557c5d0e3a01b3dc3a9be42f6c0aa80cc6f1f519340e345ad0eba0e7454793"))
 
     println("Languages: " + request.acceptLanguages.map(_.code).mkString(", "))
 

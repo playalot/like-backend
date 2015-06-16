@@ -1,7 +1,7 @@
 package services
 
-import com.mohiva.play.silhouette.api.services.IdentityService
-import models.User
+import com.mohiva.play.silhouette.api.LoginInfo
+import models.{ SocialAccount, User }
 
 import scala.concurrent.Future
 
@@ -9,11 +9,23 @@ import scala.concurrent.Future
  * Created by Guan Guan
  * Date: 5/22/15
  */
-trait UserService extends IdentityService[User] {
+trait UserService {
 
   def findById(id: Long): Future[Option[User]]
 
-  def findByMobile(mobilePhoneNumber: String): Future[Option[User]]
+  def findByMobileLegacy(mobilePhoneNumber: String): Future[Option[User]]
+
+  def findByMobileAndZone(mobilePhoneNumber: String, zone: Int): Future[Option[User]]
+
+  def findBySocial(providerId: String, providerKey: String): Future[Option[SocialAccount]]
+
+  def linkAccount(userId: Long, providerId: String, providerKey: String): Future[Boolean]
+
+  def unlinkAccount(userId: Long, providerId: String): Future[Unit]
+
+  def listLinkedAccounts(userId: Long): Future[Seq[SocialAccount]]
+
+  def updateMobile(userId: Long, mobilePhoneNumber: String, zone: Int): Future[Unit]
 
   def count(): Future[Int]
 
@@ -22,6 +34,8 @@ trait UserService extends IdentityService[User] {
   def countFriends(id: Long): Future[Int]
 
   def insert(user: User): Future[User]
+
+  def upsert(loginInfo: LoginInfo, user: User): Future[User]
 
   def update(id: Long, user: User): Future[User]
 

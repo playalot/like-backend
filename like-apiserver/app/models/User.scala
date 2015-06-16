@@ -8,8 +8,8 @@ import com.mohiva.play.silhouette.api.Identity
  */
 case class User(
   id: Option[Long] = None,
-  mobile: String,
-  email: Option[String],
+  mobile: Option[String] = None,
+  email: Option[String] = None,
   password: String,
   nickname: String,
   avatar: String,

@@ -21,7 +21,7 @@ GET
 
 ######请求示例
 <pre>
-curl -i -X GET -H "LIKE-SESSION-TOKEN:bd625d6a6b6fe5bc0b128954ad5ca39d" http://api.likeorz.com/v2/user/1/
+curl -i -X GET -H "LIKE-SESSION-TOKEN:bd625d6a6b6fe5bc0b128954ad5ca39d" http://api.likeorz.com/v2/user/1
 </pre>
 
 ######返回结果
@@ -36,12 +36,14 @@ curl -i -X GET -H "LIKE-SESSION-TOKEN:bd625d6a6b6fe5bc0b128954ad5ca39d" http://a
         "user_id": "1", 
         "nickname": "小改", 
         "avatar": "http://likeorz.qiniucdn.com/avatar_8.jpg", 
+        "origin_avatar": "http://cdn.likeorz.com/avatar_700_1431757477.jpg?imageView2/1/w/1242/h/1242",
+        "cover": "http://cdn.likeorz.com/cover_700_1431757537.jpg?imageView2/1/w/1242/h/1242",
         "likes": 0, 
-        "is_following": "1"
-        "count": {
-            "post": "6", 
-            "follow": "1", 
-            "fan": "0"
+        "is_following": 0,
+        "count":{
+            "post": 0,
+            "follow": 1,
+            "fan": 1
         }
     }
 }
@@ -54,6 +56,8 @@ curl -i -X GET -H "LIKE-SESSION-TOKEN:bd625d6a6b6fe5bc0b128954ad5ca39d" http://a
 |user_id|int|用户ID|
 |nickname|string|昵称|
 |avatar|string|头像|
+|origin_avatar|string|头像原图|
+|cover|string|封面原图|
 |likes|int|获得总赞数|
 |is_following|int|是否关注|
 |count|array|统计信息|

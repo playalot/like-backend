@@ -83,7 +83,7 @@ trait UsersComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def likes = column[Long]("likes")
     def refreshToken = column[String]("refresh_token")
 
-    override def * = (id.?, mobile, email.?, password, nickname, avatar, cover, created, updated, likes, refreshToken.?) <> (User.tupled, User.unapply _)
+    override def * = (id.?, mobile.?, email.?, password, nickname, avatar, cover, created, updated, likes, refreshToken.?) <> (User.tupled, User.unapply _)
   }
 }
 
@@ -103,4 +103,18 @@ trait NotificationsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     override def * = (id.?, `type`, userId, fromUserId, updated, tagName.?, postId.?) <> (Notification.tupled, Notification.unapply _)
   }
 
+}
+
+trait SocialAccountsComponent {
+  self: HasDatabaseConfig[JdbcProfile] =>
+
+  import driver.api._
+
+  class SocialAccountsTable(tag: Tag) extends Table[SocialAccount](tag, "social") {
+    def provider = column[String]("provider")
+    def key = column[String]("key")
+    def userId = column[Long]("user_id")
+
+    override def * = (provider, key, userId) <> (SocialAccount.tupled, SocialAccount.unapply _)
+  }
 }

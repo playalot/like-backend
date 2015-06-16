@@ -20,18 +20,18 @@ POST
 |access_token|true|string|第三方账号授权码|
 
 ######请求示例json
-`json
+```json
 {
     "uid": "13333333333",
     "access_token": "12341231231"
 }
-`
+```
 
 ######返回结果
 
 ######JSON示例
 
-<pre>
+```json
 {
     "code": "1", 
     "message": "Login Success", 
@@ -42,7 +42,7 @@ POST
         "expires_in": 604800
     }
 }
-</pre>
+```
 
 ######返回字段说明
 |返回值字段|字段类型|字段说明|

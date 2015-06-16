@@ -28,7 +28,7 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
 
 ######JSON示例
 
-`json
+```json
 {
     "code": "1", 
     "message": "Record(s) Found", 
@@ -49,7 +49,7 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
         ]
     }
 }
-`
+```
 
 ######返回字段说明
 |返回值字段|字段类型|字段说明|

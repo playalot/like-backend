@@ -31,7 +31,11 @@ trait UserService {
 
   def countFollowers(id: Long): Future[Int]
 
+  def getFollowers(userId: Long, page: Int): Future[Seq[User]]
+
   def countFriends(id: Long): Future[Int]
+
+  def getFriends(userId: Long, page: Int): Future[Seq[User]]
 
   def insert(user: User): Future[User]
 

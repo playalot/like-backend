@@ -76,31 +76,64 @@ class UserController @Inject() (
   }
 
   def getPostsForUser(id: Long, page: Int) = SecuredAction.async { implicit request =>
-    postService.getPostsByUserId(id, page).flatMap { list =>
-      val futures = list.map { row =>
-        val markIds = row._2.map(_._1)
-        markService.checkLikes(request.userId, markIds).map { likedMarks =>
-          val marksJson = row._2.map { fields =>
-            Json.obj(
-              "mark_id" -> fields._1,
-              "tag" -> fields._2,
-              "likes" -> fields._3,
-              "is_liked" -> likedMarks.contains(fields._1)
-            )
+    userService.findById(id).flatMap {
+      case Some(user) =>
+        postService.getPostsByUserId(id, page).flatMap { list =>
+          val futures = list.map { row =>
+            val markIds = row._2.map(_._1)
+            markService.checkLikes(request.userId, markIds).map { likedMarks =>
+              val marksJson = row._2.map { fields =>
+                Json.obj(
+                  "mark_id" -> fields._1,
+                  "tag" -> fields._2,
+                  "likes" -> fields._3,
+                  "is_liked" -> likedMarks.contains(fields._1)
+                )
+              }
+              val post = row._1
+              Json.obj(
+                "post_id" -> post.id.get,
+                "type" -> post.`type`,
+                "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+                "created" -> post.created,
+                "marks" -> Json.toJson(marksJson)
+              )
+            }
           }
-          val post = row._1
-          Json.obj(
-            "post_id" -> post.id.get,
-            "type" -> post.`type`,
-            "content" -> QiniuUtil.getPhoto(post.content, "medium"),
-            "created" -> post.created,
-            "marks" -> Json.toJson(marksJson)
-          )
+          Future.sequence(futures).map { posts =>
+            success(Messages("success.recordFound"), Json.obj("posts" -> Json.toJson(posts)))
+          }
         }
+      case None =>
+        Future.successful(error(4022, Messages("user.notFound")))
+    }
+  }
+
+  def getFriends(id: Long, page: Int) = SecuredAction.async {
+    userService.getFriends(id, page).map { list =>
+      val jsonArr = list.map { user =>
+        Json.obj(
+          "user_id" -> user.identify,
+          "nickname" -> user.nickname,
+          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+          "likes" -> user.likes
+        )
       }
-      Future.sequence(futures).map { posts =>
-        success(Messages("success.recordFound"), Json.obj("posts" -> Json.toJson(posts)))
+      success(Messages("success.recordFound"), Json.obj("follows" -> Json.toJson(jsonArr)))
+    }
+  }
+
+  def getFollowers(id: Long, page: Int) = SecuredAction.async {
+    userService.getFollowers(id, page).map { list =>
+      val jsonArr = list.map { user =>
+        Json.obj(
+          "user_id" -> user.identify,
+          "nickname" -> user.nickname,
+          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+          "likes" -> user.likes
+        )
       }
+      success(Messages("success.recordFound"), Json.obj("fans" -> Json.toJson(jsonArr)))
     }
   }
 

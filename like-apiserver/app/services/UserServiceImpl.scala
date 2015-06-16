@@ -77,9 +77,25 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def count(): Future[Int] = db.run(users.length.result)
 
-  override def countFollowers(id: Long): Future[Int] = db.run(follows.filter(_.toId === id).result.map(_.length))
+  override def countFollowers(id: Long): Future[Int] = db.run(follows.filter(_.toId === id).length.result)
 
-  override def countFriends(id: Long): Future[Int] = db.run(follows.filter(_.fromId === id).result.map(_.length))
+  override def getFollowers(userId: Long, page: Int): Future[Seq[User]] = {
+    val query = (for {
+      (follow, user) <- follows join users on (_.fromId === _.id)
+      if (follow.toId === userId)
+    } yield (follow, user)).sortBy(_._1.created.desc).drop(page * 20).take(20)
+    db.run(query.map(_._2).result)
+  }
+
+  override def countFriends(id: Long): Future[Int] = db.run(follows.filter(_.fromId === id).length.result)
+
+  override def getFriends(userId: Long, page: Int): Future[Seq[User]] = {
+    val query = (for {
+      (follow, user) <- follows join users on (_.toId === _.id)
+      if (follow.fromId === userId)
+    } yield (follow, user)).sortBy(_._1.created.desc).drop(page * 20).take(20)
+    db.run(query.map(_._2).result)
+  }
 
   override def insert(user: User): Future[User] = {
     db.run(users returning users.map(_.id) += user).map(id => user.copy(id = Some(id)))

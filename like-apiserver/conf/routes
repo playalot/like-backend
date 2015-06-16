@@ -18,6 +18,8 @@ PUT     /v1/user/nickname                           controllers.UserController.u
 PUT     /v1/user/avatar                             controllers.UserController.updateAvatar
 GET     /v1/user/$id<[0-9]+>/posts/$page<[0-9]+>    controllers.UserController.getPostsForUser(id: Long, page: Int)
 POST    /v1/user/$id<[0-9]+>/follow                 controllers.UserController.follow(id: Long)
+GET     /v1/user/$id<[0-9]+>/follows/$page<[0-9]+>  controllers.UserController.getFriends(id: Long, page: Int)
+GET     /v1/user/$id<[0-9]+>/fans/$page<[0-9]+>     controllers.UserController.getFollowers(id: Long, page: Int)
 
 # Post
 GET     /v1/post/$id<[0-9]+>                        controllers.PostController.getPost(id: Long)

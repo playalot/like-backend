@@ -5,7 +5,7 @@ import javax.inject.Inject
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ PostService, UserService }
+import services.{ MarkService, PostService, UserService }
 import utils.QiniuUtil
 
 import scala.concurrent.Future
@@ -16,7 +16,9 @@ import scala.concurrent.Future
  */
 class UserController @Inject() (
     val messagesApi: MessagesApi,
-    userService: UserService, postService: PostService) extends BaseController {
+    userService: UserService,
+    markService: MarkService,
+    postService: PostService) extends BaseController {
 
   def getInfo(id: Long) = UserAwareAction.async { implicit request =>
     userService.findById(id).flatMap {
@@ -73,13 +75,38 @@ class UserController @Inject() (
     }
   }
 
-  def follow(id: Long) = SecuredAction.async { implicit request =>
+  def getPostsForUser(id: Long, page: Int) = SecuredAction.async { implicit request =>
+    postService.getPostsByUserId(id, page).flatMap { list =>
+      val futures = list.map { row =>
+        val markIds = row._2.map(_._1)
+        markService.checkLikes(request.userId, markIds).map { likedMarks =>
+          val marksJson = row._2.map { fields =>
+            Json.obj(
+              "mark_id" -> fields._1,
+              "tag" -> fields._2,
+              "likes" -> fields._3,
+              "is_liked" -> likedMarks.contains(fields._1)
+            )
+          }
+          val post = row._1
+          Json.obj(
+            "post_id" -> post.id.get,
+            "type" -> post.`type`,
+            "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+            "created" -> post.created,
+            "marks" -> Json.toJson(marksJson)
+          )
+        }
+      }
+      Future.sequence(futures).map { posts =>
+        success(Messages("success.recordFound"), Json.obj("posts" -> Json.toJson(posts)))
+      }
+    }
+  }
 
+  def follow(id: Long) = SecuredAction.async { implicit request =>
     if (id == request.userId) {
-      Future.successful(Ok(Json.obj(
-        "code" -> 4022,
-        "message" -> Messages("forbid.followYourself")
-      )))
+      Future.successful(error(4017, Messages("forbid.followYourself")))
     } else {
       userService.findById(id).flatMap {
         case Some(user) =>
@@ -93,10 +120,7 @@ class UserController @Inject() (
             ))
           }
         case None =>
-          Future.successful(Ok(Json.obj(
-            "code" -> 4022,
-            "message" -> Messages("user.notFound")
-          )))
+          Future.successful(error(4022, Messages("user.notFound")))
       }
     }
   }

@@ -5,7 +5,7 @@ import javax.inject.Inject
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ PostService, TagService }
+import services.{ MarkService, PostService, TagService }
 import utils.QiniuUtil
 
 import scala.concurrent.Future
@@ -17,6 +17,7 @@ import scala.concurrent.Future
 class PostController @Inject() (
     val messagesApi: MessagesApi,
     tagService: TagService,
+    markService: MarkService,
     postService: PostService) extends BaseController {
 
   /**

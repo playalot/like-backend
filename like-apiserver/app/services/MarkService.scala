@@ -20,6 +20,8 @@ trait MarkService {
 
   def getLikes(markId: Long): Future[Seq[(Like, User)]]
 
+  def checkLikes(userId: Long, markIds: Seq[Long]): Future[Seq[Long]]
+
   def commentMark(markId: Long, comment: Comment): Future[Comment]
 
   def deleteCommentFromMark(commentId: Long, userId: Long): Future[Boolean]
@@ -28,4 +30,5 @@ trait MarkService {
 
   def deleteMark(markId: Long, userId: Long): Future[Unit]
 
+  def rebuildMarkCache(): Unit
 }

@@ -8,7 +8,8 @@ import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
 import utils.RedisCacheClient
 
-import scala.concurrent.Future
+import scala.concurrent.{ Await, Future }
+import scala.concurrent.duration._
 
 /**
  * Created by Guan Guan
@@ -106,6 +107,13 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(query.result)
   }
 
+  override def checkLikes(userId: Long, markIds: Seq[Long]): Future[Seq[Long]] = {
+    val query = for {
+      like <- likes.filter(x => x.userId === userId && (x.markId inSet markIds))
+    } yield (like.markId)
+    db.run(query.result)
+  }
+
   override def commentMark(markId: Long, comment: Comment): Future[Comment] = {
     val markQuery = for {
       ((mark, post), tag) <- marks join posts on (_.postId === _.id) join tags on (_._1.tagId === _.id) if mark.id === markId
@@ -153,4 +161,18 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def deleteMark(markId: Long, userId: Long): Future[Unit] = ???
+
+  override def rebuildMarkCache(): Unit = {
+
+    val query = for {
+      (like, mark) <- likes join marks on (_.markId === _.id)
+    } yield (like.markId, mark.postId)
+
+    val publisher = db.stream(query.result)
+
+    publisher.foreach { items =>
+      RedisCacheClient.zIncrBy("post_mark:" + items._2, 1, items._1.toString)
+    }
+  }
+
 }

@@ -37,6 +37,25 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(posts.filter(_.userId === userId).result.map(_.length))
   }
 
+  override def getPostsByUserId(userId: Long, page: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
+    val pageSize = 21
+    db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).drop(page * pageSize).take(pageSize).result).flatMap { posts =>
+      val futures = posts.map { post =>
+        val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
+        val query = for {
+          (mark, tag) <- marks join tags on (_.tagId === _.id)
+          if (mark.id inSet cachedMarks.keySet)
+        } yield (mark.id, tag.tagName)
+
+        db.run(query.result).map { list =>
+          val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
+          (post, marklist)
+        }
+      }
+      Future.sequence(futures.toList)
+    }
+  }
+
   override def searchByTag(page: Int = 0, pageSize: Int = 18, name: String = "%"): Future[Seq[(Post, User)]] = {
     val offset = pageSize * page
 

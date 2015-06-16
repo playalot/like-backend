@@ -3,48 +3,46 @@
 # ~~~~
 
 # Home page
-GET     /                                   controllers.Application.index
-GET     /test                               controllers.Application.test
+GET     /                                           controllers.Application.index
+GET     /test                                       controllers.Application.test
 
 # Auth
-POST    /v1/authenticate/mobile             controllers.AuthController.mobileAuthenticate
-POST    /v1/authenticate/:provider          controllers.AuthController.socialAuthenticate(provider: String)
+POST    /v1/authenticate/mobile                     controllers.AuthController.mobileAuthenticate
+POST    /v1/authenticate/:provider                  controllers.AuthController.socialAuthenticate(provider: String)
 
 # User
-GET     /v1/user/$id<[0-9]+>                controllers.UserController.getInfo(id: Long)
-POST    /v1/user/login                      controllers.AuthController.mobileAuthenticate
-PUT     /v1/user/$id<[0-9]+>/refreshToken   controllers.AuthController.refreshSessionToken(id: Long)
-PUT     /v1/user/nickname                   controllers.UserController.updateNickname
-PUT     /v1/user/avatar                     controllers.UserController.updateAvatar
-POST    /v1/user/$id<[0-9]+>/follow         controllers.UserController.follow(id: Long)
+GET     /v1/user/$id<[0-9]+>                        controllers.UserController.getInfo(id: Long)
+POST    /v1/user/login                              controllers.AuthController.mobileAuthenticate
+PUT     /v1/user/$id<[0-9]+>/refreshToken           controllers.AuthController.refreshSessionToken(id: Long)
+PUT     /v1/user/nickname                           controllers.UserController.updateNickname
+PUT     /v1/user/avatar                             controllers.UserController.updateAvatar
+GET     /v1/user/$id<[0-9]+>/posts/$page<[0-9]+>    controllers.UserController.getPostsForUser(id: Long, page: Int)
+POST    /v1/user/$id<[0-9]+>/follow                 controllers.UserController.follow(id: Long)
 
 # Post
-GET     /v1/post/$id<[0-9]+>                controllers.PostController.getPost(id: Long)
-GET     /v1/post/$id<[0-9]+>/marks/$page<[0-9]+>  controllers.PostController.getPostMarks(id: Long, page: Int)
-DELETE  /v1/post/$id<[0-9]+>                controllers.PostController.deletePost(id: Long)
-POST    /v1/post/$id<[0-9]+>/mark           controllers.PostController.addMark(id: Long)
+GET     /v1/post/$id<[0-9]+>                        controllers.PostController.getPost(id: Long)
+GET     /v1/post/$id<[0-9]+>/marks/$page<[0-9]+>    controllers.PostController.getPostMarks(id: Long, page: Int)
+DELETE  /v1/post/$id<[0-9]+>                        controllers.PostController.deletePost(id: Long)
+POST    /v1/post/$id<[0-9]+>/mark                   controllers.PostController.addMark(id: Long)
 
 # Mark
-POST    /v1/mark/$id<[0-9]+>/like           controllers.MarkController.like(id: Long)
-DELETE  /v1/mark/$id<[0-9]+>/like         controllers.MarkController.unlike(id: Long)
-GET     /v1/mark/$id<[0-9]+>/likes          controllers.MarkController.getLikes(id: Long)
+POST    /v1/mark/$id<[0-9]+>/like                   controllers.MarkController.like(id: Long)
+DELETE  /v1/mark/$id<[0-9]+>/like                   controllers.MarkController.unlike(id: Long)
+GET     /v1/mark/$id<[0-9]+>/likes                  controllers.MarkController.getLikes(id: Long)
 
 # Comment
-POST    /v1/mark/$id<[0-9]+>/comment        controllers.CommentController.commentMark(id: Long)
-DELETE  /v1/comment/$id<[0-9]+>             controllers.CommentController.deleteCommentFromMark(id: Long)
-GET     /v1/mark/$id<[0-9]+>/comment        controllers.CommentController.getCommentsForMark(id: Long)
+POST    /v1/mark/$id<[0-9]+>/comment                controllers.CommentController.commentMark(id: Long)
+DELETE  /v1/comment/$id<[0-9]+>                     controllers.CommentController.deleteCommentFromMark(id: Long)
+GET     /v1/mark/$id<[0-9]+>/comment                controllers.CommentController.getCommentsForMark(id: Long)
 
 # Upload
-GET     /v2/upload                          controllers.PostController.qiniuUploadToken
+GET     /v2/upload                                  controllers.PostController.qiniuUploadToken
 
 # Search
-GET     /v1/tag/hot                         controllers.SearchController.hotTags
-GET     /v1/tag/guess/:tag                  controllers.SearchController.autoComplete(tag: String)
-GET     /v1/tag/search/:tag/:page           controllers.SearchController.searchTag(page: Int, tag: String)
+GET     /v1/tag/hot                                 controllers.SearchController.hotTags
+GET     /v1/tag/guess/:tag                          controllers.SearchController.autoComplete(tag: String)
+GET     /v1/tag/search/:tag/:page                   controllers.SearchController.searchTag(page: Int, tag: String)
 
 #Notification
-GET     /v1/notification                    controllers.NotificationController.getNotifications(ts: Option[Long] ?= None)
-GET     /v1/notification/count              controllers.NotificationController.notificationCount
-
-# Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /v1/notification                            controllers.NotificationController.getNotifications(ts: Option[Long] ?= None)
+GET     /v1/notification/count                      controllers.NotificationController.notificationCount

@@ -12,6 +12,8 @@ trait PostService {
 
   def countByUserId(userId: Long): Future[Long]
 
+  def getPostsByUserId(userId: Long, page: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]]
+
   def searchByTag(page: Int = 0, pageSize: Int = 20, name: String): Future[Seq[(Post, User)]]
 
   def getPostById(postId: Long): Future[Option[(Post, User)]]

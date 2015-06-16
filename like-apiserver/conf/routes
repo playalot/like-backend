@@ -13,8 +13,9 @@ POST    /v1/authenticate/:provider          controllers.AuthController.socialAut
 # User
 GET     /v1/user/$id<[0-9]+>                controllers.UserController.getInfo(id: Long)
 POST    /v1/user/login                      controllers.AuthController.mobileAuthenticate
-PUT     /v1/user/$id<[0-9]+>/refreshtoken   controllers.AuthController.refreshSessionToken(id: Long)
-PUT     /v2/user/nickname                   controllers.UserController.updateNickname
+PUT     /v1/user/$id<[0-9]+>/refreshToken   controllers.AuthController.refreshSessionToken(id: Long)
+PUT     /v1/user/nickname                   controllers.UserController.updateNickname
+PUT     /v1/user/avatar                     controllers.UserController.updateAvatar
 POST    /v1/user/$id<[0-9]+>/follow         controllers.UserController.follow(id: Long)
 
 # Post

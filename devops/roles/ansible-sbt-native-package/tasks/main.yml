@@ -4,11 +4,11 @@
 - name: Create init script from template
   template: src=init.sh dest=/etc/init.d/{{app_name}}{{test_tag}} mode=0755
 
-- name: Stop the service
-  service: name={{app_name}}{{test_tag}} state=stopped enabled=yes
+#- name: Stop the service
+#  service: name={{app_name}}{{test_tag}} state=stopped enabled=yes
 
-- name: wait for instances to stop on port:{{app_port}}
-  wait_for: port={{app_port}} state=stopped
+#- name: wait for instances to stop on port:{{app_port}}
+#  wait_for: port={{app_port}} state=stopped
 
 - name: Install unzip
   apt: pkg=unzip state=present

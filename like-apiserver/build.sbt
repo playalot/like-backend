@@ -2,7 +2,7 @@ import scalariform.formatter.preferences._
 
 name := """like-apiserver"""
 
-version := "1.0.0"
+version := "1.1.0"
 
 resolvers := ("Atlassian Releases" at "https://maven.atlassian.com/public/") +: resolvers.value
 

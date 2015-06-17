@@ -22,15 +22,17 @@ class Application @Inject() (
 
     Logger.debug(Messages("invalid.mobileCode"))
 
-    userService.findById(1).map(println)
+    //    userService.findById(1).map(println)
 
-    userService.findByMobileAndZone("66666688868", 86).map(println)
+    //    userService.findByMobileAndZone("66666688868", 86).map(println)
 
-    userService.count().map(println)
+    //    userService.count().map(println)
 
     //    markService.rebuildMarkCache()
 
     //    MemcachedCacheClient.save[String]("session_user:e5b7f1ef625fc31c62a6577e71bb9ac1d2491177d1b8bee9d4db4b72ef177014", "72", 900000)
+
+    //    MemcachedCacheClient.save[String]("session_user:420ca1ba7a736e2bed8e23c7e1a78eca", "826", 900000)
 
     //    println(MemcachedCacheClient.find[Long]("session_user:e5b7f1ef625fc31c62a6577e71bb9ac1d2491177d1b8bee9d4db4b72ef177014"))
 
@@ -43,7 +45,7 @@ class Application @Inject() (
     //      userService.count().map(println)
     //    }
 
-    Ok(Json.obj("status" -> "ok"))
+    Ok(Json.obj("status" -> "1.1.0"))
   }
 
   def test = SecuredAction { implicit request =>

@@ -10,6 +10,8 @@ GET     /test                                       controllers.Application.test
 POST    /v1/authenticate/mobile                     controllers.AuthController.mobileAuthenticate
 POST    /v1/authenticate/:provider                  controllers.AuthController.socialAuthenticate(provider: String)
 GET     /v1/account/list                            controllers.AuthController.getLinkedAccounts
+POST    /v1/account/link/:provider                  controllers.AuthController.linkSocialAccount(provider: String)
+DELETE  /v1/account/link/:provider                  controllers.AuthController.unlinkSocialAccount(provider: String)
 
 # User
 GET     /v1/user/$id<[0-9]+>                        controllers.UserController.getInfo(id: Long)

@@ -263,8 +263,15 @@ class AuthController @Inject() (
   }
 
   def unlinkSocialAccount(provider: String) = SecuredAction.async(parse.json) { implicit request =>
-    userService.unlinkAccount(request.userId, provider).map { _ =>
-      success(Messages("success.unlink"))
+    userService.listLinkedAccounts(request.userId).flatMap { accounts =>
+      if (accounts.size <= 1) {
+        Future.successful(error(4055, Messages("failed.lastAccount")))
+      } else {
+        userService.unlinkAccount(request.userId, provider).map {
+          case true  => success(Messages("success.unlink"))
+          case false => error(4056, Messages("failed.unlink"))
+        }
+      }
     }
   }
 
@@ -295,15 +302,12 @@ class AuthController @Inject() (
     )
   }
 
+  /**
+   * List all social accounts linked to this user
+   */
   def getLinkedAccounts = SecuredAction.async { implicit request =>
     userService.listLinkedAccounts(request.userId).map { accounts =>
-      val jsonArr = accounts.map { account =>
-        Json.obj(
-          "provider" -> account._1,
-          "key" -> account._2
-        )
-      }
-      success(Messages("success.recordFound"), Json.obj("linked_accounts" -> Json.toJson(jsonArr)))
+      success(Messages("success.recordFound"), Json.obj("linked_accounts" -> Json.toJson(accounts)))
     }
   }
 }

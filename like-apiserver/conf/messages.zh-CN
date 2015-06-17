@@ -38,5 +38,7 @@ success.avatar = 保存头像成功
 success.cover = 保存封面成功
 success.link = 成功绑定了账户
 success.unlink = 成功解除了绑定
+failed.unlink = 接触绑定失败
 failed.linkByYou = 您已经绑定了这个账户
 failed.linkByOthers = 这个账户已经被绑定
+failed.lastAccount = 您至少需要绑定一个账号

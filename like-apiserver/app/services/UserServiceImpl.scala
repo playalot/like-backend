@@ -52,11 +52,11 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def linkAccount(userId: Long, providerId: String, providerKey: String): Future[Boolean] = {
-    db.run(socials += SocialAccount(providerId, providerKey, userId)).map(x => x == 1)
+    db.run(socials += SocialAccount(providerId, providerKey, userId)).map(_ == 1)
   }
 
-  override def unlinkAccount(userId: Long, providerId: String): Future[Unit] = {
-    db.run(socials.filter(x => x.userId === userId && x.provider === providerId).delete).map(_ => ())
+  override def unlinkAccount(userId: Long, providerId: String): Future[Boolean] = {
+    db.run(socials.filter(x => x.userId === userId && x.provider === providerId).delete).map(_ == 1)
   }
 
   override def listLinkedAccounts(userId: Long): Future[Map[String, String]] = {
@@ -132,19 +132,19 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def updateRefreshToken(id: Long, token: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => (x.refreshToken, x.updated)).update((token, GenerateUtils.currentSeconds()))).map(n => n == 1)
+    db.run(users.filter(_.id === id).map(x => (x.refreshToken, x.updated)).update((token, GenerateUtils.currentSeconds()))).map(_ == 1)
   }
 
   override def updateNickname(id: Long, nickname: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => x.nickname).update(nickname)).map(n => n == 1)
+    db.run(users.filter(_.id === id).map(x => x.nickname).update(nickname)).map(_ == 1)
   }
 
   override def updateAvatar(id: Long, avatar: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => x.avatar).update(avatar)).map(n => n == 1)
+    db.run(users.filter(_.id === id).map(x => x.avatar).update(avatar)).map(_ == 1)
   }
 
   override def updateCover(id: Long, cover: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => x.cover).update(cover)).map(n => n == 1)
+    db.run(users.filter(_.id === id).map(x => x.cover).update(cover)).map(_ == 1)
   }
 
   override def isFollowing(fromId: Long, toId: Long): Future[Int] = {

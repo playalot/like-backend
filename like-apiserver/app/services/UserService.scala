@@ -21,7 +21,7 @@ trait UserService {
 
   def linkAccount(userId: Long, providerId: String, providerKey: String): Future[Boolean]
 
-  def unlinkAccount(userId: Long, providerId: String): Future[Unit]
+  def unlinkAccount(userId: Long, providerId: String): Future[Boolean]
 
   def listLinkedAccounts(userId: Long): Future[Map[String, String]]
 

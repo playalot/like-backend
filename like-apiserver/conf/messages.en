@@ -38,5 +38,7 @@ success.avatar = Change Avatar Success
 success.cover = Change Cover Success
 success.link = Link Account Success
 success.unlink = Unlink Account Success
+failed.unlink = Unlink Account Failed
 failed.linkByYou = This account is already linked by you
 failed.linkByOthers = This account is already linked by others
+failed.lastAccount = You need to link at least one account

@@ -30,7 +30,7 @@ class UserController @Inject() (
           countPosts <- postService.countByUserId(id)
           isFollowing <- if (request.userId.isDefined) userService.isFollowing(request.userId.get, id) else Future.successful(0)
         } yield {
-          success(Messages("success.recordFound"), Json.obj(
+          success(Messages("success.found"), Json.obj(
             "user_id" -> id.toString,
             "nickname" -> user.nickname,
             "avatar" -> QiniuUtil.getAvatar(user.avatar, "large"),
@@ -111,7 +111,7 @@ class UserController @Inject() (
             }
           }
           Future.sequence(futures).map { posts =>
-            success(Messages("success.recordFound"), Json.obj("posts" -> Json.toJson(posts)))
+            success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts)))
           }
         }
       case None =>
@@ -124,7 +124,7 @@ class UserController @Inject() (
       val jsonArr = tags.map { tag =>
         Json.obj("tag" -> tag.tagName)
       }
-      success(Messages("success.recordFound"), Json.obj("suggests" -> Json.toJson(jsonArr)))
+      success(Messages("success.found"), Json.obj("suggests" -> Json.toJson(jsonArr)))
     }
   }
 
@@ -138,7 +138,7 @@ class UserController @Inject() (
           "likes" -> user.likes
         )
       }
-      success(Messages("success.recordFound"), Json.obj("follows" -> Json.toJson(jsonArr)))
+      success(Messages("success.found"), Json.obj("follows" -> Json.toJson(jsonArr)))
     }
   }
 
@@ -152,7 +152,7 @@ class UserController @Inject() (
           "likes" -> user.likes
         )
       }
-      success(Messages("success.recordFound"), Json.obj("fans" -> Json.toJson(jsonArr)))
+      success(Messages("success.found"), Json.obj("fans" -> Json.toJson(jsonArr)))
     }
   }
 

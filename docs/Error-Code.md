@@ -16,6 +16,7 @@
 |4023|No Permission|没有权限删除作品|
 |4024|No Such Posts|没有任何作品|
 |4025|Invalid Tag|标签不符合要求|
+|4026|Invalid Post Body|图片不符合要求|
 |4030|No Such Notification|没有任何消息提醒|
 |4040|Invalid Nickname|昵称不符合要求|
 |4041|Invalid Avatar|无效的头像文件|

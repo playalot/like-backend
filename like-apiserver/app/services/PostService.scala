@@ -10,6 +10,8 @@ import scala.concurrent.Future
  */
 trait PostService {
 
+  def insert(post: Post): Future[Post]
+
   def countByUserId(userId: Long): Future[Long]
 
   def getPostsByUserId(userId: Long, page: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]]

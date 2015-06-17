@@ -33,6 +33,10 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   private val comments = TableQuery[CommentsTable]
   private val notifications = TableQuery[NotificationsTable]
 
+  override def insert(post: Post): Future[Post] = {
+    db.run(posts returning posts.map(_.id) += post).map(id => post.copy(id = Some(id)))
+  }
+
   override def countByUserId(userId: Long): Future[Long] = {
     db.run(posts.filter(_.userId === userId).result.map(_.length))
   }

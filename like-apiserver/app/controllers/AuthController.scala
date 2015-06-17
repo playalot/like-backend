@@ -64,11 +64,11 @@ class AuthController @Inject() (
               ))
             }
           } else {
-            Future.successful(error(4013, Messages("invalid.sessionToken")))
+            Future.successful(error(4013, Messages("invalid.refreshToken")))
           }
         case None => Future.successful(error(4014, Messages("invalid.userId")))
       }
-      case None => Future.successful(error(4013, Messages("invalid.sessionToken")))
+      case None => Future.successful(error(4013, Messages("invalid.refreshToken")))
     }
   }
 
@@ -307,7 +307,7 @@ class AuthController @Inject() (
    */
   def getLinkedAccounts = SecuredAction.async { implicit request =>
     userService.listLinkedAccounts(request.userId).map { accounts =>
-      success(Messages("success.recordFound"), Json.obj("linked_accounts" -> Json.toJson(accounts)))
+      success(Messages("success.found"), Json.obj("linked_accounts" -> Json.toJson(accounts)))
     }
   }
 }

@@ -2,10 +2,12 @@ package controllers
 
 import javax.inject.Inject
 
+import models.Post
 import play.api.i18n.{ Messages, MessagesApi }
-import play.api.libs.json.Json
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ MarkService, PostService, TagService }
+import services.{ UserService, MarkService, PostService, TagService }
 import utils.QiniuUtil
 
 import scala.concurrent.Future
@@ -18,7 +20,74 @@ class PostController @Inject() (
     val messagesApi: MessagesApi,
     tagService: TagService,
     markService: MarkService,
+    userService: UserService,
     postService: PostService) extends BaseController {
+
+  case class PostCommand(content: String, `type`: Option[String], description: Option[String], tags: Seq[String])
+
+  implicit val postCommandReads = (
+    (__ \ 'content).read[String] and
+    (__ \ 'type).readNullable[String] and
+    (__ \ 'description).readNullable[String] and
+    (__ \ 'tags).read[Seq[String]]
+  )(PostCommand.apply _)
+
+  /**
+   * Get Qiniu upload token
+   */
+  def getQiniuUploadToken = SecuredAction {
+    success(Messages("success.uploadToken"),
+      Json.obj("upload_token" -> QiniuUtil.getUploadToken()))
+  }
+
+  /**
+   * Publish a post
+   */
+  def publishPost = SecuredAction.async(parse.json) { implicit request =>
+    request.body.validate[PostCommand].fold(
+      errors => {
+        Future.successful(error(4012, Messages("invalid.postJson")))
+      },
+      postCommand => {
+        postService.insert(Post(None, postCommand.content,
+          postCommand.description, postCommand.`type`.getOrElse("PHOTO"),
+          request.userId, System.currentTimeMillis / 1000,
+          System.currentTimeMillis / 1000, 0, 0)).flatMap { post =>
+
+          val futures = postCommand.tags.filter(t => t.length <= 13 && t.length >= 1)
+            .map(tag => postService.addMark(post.id.get, request.userId, tag, request.userId).map(mark => (tag, mark)))
+
+          for {
+            author <- userService.findById(request.userId)
+            results <- Future.sequence(futures)
+          } yield {
+            val marksJson = results.map { tagAndMark =>
+              Json.obj(
+                "mark_id" -> tagAndMark._2.id.get,
+                "tag" -> tagAndMark._1,
+                "likes" -> 1,
+                "is_liked" -> 1
+              )
+            }
+            success(Messages("success.publish"), Json.obj(
+              "post_id" -> post.id.get,
+              "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+              "type" -> post.`type`,
+              "description" -> post.description,
+              "created" -> post.created,
+              "user" -> Json.obj(
+                "user_id" -> author.get.identify,
+                "nickname" -> author.get.nickname,
+                "avatar" -> QiniuUtil.getAvatar(author.get.avatar, "small"),
+                "likes" -> author.get.likes
+              ),
+              "marks" -> Json.toJson(marksJson)
+            ))
+          }
+        }
+      }
+    )
+  }
 
   /**
    * Get Post summary and author info
@@ -27,29 +96,20 @@ class PostController @Inject() (
     postService.getPostById(id).map {
       case Some(postAndUser) =>
         val (post, user) = postAndUser
-        Ok(Json.obj(
-          "code" -> 1,
-          "message" -> "Record(s) Found",
-          "data" -> Json.obj(
-            "post_id" -> id,
-            "type" -> post.`type`,
-            "content" -> QiniuUtil.getPhoto(post.content, "large"),
-            "description" -> post.description,
-            "created" -> post.created,
-            "user" -> Json.obj(
-              "user_id" -> user.id.get.toString,
-              "nickname" -> user.nickname,
-              "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
-              "likes" -> user.likes
-            )
+        success(Messages("success.found"), Json.obj(
+          "post_id" -> id,
+          "type" -> post.`type`,
+          "content" -> QiniuUtil.getPhoto(post.content, "large"),
+          "description" -> post.description,
+          "created" -> post.created,
+          "user" -> Json.obj(
+            "user_id" -> user.identify,
+            "nickname" -> user.nickname,
+            "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+            "likes" -> user.likes
           )
         ))
-      case None =>
-        Ok(Json.obj(
-          "code" -> 4020,
-          "field" -> "post_id",
-          "message" -> Messages("postNotFound")
-        ))
+      case None => error(4020, Messages("invalid.postId"))
     }
   }
 
@@ -138,19 +198,6 @@ class PostController @Inject() (
         "message" -> Messages("postNotFound")
       )))
     }
-  }
-
-  /**
-   * Get Qiniu upload token
-   */
-  def qiniuUploadToken = SecuredAction {
-    Ok(Json.obj(
-      "code" -> 1,
-      "message" -> "Get Upload Token Sucess",
-      "data" -> Json.obj(
-        "upload_token" -> QiniuUtil.getUploadToken()
-      )
-    ))
   }
 
   def addMark(postId: Long) = SecuredAction.async(parse.json) { implicit request =>

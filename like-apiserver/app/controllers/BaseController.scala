@@ -23,11 +23,7 @@ trait BaseController extends Controller with I18nSupport {
       request.headers.get("LIKE-SESSION-TOKEN")
         .flatMap(token => MemcachedCacheClient.findUserId("session_user:" + token))
         .map(userId => block(new SecuredRequest(userId, request)))
-        .getOrElse(Future.successful(Ok(Json.obj(
-          "code" -> 4016,
-          "field" -> "LIKE-SESSION-TOKEN",
-          "message" -> Messages("invalid.sessionToken")
-        ))))
+        .getOrElse(Future.successful(error(4016, Messages("invalid.sessionToken"))))
     }
   }
 

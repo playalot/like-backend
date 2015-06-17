@@ -1,7 +1,7 @@
 package dao
 
 import models._
-import play.api.db.slick.{ HasDatabaseConfig, DatabaseConfigProvider, HasDatabaseConfigProvider }
+import play.api.db.slick.HasDatabaseConfig
 import slick.driver.JdbcProfile
 
 trait FollowsComponent { self: HasDatabaseConfig[JdbcProfile] =>
@@ -116,5 +116,19 @@ trait SocialAccountsComponent {
     def userId = column[Long]("user_id")
 
     override def * = (provider, key, userId) <> (SocialAccount.tupled, SocialAccount.unapply _)
+  }
+}
+
+trait BlocksComponent { self: HasDatabaseConfig[JdbcProfile] =>
+
+  import driver.api._
+
+  class BlocksTable(tag: Tag) extends Table[Block](tag, "block") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def userId = column[Long]("user_id")
+    def blockedUserId = column[Long]("blocked_user_id")
+    def created = column[Long]("created")
+
+    override def * = (id.?, userId, blockedUserId, created) <> (Block.tupled, Block.unapply _)
   }
 }

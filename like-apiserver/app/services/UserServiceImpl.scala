@@ -5,7 +5,7 @@ import javax.inject.Inject
 import com.mohiva.play.silhouette.api.LoginInfo
 import dao._
 import extensions.MobileProvider
-import models.{ SocialAccount, Notification, Follow, User }
+import models._
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
@@ -17,15 +17,16 @@ import scala.concurrent.Future
  * Date: 5/22/15
  */
 class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends UserService
-    with UsersComponent with FollowsComponent
+    with UsersComponent with SocialAccountsComponent
+    with FollowsComponent with BlocksComponent
     with MarksComponent with NotificationsComponent
-    with SocialAccountsComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 
   private val users = TableQuery[UsersTable]
   private val follows = TableQuery[FollowsTable]
+  private val blocks = TableQuery[BlocksTable]
   private val notifications = TableQuery[NotificationsTable]
   private val socials = TableQuery[SocialAccountsTable]
 
@@ -82,7 +83,7 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def getFollowers(userId: Long, page: Int): Future[Seq[User]] = {
     val query = (for {
       (follow, user) <- follows join users on (_.fromId === _.id)
-      if (follow.toId === userId)
+      if follow.toId === userId
     } yield (follow, user)).sortBy(_._1.created.desc).drop(page * 20).take(20)
     db.run(query.map(_._2).result)
   }
@@ -92,7 +93,7 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def getFriends(userId: Long, page: Int): Future[Seq[User]] = {
     val query = (for {
       (follow, user) <- follows join users on (_.toId === _.id)
-      if (follow.fromId === userId)
+      if follow.fromId === userId
     } yield (follow, user)).sortBy(_._1.created.desc).drop(page * 20).take(20)
     db.run(query.map(_._2).result)
   }
@@ -121,20 +122,20 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(users.filter(_.id === id).update(userToUpdate)).map(_ => userToUpdate)
   }
 
-  override def updateRefreshToken(id: Long, token: String): Future[Unit] = {
-    db.run(users.filter(_.id === id).map(x => (x.refreshToken, x.updated)).update((token, GenerateUtils.currentSeconds()))).map(_ => ())
+  override def updateRefreshToken(id: Long, token: String): Future[Boolean] = {
+    db.run(users.filter(_.id === id).map(x => (x.refreshToken, x.updated)).update((token, GenerateUtils.currentSeconds()))).map(n => n == 1)
   }
 
-  override def updateNickname(id: Long, nickname: String): Future[Unit] = {
-    db.run(users.filter(_.id === id).map(x => x.nickname).update(nickname)).map(_ => ())
+  override def updateNickname(id: Long, nickname: String): Future[Boolean] = {
+    db.run(users.filter(_.id === id).map(x => x.nickname).update(nickname)).map(n => n == 1)
   }
 
-  override def updateAvatar(id: Long, avatar: String): Future[Unit] = {
-    db.run(users.filter(_.id === id).map(x => x.avatar).update(avatar)).map(_ => ())
+  override def updateAvatar(id: Long, avatar: String): Future[Boolean] = {
+    db.run(users.filter(_.id === id).map(x => x.avatar).update(avatar)).map(n => n == 1)
   }
 
-  override def updateCover(id: Long, cover: String): Future[Unit] = {
-    db.run(users.filter(_.id === id).map(x => x.cover).update(cover)).map(_ => ())
+  override def updateCover(id: Long, cover: String): Future[Boolean] = {
+    db.run(users.filter(_.id === id).map(x => x.cover).update(cover)).map(n => n == 1)
   }
 
   override def isFollowing(fromId: Long, toId: Long): Future[Int] = {
@@ -158,17 +159,35 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
             val notifyFollow = Notification(None, "FOLLOW", toId, fromId, System.currentTimeMillis / 1000, None, None)
             for {
               updateFollower <- db.run(updateQuery.update(true))
-              insert <- db.run(follows += Follow(None, fromId, toId, true))
+              insert <- db.run(follows += Follow(None, fromId, toId, both = true))
               notify <- db.run(notifications += notifyFollow)
             } yield { 2 }
           case None =>
             val notifyFollow = Notification(None, "FOLLOW", toId, fromId, System.currentTimeMillis / 1000, None, None)
             for {
-              insert <- db.run(follows += Follow(None, fromId, toId, false))
+              insert <- db.run(follows += Follow(None, fromId, toId, both = false))
               notify <- db.run(notifications += notifyFollow)
             } yield { 1 }
         }
     }
   }
 
+  override def unFollow(fromId: Long, toId: Long): Future[Int] = {
+    val updateQuery = for { f <- follows if f.fromId === toId && f.toId === fromId } yield f.both
+    for {
+      updateFollower <- db.run(updateQuery.update(false))
+      remove <- db.run(follows.filter(f => f.fromId === fromId && f.toId === toId).delete)
+    } yield remove
+  }
+
+  override def block(fromId: Long, toId: Long): Future[Int] = {
+    db.run(blocks.filter(b => b.userId === fromId && b.blockedUserId === toId).result.headOption).flatMap {
+      case Some(block) => Future.successful(0)
+      case None        => db.run(blocks += Block(None, fromId, toId))
+    }
+  }
+
+  override def unBlock(fromId: Long, toId: Long): Future[Int] = {
+    db.run(blocks.filter(b => b.userId === fromId && b.blockedUserId === toId).delete)
+  }
 }

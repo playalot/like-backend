@@ -43,18 +43,23 @@ trait UserService {
 
   def update(id: Long, user: User): Future[User]
 
-  def updateRefreshToken(id: Long, token: String): Future[Unit]
+  def updateRefreshToken(id: Long, token: String): Future[Boolean]
 
-  def updateNickname(id: Long, nickname: String): Future[Unit]
+  def updateNickname(id: Long, nickname: String): Future[Boolean]
 
-  def updateAvatar(id: Long, avatar: String): Future[Unit]
+  def updateAvatar(id: Long, avatar: String): Future[Boolean]
 
-  def updateCover(id: Long, cover: String): Future[Unit]
+  def updateCover(id: Long, cover: String): Future[Boolean]
 
   def isFollowing(fromId: Long, toId: Long): Future[Int]
 
   def nicknameExists(nickname: String): Future[Boolean]
 
-  def follow(userId: Long, fromId: Long): Future[Int]
+  def follow(fromId: Long, toId: Long): Future[Int]
 
+  def unFollow(fromId: Long, toId: Long): Future[Int]
+
+  def block(fromId: Long, toId: Long): Future[Int]
+
+  def unBlock(fromId: Long, toId: Long): Future[Int]
 }

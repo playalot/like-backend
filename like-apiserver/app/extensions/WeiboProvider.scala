@@ -46,7 +46,6 @@ trait BaseWeiboProvider extends OAuth2Provider {
     val uid = authInfo.params.map(_.getOrElse("uid", "")).getOrElse("")
     httpLayer.url(urls("api").format(uid, authInfo.accessToken)).get().flatMap { response =>
       val json = response.json
-      println(json)
       (json \ "error").asOpt[JsObject] match {
         case Some(error) =>
           val errorMsg = (error \ "message").as[String]

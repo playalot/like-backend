@@ -163,17 +163,38 @@ class UserController @Inject() (
       userService.findById(id).flatMap {
         case Some(user) =>
           userService.follow(request.userId, id).map { following =>
-            Ok(Json.obj(
-              "code" -> 1,
-              "message" -> Messages("success.follow"),
-              "data" -> Json.obj(
-                "is_following" -> following
-              )
-            ))
+            success(Messages("success.follow"), Json.obj("is_following" -> following))
           }
         case None =>
           Future.successful(error(4022, Messages("user.notFound")))
       }
+    }
+  }
+
+  def unFollow(id: Long) = SecuredAction.async { implicit request =>
+    if (id == request.userId) {
+      Future.successful(error(4018, Messages("forbid.unFollowYourself")))
+    } else {
+      userService.findById(id).flatMap {
+        case Some(user) =>
+          userService.unFollow(request.userId, id).map { following =>
+            success(Messages("success.unFollow"), Json.obj("is_following" -> 0))
+          }
+        case None =>
+          Future.successful(error(4022, Messages("user.notFound")))
+      }
+    }
+  }
+
+  def block(id: Long) = SecuredAction.async { implicit request =>
+    userService.block(request.userId, id).map { _ =>
+      success(Messages("success.block"))
+    }
+  }
+
+  def unBlock(id: Long) = SecuredAction.async { implicit request =>
+    userService.unBlock(request.userId, id).map { _ =>
+      success(Messages("success.unBlock"))
     }
   }
 

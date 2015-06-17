@@ -5,7 +5,7 @@ package models
  * Date: 5/21/15
  */
 case class Block(
-  id: Long,
+  id: Option[Long] = None,
   userId: Long,
   blockedUserId: Long,
-  created: Long)
+  created: Long = System.currentTimeMillis / 1000)

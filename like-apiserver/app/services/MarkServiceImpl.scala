@@ -172,6 +172,7 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
     publisher.foreach { items =>
       RedisCacheClient.zIncrBy("post_mark:" + items._2, 1, items._1.toString)
+      ()
     }
   }
 

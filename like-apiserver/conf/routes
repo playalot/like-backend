@@ -9,6 +9,7 @@ GET     /test                                       controllers.Application.test
 # Auth
 POST    /v1/authenticate/mobile                     controllers.AuthController.mobileAuthenticate
 POST    /v1/authenticate/:provider                  controllers.AuthController.socialAuthenticate(provider: String)
+GET     /v1/account/list                            controllers.AuthController.getLinkedAccounts
 
 # User
 GET     /v1/user/$id<[0-9]+>                        controllers.UserController.getInfo(id: Long)

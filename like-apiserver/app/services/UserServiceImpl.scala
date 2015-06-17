@@ -59,8 +59,17 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(socials.filter(x => x.userId === userId && x.provider === providerId).delete).map(_ => ())
   }
 
-  override def listLinkedAccounts(userId: Long): Future[Seq[SocialAccount]] = {
-    db.run(socials.filter(_.userId === userId).result)
+  override def listLinkedAccounts(userId: Long): Future[Map[String, String]] = {
+    findById(userId).flatMap {
+      case Some(user) =>
+        db.run(socials.filter(_.userId === userId).result).map { accounts =>
+          if (user.mobile.isDefined && user.mobile.get.length > 0)
+            accounts.map(social => (social.provider, social.key)).toMap + ("mobile" -> ("86 " + user.mobile.get))
+          else
+            accounts.map(social => (social.provider, social.key)).toMap
+        }
+      case None => Future.successful(Map())
+    }
   }
 
   override def updateMobile(userId: Long, mobilePhoneNumber: String, zone: Int): Future[Unit] = {

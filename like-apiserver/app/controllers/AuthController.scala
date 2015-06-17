@@ -295,4 +295,15 @@ class AuthController @Inject() (
     )
   }
 
+  def getLinkedAccounts = SecuredAction.async { implicit request =>
+    userService.listLinkedAccounts(request.userId).map { accounts =>
+      val jsonArr = accounts.map { account =>
+        Json.obj(
+          "provider" -> account._1,
+          "key" -> account._2
+        )
+      }
+      success(Messages("success.recordFound"), Json.obj("linked_accounts" -> Json.toJson(jsonArr)))
+    }
+  }
 }

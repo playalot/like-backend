@@ -23,7 +23,7 @@ trait UserService {
 
   def unlinkAccount(userId: Long, providerId: String): Future[Unit]
 
-  def listLinkedAccounts(userId: Long): Future[Seq[SocialAccount]]
+  def listLinkedAccounts(userId: Long): Future[Map[String, String]]
 
   def updateMobile(userId: Long, mobilePhoneNumber: String, zone: Int): Future[Unit]
 

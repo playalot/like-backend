@@ -14,8 +14,10 @@ POST    /v1/authenticate/:provider                  controllers.AuthController.s
 GET     /v1/user/$id<[0-9]+>                        controllers.UserController.getInfo(id: Long)
 POST    /v1/user/login                              controllers.AuthController.mobileAuthenticate
 PUT     /v1/user/$id<[0-9]+>/refreshToken           controllers.AuthController.refreshSessionToken(id: Long)
-PUT     /v1/user/nickname                           controllers.UserController.updateNickname
-PUT     /v1/user/avatar                             controllers.UserController.updateAvatar
+PUT     /v1/user/nickname                           controllers.UserController.updateNickname()
+PUT     /v1/user/avatar                             controllers.UserController.updateAvatar()
+PUT     /v1/user/cover                              controllers.UserController.updateCover()
+GET     /v1/user/suggest                            controllers.UserController.suggestTags()
 GET     /v1/user/$id<[0-9]+>/posts/$page<[0-9]+>    controllers.UserController.getPostsForUser(id: Long, page: Int)
 POST    /v1/user/$id<[0-9]+>/follow                 controllers.UserController.follow(id: Long)
 GET     /v1/user/$id<[0-9]+>/follows/$page<[0-9]+>  controllers.UserController.getFriends(id: Long, page: Int)

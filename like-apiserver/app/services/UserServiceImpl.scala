@@ -133,6 +133,10 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(users.filter(_.id === id).map(x => x.avatar).update(avatar)).map(_ => ())
   }
 
+  override def updateCover(id: Long, cover: String): Future[Unit] = {
+    db.run(users.filter(_.id === id).map(x => x.cover).update(cover)).map(_ => ())
+  }
+
   override def isFollowing(fromId: Long, toId: Long): Future[Int] = {
     for {
       fs <- db.run(follows.filter(f => f.fromId === fromId && f.toId === toId).result.headOption).map(_.isDefined)

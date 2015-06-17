@@ -49,6 +49,8 @@ trait UserService {
 
   def updateAvatar(id: Long, avatar: String): Future[Unit]
 
+  def updateCover(id: Long, cover: String): Future[Unit]
+
   def isFollowing(fromId: Long, toId: Long): Future[Int]
 
   def nicknameExists(nickname: String): Future[Boolean]

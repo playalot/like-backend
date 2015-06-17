@@ -5,7 +5,7 @@ import javax.inject.Inject
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ MarkService, PostService, UserService }
+import services.{ TagService, MarkService, PostService, UserService }
 import utils.QiniuUtil
 
 import scala.concurrent.Future
@@ -17,6 +17,7 @@ import scala.concurrent.Future
 class UserController @Inject() (
     val messagesApi: MessagesApi,
     userService: UserService,
+    tagService: TagService,
     markService: MarkService,
     postService: PostService) extends BaseController {
 
@@ -75,6 +76,15 @@ class UserController @Inject() (
     }
   }
 
+  def updateCover() = SecuredAction.async(parse.json) { implicit request =>
+    (request.body \ "cover").asOpt[String] match {
+      case Some(avatar) =>
+        userService.updateCover(request.userId, avatar).map(_ => success(Messages("success.cover")))
+      case None =>
+        Future.successful(error(4041, Messages("invalid.cover")))
+    }
+  }
+
   def getPostsForUser(id: Long, page: Int) = SecuredAction.async { implicit request =>
     userService.findById(id).flatMap {
       case Some(user) =>
@@ -106,6 +116,15 @@ class UserController @Inject() (
         }
       case None =>
         Future.successful(error(4022, Messages("user.notFound")))
+    }
+  }
+
+  def suggestTags() = SecuredAction.async { implicit request =>
+    tagService.suggestTagsForUser(request.userId).map { tags =>
+      val jsonArr = tags.map { tag =>
+        Json.obj("tag" -> tag.tagName)
+      }
+      success(Messages("success.recordFound"), Json.obj("suggests" -> Json.toJson(jsonArr)))
     }
   }
 

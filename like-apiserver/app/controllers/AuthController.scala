@@ -46,7 +46,7 @@ class AuthController @Inject() (
   /**
    * Get renewed session token
    */
-  def refreshSessionToken(id: Long) = SecuredAction.async(parse.json) { implicit request =>
+  def refreshSessionToken(id: Long) = Action.async(parse.json) { implicit request =>
     (request.body \ "refresh_token").asOpt[String] match {
       case Some(refreshToken) => userService.findById(id).flatMap {
         case Some(user) =>

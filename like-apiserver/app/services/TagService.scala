@@ -10,6 +10,8 @@ import scala.concurrent.Future
  */
 trait TagService {
 
+  def suggestTagsForUser(userId: Long): Future[Seq[Tag]]
+
   def autoComplete(name: String): Future[Seq[Tag]]
 
   def hotTags: Future[Seq[Tag]]

@@ -42,4 +42,13 @@ class ErrorHandler @Inject() (
     )
   }
 
+  override def onNotFound(request: RequestHeader, message: String) = {
+    Future.successful(
+      Ok(Json.obj(
+        "code" -> 404,
+        "message" -> "Page not found"
+      ))
+    )
+  }
+
 }

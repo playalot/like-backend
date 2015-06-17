@@ -46,6 +46,7 @@ trait BaseWechatProvider extends OAuth2Provider {
     val uid = authInfo.params.map(_.getOrElse("uid", "")).getOrElse("")
     httpLayer.url(urls("api").format(uid, authInfo.accessToken)).get().flatMap { response =>
       val json = response.json
+
       (json \ "error").asOpt[JsObject] match {
         case Some(error) =>
           val errorMsg = (error \ "message").as[String]
@@ -112,7 +113,7 @@ class WechatProfileParser extends SocialProfileParser[JsValue, WechatProfile] {
    * @return The social profile from given result.
    */
   override def parse(json: JsValue) = Future.successful {
-    val userId = (json \ "openid").as[Long].toString
+    val userId = (json \ "openid").as[String]
     val screenName = (json \ "nickname").as[String]
     val biography = (json \ "description").asOpt[String]
     val location = (json \ "city").asOpt[String]

@@ -3,7 +3,8 @@ package controllers
 import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.util.IDGenerator
-import com.mohiva.play.silhouette.impl.providers.OAuth2Info
+import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
+import com.mohiva.play.silhouette.impl.providers.{ CommonSocialProfileBuilder, OAuth2Info }
 import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
 import extensions._
 import play.api.{ Logger, Play }
@@ -164,6 +165,44 @@ class AuthController @Inject() (
                 "expires_in" -> TokenExpiry
               ))
             }
+          case Some(p: WechatProvider with WechatProfileBuilder) =>
+            for {
+              profile <- p.retrieveProfile(authInfoWithId)
+              refreshToken <- refreshTokenGenerator.generate
+              user <- userService.upsert(profile.loginInfo, User(None, None, None,
+                HashUtils.hashPassword(refreshToken),
+                profile.screenName, DefaultAvatar, DefaultCover,
+                GenerateUtils.currentSeconds(),
+                GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
+              sessionToken <- sessionTokenGenerator.generate
+              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TokenExpiry)
+            } yield {
+              success(Messages("success.login"), Json.obj(
+                "user_id" -> user.identify,
+                "session_token" -> sessionToken,
+                "refresh_token" -> refreshToken,
+                "expires_in" -> TokenExpiry
+              ))
+            }
+          case Some(p: FacebookProvider with CommonSocialProfileBuilder) =>
+            for {
+              profile <- p.retrieveProfile(authInfoWithId)
+              refreshToken <- refreshTokenGenerator.generate
+              user <- userService.upsert(profile.loginInfo, User(None, None, None,
+                HashUtils.hashPassword(refreshToken),
+                profile.fullName.getOrElse("New Liker"), DefaultAvatar, DefaultCover,
+                GenerateUtils.currentSeconds(),
+                GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
+              sessionToken <- sessionTokenGenerator.generate
+              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TokenExpiry)
+            } yield {
+              success(Messages("success.login"), Json.obj(
+                "user_id" -> user.identify,
+                "session_token" -> sessionToken,
+                "refresh_token" -> refreshToken,
+                "expires_in" -> TokenExpiry
+              ))
+            }
           case _ => Future.successful(error(4052, Messages("invalid.socialProvider")))
         }
       case _ => Future.successful(error(5051, Messages("invalid.authInfo")))
@@ -181,28 +220,43 @@ class AuthController @Inject() (
         val params = authInfo.params.getOrElse(Map[String, String]()) + ("uid" -> id)
         val authInfoWithId = authInfo.copy(params = Some(params))
 
-        providerEnv.providers.get(provider) match {
-          case Some(p: WeiboProvider with WeiboProfileBuilder) =>
-            userService.findBySocial(provider, id).flatMap {
-              case Some(social) =>
-                if (social.userId == request.userId) {
-                  Future.successful(error(4053, Messages("failed.linkByYou")))
-                } else {
-                  Future.successful(error(4054, Messages("failed.linkByOthers")))
-                }
-              case None =>
+        userService.findBySocial(provider, id).flatMap {
+          case Some(social) =>
+            if (social.userId == request.userId) {
+              Future.successful(error(4053, Messages("failed.linkByYou")))
+            } else {
+              Future.successful(error(4054, Messages("failed.linkByOthers")))
+            }
+          case None =>
+            val response = success(Messages("success.link"), Json.obj(
+              "user_id" -> request.userId.toString,
+              "provider_id" -> provider,
+              "provider_key" -> id
+            ))
+            providerEnv.providers.get(provider) match {
+              case Some(p: WeiboProvider with WeiboProfileBuilder) =>
                 for {
                   profile <- p.retrieveProfile(authInfoWithId)
                   link <- userService.linkAccount(request.userId, provider, profile.userId)
                 } yield {
-                  success(Messages("success.link"), Json.obj(
-                    "user_id" -> request.userId.toString,
-                    "provider_id" -> provider,
-                    "provider_key" -> profile.userId
-                  ))
+                  response
                 }
+              case Some(p: WechatProvider with WechatProfileBuilder) =>
+                for {
+                  profile <- p.retrieveProfile(authInfoWithId)
+                  link <- userService.linkAccount(request.userId, provider, profile.userId)
+                } yield {
+                  response
+                }
+              case Some(p: FacebookProvider with CommonSocialProfileBuilder) =>
+                for {
+                  profile <- p.retrieveProfile(authInfoWithId)
+                  link <- userService.linkAccount(request.userId, provider, profile.loginInfo.providerKey)
+                } yield {
+                  response
+                }
+              case _ => Future.successful(error(4052, Messages("invalid.socialProvider")))
             }
-          case _ => Future.successful(error(4052, Messages("invalid.socialProvider")))
         }
       case _ => Future.successful(error(5051, Messages("invalid.authInfo")))
     }

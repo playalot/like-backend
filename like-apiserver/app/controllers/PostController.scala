@@ -114,18 +114,17 @@ class PostController @Inject() (
   }
 
   /**
-   * Delete Post by id
+   * Delete Post
    */
   def deletePost(id: Long) = SecuredAction.async { implicit request =>
-    postService.deletePostById(id, request.userId).map {
-      case Left(x) => Ok(Json.obj(
-        "code" -> 1,
-        "message" -> "Post Delete Success"
-      ))
-      case Right(ex) => Ok(Json.obj(
-        "code" -> 4023,
-        "message" -> Messages(ex)
-      ))
+    postService.getPostById(id).flatMap {
+      case Some(post) =>
+        if (post._1.userId != request.userId) {
+          Future.successful(error(4023, Messages("no.permission")))
+        } else {
+          postService.deletePostById(id, request.userId).map(_ => success(Messages("success.deletePost")))
+        }
+      case None => Future.successful(error(4020, Messages("invalid.postId")))
     }
   }
 
@@ -135,9 +134,7 @@ class PostController @Inject() (
   def getPostMarks(id: Long, page: Int) = UserAwareAction.async { implicit request =>
     postService.getPostById(id).flatMap {
       case Some(postAndUser) =>
-
         postService.getMarksForPost(id, page, request.userId).map { result =>
-
           val scores = result._3
           val likes = result._2
           val comments = result._4.groupBy(_._1.markId)
@@ -166,7 +163,6 @@ class PostController @Inject() (
                 )
               }
             }
-
             Json.obj(
               "mark_id" -> marks._1,
               "tag" -> marks._2,
@@ -183,68 +179,37 @@ class PostController @Inject() (
               "comments" -> Json.toJson(commentsJson.getOrElse(Seq()))
             )
           }
-
-          Ok(Json.obj(
-            "code" -> 1,
-            "message" -> "Record(s) Found",
-            "data" -> Json.obj(
-              "marks" -> Json.toJson(marksJson)
-            )
-          ))
+          success(Messages("success.found"), Json.obj("marks" -> Json.toJson(marksJson)))
         }
-      case None => Future.successful(Ok(Json.obj(
-        "code" -> 4020,
-        "field" -> "post_id",
-        "message" -> Messages("postNotFound")
-      )))
+      case None => Future.successful(error(4020, Messages("invalid.postId")))
     }
   }
 
+  /**
+   * Add a mark to the post
+   */
   def addMark(postId: Long) = SecuredAction.async(parse.json) { implicit request =>
-
     (request.body \ "tag").asOpt[String] match {
       case Some(tag) =>
         if (tag.length > 13)
-          Future.successful(Ok(Json.obj(
-            "code" -> 4022,
-            "field" -> "tag",
-            "message" -> Messages("tag.maxLength")
-          )))
+          Future.successful(error(4025, Messages("invalid.tagMaxLength")))
         else if (tag.length < 1)
-          Future.successful(Ok(Json.obj(
-            "code" -> 4022,
-            "field" -> "tag",
-            "message" -> Messages("tag.minLength")
-          )))
+          Future.successful(error(4025, Messages("invalid.tagMinLength")))
         else
           postService.getPostById(postId).flatMap {
             case Some(post) =>
               postService.addMark(postId, post._1.userId, tag, request.userId).map { mark =>
-                Ok(Json.obj(
-                  "code" -> 1,
-                  "message" -> "Mark Success",
-                  "data" -> Json.obj(
-                    "mark_id" -> mark.id.get,
-                    "tag" -> tag,
-                    "likes" -> 1,
-                    "is_liked" -> 1
-                  )
+                success(Messages("success.mark"), Json.obj(
+                  "mark_id" -> mark.id.get,
+                  "tag" -> tag,
+                  "likes" -> 1,
+                  "is_liked" -> 1
                 ))
               }
-            case None =>
-              Future.successful(Ok(Json.obj(
-                "code" -> 4022,
-                "message" -> Messages("post.notFound")
-              )))
+            case None => Future.successful(error(4024, Messages("invalid.postId")))
           }
-      case None =>
-        Future.successful(Ok(Json.obj(
-          "code" -> 4022,
-          "field" -> "tag",
-          "message" -> "Field Not Found"
-        )))
+      case None => Future.successful(error(4025, Messages("invalid.tagField")))
     }
-
   }
 
 }

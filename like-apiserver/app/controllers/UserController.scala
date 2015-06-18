@@ -115,7 +115,7 @@ class UserController @Inject() (
           }
         }
       case None =>
-        Future.successful(error(4022, Messages("user.notFound")))
+        Future.successful(error(4022, Messages("invalid.userId")))
     }
   }
 
@@ -158,7 +158,7 @@ class UserController @Inject() (
 
   def follow(id: Long) = SecuredAction.async { implicit request =>
     if (id == request.userId) {
-      Future.successful(error(4017, Messages("forbid.followYourself")))
+      Future.successful(error(4017, Messages("failed.followYourself")))
     } else {
       userService.findById(id).flatMap {
         case Some(user) =>
@@ -166,14 +166,14 @@ class UserController @Inject() (
             success(Messages("success.follow"), Json.obj("is_following" -> following))
           }
         case None =>
-          Future.successful(error(4022, Messages("user.notFound")))
+          Future.successful(error(4022, Messages("invalid.userId")))
       }
     }
   }
 
   def unFollow(id: Long) = SecuredAction.async { implicit request =>
     if (id == request.userId) {
-      Future.successful(error(4018, Messages("forbid.unFollowYourself")))
+      Future.successful(error(4018, Messages("failed.unFollowYourself")))
     } else {
       userService.findById(id).flatMap {
         case Some(user) =>
@@ -181,7 +181,7 @@ class UserController @Inject() (
             success(Messages("success.unFollow"), Json.obj("is_following" -> 0))
           }
         case None =>
-          Future.successful(error(4022, Messages("user.notFound")))
+          Future.successful(error(4022, Messages("invalid.userId")))
       }
     }
   }

@@ -1,4 +1,20 @@
-##Post Marks帖子标签######URLhttp://api.likeorz.com/v2/post/{id:[0-9]+}/marks/{page:[0-9]+}######支持格式JSON######HTTP请求方式GET######请求参数|参数|必选|类型及范围|说明|
+##Post Marks
+
+帖子标签
+
+######URL
+
+http://api.likeorz.com/v1/post/{id:[0-9]+}/marks/{page:[0-9]+}
+
+######支持格式
+JSON
+
+######HTTP请求方式
+
+GET
+
+######请求参数
+|参数|必选|类型及范围|说明|
 |--------|-------|-------|
 |LIKE-SESSION-TOKEN|false|string|Header中带用户授权|
 |{id:[0-9]+}|true|int|作品ID|
@@ -7,7 +23,13 @@
 ######请求示例
 <pre>
 curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://api.likeorz.com/v2/post/3061/marks/0
-</pre>######返回结果######JSON示例<pre>{
+</pre>
+######返回结果
+
+######JSON示例
+
+<pre>
+{
     "code": "1", 
     "message": "Record(s) Found", 
     "data": {
@@ -55,7 +77,10 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
         "next": false
     }
 }
-</pre>######返回字段说明|返回值字段|字段类型|字段说明|
+</pre>
+
+######返回字段说明
+|返回值字段|字段类型|字段说明|
 |--------|-------|-------|
 |mark_id|int|标签ID|
 |tag|string|标签名|

@@ -48,7 +48,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
         val query = for {
           (mark, tag) <- marks join tags on (_.tagId === _.id)
-          if (mark.id inSet cachedMarks.keySet)
+          if mark.id inSet cachedMarks.keySet
         } yield (mark.id, tag.tagName)
 
         db.run(query.result).map { list =>
@@ -100,7 +100,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
     val likesQuery = for {
       like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
-    } yield (like.markId)
+    } yield like.markId
 
     val commentsQuery = for {
       ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
@@ -116,37 +116,28 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def deletePostById(postId: Long, userId: Long): Future[Either[Boolean, String]] = {
+  override def deletePostById(postId: Long, userId: Long): Future[Unit] = {
     val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postId, offset = 0, limit = 1000).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
-    db.run(posts.filter(p => p.id === postId).result.headOption).flatMap {
-      case Some(post) =>
-        if (post.userId == userId)
-          db.run(marks.filter(_.postId === postId).result).flatMap { markResults =>
-            var total: Double = 0
-            markResults.foreach { mark =>
-              val likeNum = RedisCacheClient.zScore("post_mark:" + postId, mark.identify).getOrElse(0.0)
-              RedisCacheClient.zIncrBy("tag_likes", -likeNum, mark.tagId.toString)
-              total += likeNum
-            }
-            RedisCacheClient.zIncrBy("user_likes", -total, userId.toString)
-            RedisCacheClient.del("post_mark:" + postId)
-            RedisCacheClient.del("push:" + userId)
+    db.run(marks.filter(_.postId === postId).result).flatMap { markResults =>
+      var total: Double = 0
+      markResults.foreach { mark =>
+        val likeNum = RedisCacheClient.zScore("post_mark:" + postId, mark.identify).getOrElse(mark.likes.toDouble)
+        RedisCacheClient.zIncrBy("tag_likes", -likeNum, mark.tagId.toString)
+        total += likeNum
+      }
+      RedisCacheClient.zIncrBy("user_likes", -total, userId.toString)
+      RedisCacheClient.del("post_mark:" + postId)
+      RedisCacheClient.del("push:" + userId)
 
-            val markIds = markResults.map(_.id.getOrElse(-1L))
-            for {
-              deleteLikes <- db.run(likes.filter(_.markId inSet markIds).delete)
-              deleteComments <- db.run(comments.filter(_.markId inSet markIds).delete)
-              deleteMarks <- db.run(marks.filter(_.postId === postId).delete)
-              deletePost <- db.run(posts.filter(_.id === postId).delete)
-            } yield {
-              Left(true)
-            }
-          }
-        else
-          Future.successful(Right("no.permission"))
-      case None => Future.successful(Right("not.found"))
+      val markIds = markResults.map(_.id.getOrElse(-1L))
+      for {
+        deleteLikes <- db.run(likes.filter(_.markId inSet markIds).delete)
+        deleteComments <- db.run(comments.filter(_.markId inSet markIds).delete)
+        deleteMarks <- db.run(marks.filter(_.postId === postId).delete)
+        deletePost <- db.run(posts.filter(_.id === postId).delete)
+      } yield {}
     }
   }
 

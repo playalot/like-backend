@@ -30,11 +30,11 @@ POST    /v1/user/$id<[0-9]+>/block                  controllers.UserController.b
 DELETE  /v1/user/$id<[0-9]+>/block                  controllers.UserController.unBlock(id: Long)
 
 # Post
-POST    /v1/post                                    controllers.PostController.publishPost
 GET     /v1/post/uploadToken                        controllers.PostController.getQiniuUploadToken
+POST    /v1/post                                    controllers.PostController.publishPost
+DELETE  /v1/post/$id<[0-9]+>                        controllers.PostController.deletePost(id: Long)
 GET     /v1/post/$id<[0-9]+>                        controllers.PostController.getPost(id: Long)
 GET     /v1/post/$id<[0-9]+>/marks/$page<[0-9]+>    controllers.PostController.getPostMarks(id: Long, page: Int)
-DELETE  /v1/post/$id<[0-9]+>                        controllers.PostController.deletePost(id: Long)
 POST    /v1/post/$id<[0-9]+>/mark                   controllers.PostController.addMark(id: Long)
 
 

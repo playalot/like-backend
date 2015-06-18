@@ -281,7 +281,7 @@ class AuthController @Inject() (
         Future.successful(error(4012, Messages("invalid.mobileCode")))
       },
       smsCode => userService.findByMobileAndZone(smsCode.mobilePhoneNumber, smsCode.zone.toInt).flatMap {
-        case Some(user) => Future.successful(error(4011, Messages("mobile.exists")))
+        case Some(user) => Future.successful(error(4011, Messages("invalid.mobileExists")))
         case None =>
           mobileProvider.authenticate(smsCode).flatMap { loginInfo =>
             for {

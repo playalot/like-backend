@@ -5,8 +5,8 @@ package models
  * Date: 5/21/15
  */
 case class Report(
-  id: Long,
+  id: Option[Long],
   userId: Long,
   postId: Long,
-  num: Long,
-  created: Long)
+  num: Long = 1,
+  created: Long = System.currentTimeMillis() / 1000)

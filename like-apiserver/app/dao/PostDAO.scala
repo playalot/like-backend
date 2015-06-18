@@ -25,5 +25,20 @@ trait PostsComponent { self: HasDatabaseConfig[JdbcProfile] =>
 
     override def * = (id.?, content, description.?, `type`, userId, created, updated, tagId, likes) <> (Post.tupled, Post.unapply _)
   }
+
 }
 
+trait ReportsComponent { self: HasDatabaseConfig[JdbcProfile] =>
+
+  import driver.api._
+
+  class ReportsTable(tag: Tag) extends Table[Report](tag, "report") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def userId = column[Long]("user_id")
+    def postId = column[Long]("post_id")
+    def num = column[Long]("num")
+    def created = column[Long]("created")
+
+    override def * = (id.?, userId, postId, num, created) <> (Report.tupled, Report.unapply _)
+  }
+}

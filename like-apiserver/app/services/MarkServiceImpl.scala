@@ -18,7 +18,7 @@ import scala.concurrent.duration._
 class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends MarkService
     with PostsComponent
     with MarksComponent
-    with CommentsConponent
+    with CommentsComponent
     with TagsComponent
     with LikesComponent
     with NotificationsComponent

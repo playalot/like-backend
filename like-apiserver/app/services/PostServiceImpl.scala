@@ -20,7 +20,8 @@ import scala.concurrent.Future
 class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends PostService
     with PostsComponent with UsersComponent
     with TagsComponent with MarksComponent
-    with LikesComponent with CommentsConponent with NotificationsComponent
+    with LikesComponent with CommentsComponent
+    with NotificationsComponent with ReportsComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -32,6 +33,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   private val users = TableQuery[UsersTable]
   private val comments = TableQuery[CommentsTable]
   private val notifications = TableQuery[NotificationsTable]
+  private val reports = TableQuery[ReportsTable]
 
   override def insert(post: Post): Future[Post] = {
     db.run(posts returning posts.map(_.id) += post).map(id => post.copy(id = Some(id)))
@@ -168,6 +170,10 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           }
       }
     }
+  }
+
+  override def report(report: Report): Future[Report] = {
+    db.run(reports returning reports.map(_.id) += report).map(id => report.copy(id = Some(id)))
   }
 
 }

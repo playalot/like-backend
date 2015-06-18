@@ -37,7 +37,7 @@ DELETE  /v1/post/$id<[0-9]+>                        controllers.PostController.d
 GET     /v1/post/$id<[0-9]+>                        controllers.PostController.getPost(id: Long)
 GET     /v1/post/$id<[0-9]+>/marks/$page<[0-9]+>    controllers.PostController.getPostMarks(id: Long, page: Int)
 POST    /v1/post/$id<[0-9]+>/mark                   controllers.PostController.addMark(id: Long)
-
+POST    /v1/post/$id<[0-9]+>/report                 controllers.PostController.report(id: Long)
 
 # Mark
 POST    /v1/mark/$id<[0-9]+>/like                   controllers.MarkController.like(id: Long)

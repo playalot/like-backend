@@ -36,7 +36,7 @@ trait MarksComponent { self: HasDatabaseConfig[JdbcProfile] =>
   }
 }
 
-trait CommentsConponent {
+trait CommentsComponent {
   self: HasDatabaseConfig[JdbcProfile] =>
   import driver.api._
 

@@ -38,6 +38,7 @@ success.link = 成功绑定了账户
 success.unlink = 成功解除了绑定
 success.mark = 标记成功
 success.sendCode = 短信验证发送成功
+success.report = 举报成功
 failed.sendCode = 短信验证发送失败
 failed.unlink = 接触绑定失败
 failed.linkByYou = 您已经绑定了这个账户

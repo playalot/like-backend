@@ -39,6 +39,7 @@ success.link = Link Account Success
 success.unlink = Unlink Account Success
 success.mark = Mark Success
 success.sendCode = Code Send Success
+success.report = Report Success
 failed.sendCode = Code Send Failed
 failed.unlink = Unlink Account Failed
 failed.linkByYou = This account is already linked by you

@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
-import models.Post
+import models.{ Report, Post }
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -216,6 +216,9 @@ class PostController @Inject() (
    * Report abuse of a post
    */
   def report(postId: Long) = SecuredAction.async { implicit request =>
-
+    postService.report(Report(None, request.userId, postId)).map { _ =>
+      success("success.report")
+    }
   }
+
 }

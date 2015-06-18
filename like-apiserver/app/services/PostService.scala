@@ -1,6 +1,6 @@
 package services
 
-import models.{ Mark, Comment, User, Post }
+import models._
 
 import scala.concurrent.Future
 
@@ -26,4 +26,5 @@ trait PostService {
 
   def addMark(postId: Long, authorId: Long, tagName: String, userId: Long): Future[Mark]
 
+  def report(report: Report): Future[Report]
 }

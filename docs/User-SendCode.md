@@ -4,7 +4,7 @@
 
 ######URL
 
-http://api.likeorz.com/v1/user/sendCode
+http://api.likeorz.com/v1/sendSmsCode
 
 ######支持格式
 JSON
@@ -18,12 +18,14 @@ POST
 |--------|-------|-------|-------|
 |mobile|true|string|手机号|
 |zone|true|string|国家代号|
+|token|true|string|加密后的字符串|
 
 ######请求示例json
 ```json
 {
     "zone": "86",
-    "mobile": "13333333333"
+    "mobile": "13333333333",
+    "token" "EA42ED1CE627F0703EA888C3245B84C2"
 }
 ```
 

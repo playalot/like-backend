@@ -15,11 +15,11 @@ object HashUtils {
 
   def validateTimestampHash(value: String): Boolean = {
     val currentMinutes = System.currentTimeMillis() / 1000 / 60
-    (0 to 4).exists( i => minuteToHash(currentMinutes - i) == value)
+    (0 to 4).exists(i => minuteToHash(currentMinutes - i) == value)
   }
 
   private def minuteToHash(minute: Long): String = {
-    val map = Map('0'->"x", '1' -> "v", '2' -> ".", '3' -> "e",
+    val map = Map('0' -> "x", '1' -> "v", '2' -> ".", '3' -> "e",
       '4' -> "5", '5' -> "0", '6' -> ";", '7' -> "r",
       '8' -> "8", '9' -> "@")
     val mappedStr = minute.toString.map(c => map(c))

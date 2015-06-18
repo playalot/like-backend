@@ -15,7 +15,7 @@ import play.api.mvc._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import services.UserService
-import utils.{ MemcachedCacheClient, HashUtils, GenerateUtils }
+import utils.{ AVOSUtils, MemcachedCacheClient, HashUtils, GenerateUtils }
 import models.User
 
 import scala.concurrent.Future
@@ -32,7 +32,7 @@ class AuthController @Inject() (
     mobileProvider: MobileProvider) extends BaseController {
 
   implicit val mobileCodeReads = (
-    (__ \ 'phone).read[String] and
+    (__ \ 'mobile).read[String] and
     (__ \ 'zone).read[String] and
     (__ \ 'code).read[String]
   )(SmsCode.apply _)
@@ -69,6 +69,28 @@ class AuthController @Inject() (
         case None => Future.successful(error(4014, Messages("invalid.userId")))
       }
       case None => Future.successful(error(4013, Messages("invalid.refreshToken")))
+    }
+  }
+
+  /**
+   * Send sms code to mobile phone
+   */
+  def sendSmsCode = Action.async(parse.json) { implicit request =>
+    val tokenOpt = (request.body \ "token").asOpt[String]
+    val mobileOpt = (request.body \ "mobile").asOpt[String]
+    val zoneOpt = (request.body \ "zone").asOpt[String]
+    (tokenOpt, zoneOpt, mobileOpt) match {
+      case (Some(token), Some(zone), Some(mobile)) =>
+        val valid = HashUtils.validateTimestampHash(token)
+        if (valid) {
+          AVOSUtils.sendSmsCode(mobile, zone).map {
+            case true  => success("success.sendCode")
+            case false => error(4015, Messages("failed.sendCode"))
+          }
+        } else {
+          Future.successful(error(4015, Messages("failed.sendCode")))
+        }
+      case _ => Future.successful(error(4015, Messages("failed.sendCode")))
     }
   }
 

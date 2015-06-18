@@ -84,7 +84,7 @@ class AuthController @Inject() (
         val valid = HashUtils.validateTimestampHash(token)
         if (valid) {
           AVOSUtils.sendSmsCode(mobile, zone).map {
-            case true  => success("success.sendCode")
+            case true  => success(Messages("success.sendCode"))
             case false => error(4015, Messages("failed.sendCode"))
           }
         } else {
@@ -103,7 +103,7 @@ class AuthController @Inject() (
         Future.successful(error(4012, Messages("invalid.mobileCode")))
       },
       smsCode => mobileProvider.authenticate(smsCode).flatMap { loginInfo =>
-        userService.findByMobileAndZone(smsCode.mobilePhoneNumber, smsCode.zone.toInt).flatMap {
+        userService.findByMobileAndZone(smsCode.mobilePhoneNumber, smsCode.zone).flatMap {
           case Some(user) => // User already exists
             for {
               // Create new session token
@@ -302,7 +302,7 @@ class AuthController @Inject() (
       errors => {
         Future.successful(error(4012, Messages("invalid.mobileCode")))
       },
-      smsCode => userService.findByMobileAndZone(smsCode.mobilePhoneNumber, smsCode.zone.toInt).flatMap {
+      smsCode => userService.findByMobileAndZone(smsCode.mobilePhoneNumber, smsCode.zone).flatMap {
         case Some(user) => Future.successful(error(4011, Messages("invalid.mobileExists")))
         case None =>
           mobileProvider.authenticate(smsCode).flatMap { loginInfo =>

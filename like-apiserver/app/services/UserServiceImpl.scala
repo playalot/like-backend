@@ -34,7 +34,7 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def findByMobileLegacy(mobilePhoneNumber: String): Future[Option[User]] = db.run(users.filter(_.mobile === mobilePhoneNumber).result.headOption)
 
-  override def findByMobileAndZone(mobilePhoneNumber: String, zone: Int): Future[Option[User]] = {
+  override def findByMobileAndZone(mobilePhoneNumber: String, zone: String): Future[Option[User]] = {
     val key = s"$zone $mobilePhoneNumber"
     db.run(socials.filter(u => u.provider === MobileProvider.ID && u.key === key).result.headOption).flatMap {
       case Some(social) => db.run(users.filter(_.id === social.userId).result.headOption)

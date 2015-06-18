@@ -23,7 +23,7 @@ POST
 ######请求示例json
 ```json
 {
-    "zone": "86",
+    "zone": "CN",
     "mobile": "13333333333",
     "token" "EA42ED1CE627F0703EA888C3245B84C2"
 }

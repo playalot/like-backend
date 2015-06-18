@@ -4,7 +4,7 @@ import MobileProvider._
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.impl.exceptions.AccessDeniedException
 import play.api.libs.concurrent.Execution.Implicits._
-import utils.MobSmsUtils
+import utils.{ AVOSUtils, MobSmsUtils }
 
 import scala.concurrent.Future
 
@@ -29,7 +29,7 @@ class MobileProvider() extends Provider {
       // TODO This is a developer backdoor
       Future.successful(loginInfo)
     } else {
-      MobSmsUtils.verifySmsCode(smsCode.mobilePhoneNumber, smsCode.zone, smsCode.code).map {
+      AVOSUtils.verifySmsCode(smsCode.mobilePhoneNumber, smsCode.zone, smsCode.code).map {
         case true  => loginInfo
         case false => throw new AccessDeniedException("Invalid sms code")
       }

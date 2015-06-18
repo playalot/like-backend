@@ -15,7 +15,7 @@ trait UserService {
 
   def findByMobileLegacy(mobilePhoneNumber: String): Future[Option[User]]
 
-  def findByMobileAndZone(mobilePhoneNumber: String, zone: Int): Future[Option[User]]
+  def findByMobileAndZone(mobilePhoneNumber: String, zone: String): Future[Option[User]]
 
   def findBySocial(providerId: String, providerKey: String): Future[Option[SocialAccount]]
 

@@ -142,7 +142,7 @@ class PostController @Inject() (
           val marksJson = result._1.map { marks =>
             val totalComments = comments.getOrElse(marks._1, Seq()).length
             val commentsJson = comments.get(marks._1).map { list =>
-              list.reverse.take(3).map { row =>
+              list.sortBy(_._1.created).reverse.take(3).map { row =>
                 Json.obj(
                   "comment_id" -> row._1.id,
                   "content" -> row._1.content,
@@ -212,4 +212,10 @@ class PostController @Inject() (
     }
   }
 
+  /**
+   * Report abuse of a post
+   */
+  def report(postId: Long) = SecuredAction.async { implicit request =>
+
+  }
 }

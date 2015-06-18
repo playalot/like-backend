@@ -15,7 +15,7 @@ DELETE
 
 ######请求参数
 |参数|必选|类型及范围|说明|
-|--------|-------|-------|
+|--------|-------|-------|-------|
 |LIKE-SESSION-TOKEN|true|string|Header中带用户授权|
 |provider|true|string|账号类型|
 

@@ -41,7 +41,7 @@ class MarkController @Inject() (
       case Some(mark) =>
         markService.getLikes(markId).map { rows =>
           val json = rows.map { row =>
-            val (like, user) = row
+            val user = row._2
             Json.obj(
               "user" -> Json.obj(
                 "user_id" -> user.id.get.toString,
@@ -51,19 +51,9 @@ class MarkController @Inject() (
               )
             )
           }
-          Ok(Json.obj(
-            "code" -> 1,
-            "message" -> "Record(s) Found",
-            "data" -> Json.obj(
-              "likes" -> Json.toJson(json)
-            )
-          ))
+          success(Messages("success.found"), Json.obj("likes" -> Json.toJson(json)))
         }
-      case None =>
-        Future.successful(Ok(Json.obj(
-          "code" -> 4022,
-          "message" -> Messages("mark.notFound")
-        )))
+      case None => Future.successful(error(4022, Messages("invalid.markId")))
     }
   }
 

@@ -162,17 +162,20 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(query.result)
   }
 
-  override def deleteMark(markId: Long, userId: Long): Future[Unit] = ???
+  override def deleteMark(markId: Long): Future[Unit] = {
+    for {
+      l <- db.run(likes.filter(_.markId === markId).delete)
+      c <- db.run(comments.filter(_.markId === markId).delete)
+      m <- db.run(marks.filter(_.id === markId).delete)
+    } yield {}
+  }
 
-  override def rebuildMarkCache(): Unit = {
-
+  override def rebuildMarkCache(): Future[Unit] = {
     val query = for {
       (like, mark) <- likes join marks on (_.markId === _.id)
     } yield (like.markId, mark.postId)
 
-    val publisher = db.stream(query.result)
-
-    publisher.foreach { items =>
+    db.stream(query.result).foreach { items =>
       RedisCacheClient.zIncrBy("post_mark:" + items._2, 1, items._1.toString)
       ()
     }

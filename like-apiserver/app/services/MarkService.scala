@@ -28,7 +28,7 @@ trait MarkService {
 
   def getCommentsForMark(markId: Long, pageSize: Int = 1000, created: Option[Long] = None): Future[Seq[(Comment, User, Option[User])]]
 
-  def deleteMark(markId: Long, userId: Long): Future[Unit]
+  def deleteMark(markId: Long): Future[Unit]
 
-  def rebuildMarkCache(): Unit
+  def rebuildMarkCache(): Future[Unit]
 }

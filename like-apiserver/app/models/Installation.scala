@@ -1,26 +1,11 @@
 package models
 
-object DeviceTypeEnum extends Enumeration {
-
-  //  import
-  //
-  //  def enum2StringMapper(enum: Enumeration) = MappedColumnType.base[enum.Value, String](
-  //    b => b.toString,
-  //    i => enum.withName(i))
-  //
-  //  implicit val DeviceTypeEnumMapper = enum2StringMapper(DeviceTypeEnum)
-
-  type DeviceTypeEnum = Value
-  val Ios = Value("ios")
-  val Andriod = Value("andriod")
-
-}
-
 case class Installation(
-  id: Long,
+  id: Option[Long],
   userId: Long,
-  objectId: Long,
+  objectId: String,
   deviceToken: String,
-  deviceType: DeviceTypeEnum.DeviceTypeEnum,
-  created: Long,
-  updated: Long)
+  deviceType: String, // ios, andriod
+  status: Int,
+  created: Long = System.currentTimeMillis() / 1000,
+  updated: Long = System.currentTimeMillis() / 1000)

@@ -27,40 +27,21 @@ class CommentController @Inject() (
         val content = (request.body \ "content").as[String].trim
         val location = (request.body \ "location").asOpt[String]
         val created = System.currentTimeMillis / 1000
-        markService.commentMark(id, Comment(None, id, request.userId, replyId, content, created, location)).map { comment =>
-          Ok(Json.obj(
-            "code" -> 1,
-            "message" -> "Success",
-            "data" -> Json.obj(
-              "comment_id" -> comment.id
-            )
-          ))
-        }
+        markService.commentMark(id, Comment(None, id, request.userId, replyId, content, created, location))
+          .map(comment => success(Messages("success.comment", Json.obj("comment_id" -> comment.id))))
       case None =>
-        Future.successful(Ok(Json.obj(
-          "code" -> 4022,
-          "message" -> Messages("mark.notFound")
-        )))
+        Future.successful(error(4022, Messages("invalid.markId")))
     }
   }
 
   def deleteCommentFromMark(commentId: Long) = SecuredAction.async { implicit request =>
     markService.deleteCommentFromMark(commentId, request.userId).map {
-      case true =>
-        Ok(Json.obj(
-          "code" -> 1,
-          "message" -> "Delete Success"
-        ))
-      case false =>
-        Ok(Json.obj(
-          "code" -> 1,
-          "message" -> "Delete Failed"
-        ))
+      case true  => success(Messages("success.deleteComment"))
+      case false => error(4029, Messages("failed.deleteComment"))
     }
   }
 
   def getCommentsForMark(markId: Long) = Action.async { implicit request =>
-
     markService.getCommentsForMark(markId).map { results =>
       val totalComments = results.length
       val commentsJson = results.map { row =>
@@ -83,14 +64,9 @@ class CommentController @Inject() (
           ))
         )
       }
-
-      Ok(Json.obj(
-        "code" -> 1,
-        "message" -> "Record(s) Found",
-        "data" -> Json.obj(
-          "total_comments" -> totalComments,
-          "comments" -> Json.toJson(commentsJson)
-        )
+      success(Messages("success.found"), Json.obj(
+        "total_comments" -> totalComments,
+        "comments" -> Json.toJson(commentsJson)
       ))
     }
   }

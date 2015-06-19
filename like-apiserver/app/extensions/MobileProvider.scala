@@ -4,7 +4,7 @@ import MobileProvider._
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.impl.exceptions.AccessDeniedException
 import play.api.libs.concurrent.Execution.Implicits._
-import utils.{ AVOSUtils, MobSmsUtils }
+import utils.AVOSUtils
 
 import scala.concurrent.Future
 

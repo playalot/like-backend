@@ -34,4 +34,15 @@ object AVOSUtils {
       ).post("").map(response => response.status == 200)
   }
 
+  def installations(deviceToken: String, deviceType: String): Future[String] = {
+    Logger.debug(s"[AVOSCloud] Debug installations token: $deviceToken, type: $deviceType")
+    WS.url(s"$AVOSCloudApplicationUrl/installations")
+      .withHeaders(
+        "X-AVOSCloud-Application-Id" -> AVOSCloudApplicationId,
+        "X-AVOSCloud-Application-Key" -> AVOSCloudApplicationKey,
+        "Content-Type" -> "application/json")
+      .post(Json.obj("deviceType" -> deviceType, "deviceToken" -> deviceToken, "channels" -> Json.arr("")))
+      .map(response => (response.json \ "objectId").as[String])
+  }
+
 }

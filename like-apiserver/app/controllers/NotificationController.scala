@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
-import play.api.i18n.MessagesApi
+import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
 import services.NotificationService
@@ -18,13 +18,7 @@ class NotificationController @Inject() (
 
   def notificationCount = SecuredAction.async { implicit request =>
     notificationService.countForUser(request.userId).map { count =>
-      Ok(Json.obj(
-        "code" -> 1,
-        "message" -> "Record(s) Found",
-        "data" -> Json.obj(
-          "count" -> count
-        )
-      ))
+      success(Messages("success.found", Json.obj("count" -> count)))
     }
   }
 
@@ -77,15 +71,10 @@ class NotificationController @Inject() (
             "timestamp" -> row._1.updated
           )
         }
-
       }
-      Ok(Json.obj(
-        "code" -> 1,
-        "message" -> "Record(s) Found",
-        "data" -> Json.obj(
-          "notifications" -> Json.toJson(json),
-          "ts" -> ts
-        )
+      success(Messages("success.found"), Json.obj(
+        "notifications" -> Json.toJson(json),
+        "ts" -> ts
       ))
     }
   }

@@ -1,8 +1,30 @@
-##Notification消息中心列表######URLhttp://api.likeorz.com/v2/notification/{page:[0-9]+}######支持格式JSON######HTTP请求方式GET######请求参数|参数|必选|类型及范围|说明|
+##Notification
+
+消息中心列表
+
+######URL
+
+http://api.likeorz.com/v1/notification/{page:[0-9]+}
+
+######支持格式
+JSON
+
+######HTTP请求方式
+
+GET
+
+######请求参数
+|参数|必选|类型及范围|说明|
 |--------|-------|-------|
 |LIKE-SESSION-TOKEN|true|string|Header中带用户授权|
 |{page:[0-9]+}|true|int|分页|
-######返回结果######JSON示例<pre>{
+
+######返回结果
+
+######JSON示例
+
+```json
+{
     "code": "1", 
     "message": "Record(s) Found", 
     "data": {
@@ -53,7 +75,10 @@
         "next": false
     }
 }
-</pre>######返回字段说明|返回值字段|字段类型|字段说明|
+```
+
+######返回字段说明
+|返回值字段|字段类型|字段说明|
 |--------|-------|-------|
 |notes|array|消息列表|
 |type|string|消息类型(LIKE MARK FOLLOW)|

@@ -18,10 +18,12 @@
 |4025|Invalid Tag|标签不符合要求|
 |4026|Invalid Post Body|图片不符合要求|
 |4027|Invalid Feedback|反馈不符合要求|
+|4028|Invalid Installation|安装数据有错|
+|4029|Failed Delete Comment|删除评论失败|
 |4030|No Such Notification|没有任何消息提醒|
 |4040|Invalid Nickname|昵称不符合要求|
 |4041|Invalid Avatar|无效的头像文件|
-|4050|Failed Delete Comment|删除评论失败|
+
 |4051|Invalid Auth Info|错误的认证信息|
 
 4052 invalid.socialProvider

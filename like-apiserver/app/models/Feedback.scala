@@ -5,7 +5,7 @@ package models
  * Date: 5/21/15
  */
 case class Feedback(
-  id: Long,
+  id: Option[Long],
   userId: Long,
   feedback: String,
-  created: Long)
+  created: Long = System.currentTimeMillis() / 1000)

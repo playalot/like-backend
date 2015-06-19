@@ -50,9 +50,6 @@ POST    /v1/mark/$id<[0-9]+>/comment                controllers.CommentControlle
 DELETE  /v1/comment/$id<[0-9]+>                     controllers.CommentController.deleteCommentFromMark(id: Long)
 GET     /v1/mark/$id<[0-9]+>/comment                controllers.CommentController.getCommentsForMark(id: Long)
 
-# Upload
-
-
 # Search
 GET     /v1/tag/hot                                 controllers.SearchController.hotTags
 GET     /v1/tag/guess/:tag                          controllers.SearchController.autoComplete(tag: String)
@@ -61,3 +58,6 @@ GET     /v1/tag/search/:tag/:page                   controllers.SearchController
 #Notification
 GET     /v1/notification                            controllers.NotificationController.getNotifications(ts: Option[Long] ?= None)
 GET     /v1/notification/count                      controllers.NotificationController.notificationCount
+
+#Info
+POST    /v1/feedback                                controllers.InfoController.feedback

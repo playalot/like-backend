@@ -72,14 +72,14 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
       if (tag.tagName.toLowerCase like s"%${jian.toLowerCase}%") || (tag.tagName.toLowerCase like s"%${fan.toLowerCase}%")
     } yield post)
-      .sortBy(_.likes.desc)
       .groupBy(_.id).map(_._1)
+      .sortBy(_.desc)
       .drop(offset)
       .take(pageSize)
     db.run(query.result).flatMap { ids =>
-      val q = for {
+      val q = (for {
         (post, user) <- posts join users on (_.userId === _.id) if post.id inSet ids
-      } yield (post, user)
+      } yield (post, user)).sortBy(_._1.likes.desc)
       db.run(q.result)
     }
   }

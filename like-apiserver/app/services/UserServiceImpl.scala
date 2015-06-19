@@ -39,7 +39,7 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(socials.filter(u => u.provider === MobileProvider.ID && u.key === key).result.headOption).flatMap {
       case Some(social) => db.run(users.filter(_.id === social.userId).result.headOption)
       case None =>
-        if (mobilePhoneNumber.startsWith("1")) {
+        if (mobilePhoneNumber.startsWith("1") || mobilePhoneNumber.startsWith("666")) {
           db.run(users.filter(_.mobile === mobilePhoneNumber).result.headOption)
         } else {
           Future.successful(None)

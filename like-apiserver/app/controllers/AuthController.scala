@@ -103,6 +103,7 @@ class AuthController @Inject() (
         Future.successful(error(4012, Messages("invalid.mobileCode")))
       },
       smsCode => mobileProvider.authenticate(smsCode).flatMap { loginInfo =>
+
         userService.findByMobileAndZone(smsCode.mobilePhoneNumber, smsCode.zone).flatMap {
           case Some(user) => // User already exists
             for {

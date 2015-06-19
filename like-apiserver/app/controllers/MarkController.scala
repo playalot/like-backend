@@ -21,34 +21,18 @@ class MarkController @Inject() (
   def like(markId: Long) = SecuredAction.async { implicit request =>
     markService.getMark(markId).flatMap {
       case Some(mark) =>
-        markService.like(markId, request.userId).map { _ =>
-          Ok(Json.obj(
-            "code" -> 1,
-            "message" -> "Like Success"
-          ))
-        }
+        markService.like(markId, request.userId).map(_ => success(Messages("success.like")))
       case None =>
-        Future.successful(Ok(Json.obj(
-          "code" -> 4022,
-          "message" -> Messages("mark.notFound")
-        )))
+        Future.successful(error(4022, Messages("invalid.markId")))
     }
   }
 
   def unlike(markId: Long) = SecuredAction.async { implicit request =>
     markService.getMark(markId).flatMap {
       case Some(mark) =>
-        markService.unlike(markId, request.userId).map { _ =>
-          Ok(Json.obj(
-            "code" -> 1,
-            "message" -> "Unlike Success"
-          ))
-        }
+        markService.unlike(markId, request.userId).map(_ => success(Messages("success.unLike")))
       case None =>
-        Future.successful(Ok(Json.obj(
-          "code" -> 4022,
-          "message" -> Messages("mark.notFound")
-        )))
+        Future.successful(error(4022, Messages("invalid.markId")))
     }
   }
 

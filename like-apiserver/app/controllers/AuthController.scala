@@ -291,8 +291,8 @@ class AuthController @Inject() (
         Future.successful(error(4055, Messages("failed.lastAccount")))
       } else {
         userService.unlinkAccount(request.userId, provider).map {
-          case true  => success(Messages("success.unlink"))
-          case false => error(4056, Messages("failed.unlink"))
+          case true  => success(Messages("success.unLink"))
+          case false => error(4056, Messages("failed.unLink"))
         }
       }
     }

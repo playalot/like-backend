@@ -8,8 +8,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
 import utils.RedisCacheClient
 
-import scala.concurrent.{ Await, Future }
-import scala.concurrent.duration._
+import scala.concurrent.Future
 
 /**
  * Created by Guan Guan
@@ -48,7 +47,8 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def like(markId: Long, userId: Long): Future[Unit] = {
     val markQuery = for {
-      ((mark, post), tag) <- marks join posts on (_.postId === _.id) join tags on (_._1.tagId === _.id) if mark.id === markId
+      ((mark, post), tag) <- marks join posts on (_.postId === _.id) join tags on (_._1.tagId === _.id)
+      if mark.id === markId
     } yield (mark, post, tag)
 
     db.run(markQuery.result.headOption).flatMap {
@@ -78,12 +78,13 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def unlike(markId: Long, userId: Long): Future[Unit] = {
     val markQuery = for {
-      (mark, post) <- marks join posts on (_.postId === _.id) if mark.id === markId
-    } yield (mark, post)
+      ((mark, post), tag) <- marks join posts on (_.postId === _.id) join tags on (_._1.tagId === _.id)
+      if mark.id === markId
+    } yield (mark, post, tag)
 
     db.run(markQuery.result.headOption).flatMap {
       case Some(row) =>
-        val (mark, post) = row
+        val (mark, post, tag) = row
         db.run(likes.filter(l => l.markId === markId && l.userId === userId).delete).map { result =>
           if (result > 0) {
             RedisCacheClient.zIncrBy("post_mark:" + mark.postId, -1, mark.identify)
@@ -93,6 +94,7 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
             }
             RedisCacheClient.zIncrBy("tag_likes", -1, mark.tagId.toString)
             RedisCacheClient.zIncrBy("user_likes", -1, post.userId.toString)
+            db.run(notifications.filter(n => n.`type` === "LIKE" && n.fromUserId === userId && n.postId === post.id.get && n.tagName === tag.tagName).delete)
             ()
           }
         }
@@ -110,7 +112,7 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def checkLikes(userId: Long, markIds: Seq[Long]): Future[Seq[Long]] = {
     val query = for {
       like <- likes.filter(x => x.userId === userId && (x.markId inSet markIds))
-    } yield (like.markId)
+    } yield like.markId
     db.run(query.result)
   }
 

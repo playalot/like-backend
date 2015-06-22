@@ -2,8 +2,8 @@ package services
 
 import javax.inject.Inject
 
-import dao._
-import models._
+import com.likeorz.models._
+import com.likeorz.dao._
 import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._

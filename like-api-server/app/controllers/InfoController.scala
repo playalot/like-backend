@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
-import models.{ Installation, Feedback }
+import com.likeorz.models._
 import services.InfoService
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._

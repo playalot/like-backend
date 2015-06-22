@@ -1,8 +1,8 @@
 package services
 
 import com.google.inject.Inject
-import dao._
-import models.{ Installation, Feedback }
+import com.likeorz.dao._
+import com.likeorz.models._
 import slick.driver.JdbcProfile
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._

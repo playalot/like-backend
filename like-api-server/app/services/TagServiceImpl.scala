@@ -2,7 +2,8 @@ package services
 
 import javax.inject.Inject
 
-import dao.{ MarksComponent, TagsComponent }
+import com.likeorz.models.{ Tag => Tg }
+import com.likeorz.dao.{ MarksComponent, TagsComponent }
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
@@ -22,7 +23,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   private val tags = TableQuery[TagsTable]
   private val marks = TableQuery[MarksTable]
 
-  override def suggestTagsForUser(userId: Long): Future[Seq[models.Tag]] = {
+  override def suggestTagsForUser(userId: Long): Future[Seq[Tg]] = {
     val query = (for {
       (mark, tag) <- marks join tags on (_.tagId === _.id)
       if mark.userId === userId
@@ -36,7 +37,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
-  override def autoComplete(name: String): Future[Seq[models.Tag]] = {
+  override def autoComplete(name: String): Future[Seq[Tg]] = {
     val query = (for {
       tag <- tags if tag.tagName startsWith name.toLowerCase
     } yield tag).take(10)
@@ -44,7 +45,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     db.run(query.result)
   }
 
-  override def hotTags: Future[Seq[models.Tag]] = {
+  override def hotTags: Future[Seq[Tg]] = {
     val query = (for {
       tag <- tags
     } yield tag).sortBy(_.likes.desc).take(150)

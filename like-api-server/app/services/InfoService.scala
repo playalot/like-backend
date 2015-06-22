@@ -1,8 +1,8 @@
 package services
 
-import models.{ Installation, Feedback }
-
 import scala.concurrent.Future
+
+import com.likeorz.models._
 
 /**
  * Created by Guan Guan

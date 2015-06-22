@@ -1,6 +1,6 @@
 package services
 
-import models.{ Post, User, Notification }
+import com.likeorz.models._
 
 import scala.concurrent.Future
 

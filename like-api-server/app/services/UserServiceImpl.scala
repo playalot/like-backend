@@ -3,9 +3,9 @@ package services
 import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.LoginInfo
-import dao._
+import com.likeorz.dao._
+import com.likeorz.models._
 import extensions.MobileProvider
-import models._
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile

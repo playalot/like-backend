@@ -15,18 +15,20 @@ scalacOptions in ThisBuild ++= Seq(
   "-Ywarn-dead-code"
 )
 
-lazy val likeDao = (project in file("like-dao"))
+lazy val likeCore = (project in file("like-core"))
 
 lazy val likeApiServer = (project in file("like-api-server"))
+  .dependsOn(likeCore)
   .enablePlugins(PlayScala)
 
 lazy val likeActorCluster = (project in file("like-actor-cluster"))
+  .dependsOn(likeCore)
 
 lazy val likeBearychatRobot = (project in file("like-bearychat-robot"))
   .enablePlugins(PlayScala)
 
 lazy val root = (project in file(".")).aggregate(
-	likeDao,
+	likeCore,
 	likeApiServer,
   likeActorCluster,
   likeBearychatRobot)

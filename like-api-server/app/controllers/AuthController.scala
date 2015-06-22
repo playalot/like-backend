@@ -7,6 +7,7 @@ import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
 import com.mohiva.play.silhouette.impl.providers.{ CommonSocialProfileBuilder, OAuth2Info }
 import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
 import extensions._
+import com.likeorz.models._
 import play.api.{ Logger, Play }
 import play.api.Play.current
 import play.api.i18n.{ MessagesApi, Messages }
@@ -16,7 +17,6 @@ import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import services.UserService
 import utils.{ AVOSUtils, MemcachedCacheClient, HashUtils, GenerateUtils }
-import models.User
 
 import scala.concurrent.Future
 

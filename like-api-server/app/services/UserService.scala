@@ -1,7 +1,7 @@
 package services
 
 import com.mohiva.play.silhouette.api.LoginInfo
-import models.{ SocialAccount, User }
+import com.likeorz.models._
 
 import scala.concurrent.Future
 

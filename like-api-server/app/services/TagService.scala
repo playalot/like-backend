@@ -1,6 +1,6 @@
 package services
 
-import models.{ User, Comment, Tag }
+import com.likeorz.models.Tag
 
 import scala.concurrent.Future
 

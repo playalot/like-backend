@@ -2,11 +2,11 @@ package controllers
 
 import javax.inject.Inject
 
-import models.{ Report, Post }
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import play.api.libs.concurrent.Execution.Implicits._
+import com.likeorz.models.{ Post, Report }
 import services.{ UserService, MarkService, PostService, TagService }
 import utils.QiniuUtil
 

@@ -1,8 +1,8 @@
 package services
 
 import com.google.inject.Inject
-import dao.{ UsersComponent, PostsComponent, NotificationsComponent }
-import models.{ Post, User, Notification }
+import com.likeorz.models._
+import com.likeorz.dao.{ UsersComponent, PostsComponent, NotificationsComponent }
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile

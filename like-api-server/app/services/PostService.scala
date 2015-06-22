@@ -1,6 +1,6 @@
 package services
 
-import models._
+import com.likeorz.models._
 
 import scala.concurrent.Future
 

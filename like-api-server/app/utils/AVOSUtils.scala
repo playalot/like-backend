@@ -21,7 +21,7 @@ object AVOSUtils {
         "X-AVOSCloud-Application-Id" -> AVOSCloudApplicationId,
         "X-AVOSCloud-Application-Key" -> AVOSCloudApplicationKey,
         "Content-Type" -> "application/json"
-      ).post(Json.obj("mobilePhoneNumber" -> mobilePhoneNumber, "countryCode" -> zone)).map(response => { println(response.body); response.status == 200 })
+      ).post(Json.obj("mobilePhoneNumber" -> mobilePhoneNumber, "countryCode" -> zone, "template" -> "smscode")).map(response => { println(response.body); response.status == 200 })
   }
 
   def verifySmsCode(mobilePhoneNumber: String, zone: String, code: String): Future[Boolean] = {

@@ -1,8 +1,8 @@
 package com.likeorz.dao
 
+import com.likeorz.models.{ Tag => T, Mark }
 import play.api.db.slick.HasDatabaseConfig
 import slick.driver.JdbcProfile
-import com.likeorz.models.{ Tag => T }
 
 /**
  * Created by Guan Guan
@@ -23,3 +23,19 @@ trait TagsComponent { self: HasDatabaseConfig[JdbcProfile] =>
   }
 }
 
+trait MarksComponent { self: HasDatabaseConfig[JdbcProfile] =>
+
+  import driver.api._
+
+  class MarksTable(tag: Tag) extends Table[Mark](tag, "mark") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def postId = column[Long]("post_id")
+    def tagId = column[Long]("tag_id")
+    def userId = column[Long]("user_id")
+    def created = column[Long]("created")
+    def updated = column[Long]("updated")
+    def likes = column[Long]("likes")
+
+    override def * = (id.?, postId, tagId, userId, created, updated, likes) <> (Mark.tupled, Mark.unapply _)
+  }
+}

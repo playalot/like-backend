@@ -1,8 +1,8 @@
 package com.likeorz.dao
 
+import com.likeorz.models._
 import play.api.db.slick.HasDatabaseConfig
 import slick.driver.JdbcProfile
-import com.likeorz.models._
 
 /**
  * Created by Guan Guan

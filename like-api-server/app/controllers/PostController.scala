@@ -89,9 +89,7 @@ class PostController @Inject() (
     )
   }
 
-  /**
-   * Get Post summary and author info
-   */
+  /** Get Post summary and author info */
   def getPost(id: Long) = UserAwareAction.async { implicit request =>
     postService.getPostById(id).map {
       case Some(postAndUser) =>
@@ -113,9 +111,7 @@ class PostController @Inject() (
     }
   }
 
-  /**
-   * Delete Post
-   */
+  /** Delete Post */
   def deletePost(id: Long) = SecuredAction.async { implicit request =>
     postService.getPostById(id).flatMap {
       case Some(post) =>
@@ -128,9 +124,7 @@ class PostController @Inject() (
     }
   }
 
-  /**
-   * Get Post marks and comments
-   */
+  /** Get Post marks and comments */
   def getPostMarks(id: Long, page: Int) = UserAwareAction.async { implicit request =>
     postService.getPostById(id).flatMap {
       case Some(postAndUser) =>
@@ -185,9 +179,7 @@ class PostController @Inject() (
     }
   }
 
-  /**
-   * Add a mark to the post
-   */
+  /** Add a mark to the post */
   def addMark(postId: Long) = SecuredAction.async(parse.json) { implicit request =>
     (request.body \ "tag").asOpt[String] match {
       case Some(tag) =>
@@ -212,9 +204,7 @@ class PostController @Inject() (
     }
   }
 
-  /**
-   * Report abuse of a post
-   */
+  /** Report abuse of a post */
   def report(postId: Long) = SecuredAction.async { implicit request =>
     postService.report(Report(None, request.userId, postId)).map { _ =>
       success("success.report")

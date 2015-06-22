@@ -1,6 +1,6 @@
 package models
 
 case class Recommend(
-  id: Long,
+  id: Option[Long],
   postId: Long,
   created: Long)

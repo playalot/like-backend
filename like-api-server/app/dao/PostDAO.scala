@@ -42,3 +42,16 @@ trait ReportsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     override def * = (id.?, userId, postId, num, created) <> (Report.tupled, Report.unapply _)
   }
 }
+
+trait RecommendsComponent { self: HasDatabaseConfig[JdbcProfile] =>
+
+  import driver.api._
+
+  class RecommendsTable(tag: Tag) extends Table[Recommend](tag, "recommend") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def postId = column[Long]("post_id")
+    def created = column[Long]("created")
+
+    override def * = (id.?, postId, created) <> (Recommend.tupled, Recommend.unapply _)
+  }
+}

@@ -95,6 +95,22 @@ object RedisCacheClient {
     }
   }
 
+  def sAdd(key: String, members: String*) = {
+    blocking {
+      withJedisClient[Long] { client =>
+        client.sadd(key, members: _*)
+      }
+    }
+  }
+
+  def sMembers(key: String) = {
+    blocking {
+      withJedisClient[Set[String]] { client =>
+        client.smembers(key).toSet
+      }
+    }
+  }
+
   private def withJedisClient[T](f: Jedis => T): T = {
     val jedis = jedisPool.getResource()
     try {

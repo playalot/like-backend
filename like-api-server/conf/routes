@@ -15,6 +15,9 @@ POST    /v1/account/link/:provider                  controllers.AuthController.l
 DELETE  /v1/account/link/:provider                  controllers.AuthController.unlinkSocialAccount(provider: String)
 POST    /v1/account/link/mobile                     controllers.AuthController.linkMobileAccount
 
+# Feed
+GET     /v1/homefeeds                               controllers.FeedController.getHomeFeeds(ts: Option[String] ?= None)
+
 # User
 GET     /v1/user/$id<[0-9]+>                        controllers.UserController.getInfo(id: Long)
 POST    /v1/user/login                              controllers.AuthController.mobileAuthenticate

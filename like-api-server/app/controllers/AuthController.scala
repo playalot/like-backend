@@ -39,13 +39,11 @@ class AuthController @Inject() (
 
   val refreshTokenGenerator = new SecureRandomIDGenerator(15)
 
-  val DefaultAvatar = Play.configuration.getString("default.avatar").get
-  val DefaultCover = Play.configuration.getString("default.cover").get
-  val TokenExpiry = Play.configuration.getInt("default.tokenExpiry").get
+  val DEFAULT_AVATAR = Play.configuration.getString("default.avatar").get
+  val DEFAULT_COVER = Play.configuration.getString("default.cover").get
+  val TOKEN_EXPIRY = Play.configuration.getInt("default.tokenExpiry").get
 
-  /**
-   * Get renewed session token
-   */
+  /** Get renewed session token */
   def refreshSessionToken(id: Long) = Action.async(parse.json) { implicit request =>
     (request.body \ "refresh_token").asOpt[String] match {
       case Some(refreshToken) => userService.findById(id).flatMap {
@@ -53,7 +51,7 @@ class AuthController @Inject() (
           if (user.refreshToken.isDefined && HashUtils.validate(refreshToken, user.refreshToken.get)) {
             for {
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TokenExpiry)
+              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
               refreshToken <- refreshTokenGenerator.generate
               unit <- userService.updateRefreshToken(id, HashUtils.hashPassword(refreshToken))
             } yield {
@@ -72,9 +70,7 @@ class AuthController @Inject() (
     }
   }
 
-  /**
-   * Send sms code to mobile phone
-   */
+  /** Send sms code to mobile phone */
   def sendSmsCode = Action.async(parse.json) { implicit request =>
     val tokenOpt = (request.body \ "token").asOpt[String]
     val mobileOpt = (request.body \ "mobile").asOpt[String]
@@ -94,9 +90,7 @@ class AuthController @Inject() (
     }
   }
 
-  /**
-   * Authenticate via mobile sms code
-   */
+  /** Authenticate via mobile sms code */
   def mobileAuthenticate = Action.async(parse.json) { implicit request =>
     request.body.validate[SmsCode].fold(
       errors => {
@@ -109,7 +103,7 @@ class AuthController @Inject() (
             for {
               // Create new session token
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TokenExpiry)
+              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
               // Create new refresh token
               refreshToken <- refreshTokenGenerator.generate
               // Refresh user's refresh token and updated time
@@ -119,7 +113,7 @@ class AuthController @Inject() (
                 "user_id" -> user.identify,
                 "session_token" -> sessionToken,
                 "refresh_token" -> refreshToken,
-                "expires_in" -> TokenExpiry
+                "expires_in" -> TOKEN_EXPIRY
               ))
             }
           case None => // Register new user
@@ -128,20 +122,20 @@ class AuthController @Inject() (
               user <- userService.insert(User(None, Some(smsCode.mobilePhoneNumber), None,
                 HashUtils.hashPassword(refreshToken),
                 GenerateUtils.generateNickname(),
-                DefaultAvatar, DefaultCover,
+                DEFAULT_AVATAR, DEFAULT_COVER,
                 GenerateUtils.currentSeconds(),
                 GenerateUtils.currentSeconds(),
                 0, Some(HashUtils.hashPassword(refreshToken))
               ))
               link <- userService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone.toInt + " " + smsCode.mobilePhoneNumber)
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TokenExpiry)
+              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
             } yield {
               success(Messages("success.login"), Json.obj(
                 "user_id" -> user.identify,
                 "session_token" -> sessionToken,
                 "refresh_token" -> refreshToken,
-                "expires_in" -> TokenExpiry
+                "expires_in" -> TOKEN_EXPIRY
               )
               )
             }
@@ -154,9 +148,7 @@ class AuthController @Inject() (
     )
   }
 
-  /**
-   * Authenticate via social provider
-   */
+  /** Authenticate via social provider */
   def socialAuthenticate(provider: String) = Action.async(parse.json) { implicit request =>
     val idOpt = (request.body \ "uid").asOpt[String]
     val accessTokenOpt = (request.body \ "access_token").asOpt[String]
@@ -175,17 +167,17 @@ class AuthController @Inject() (
               refreshToken <- refreshTokenGenerator.generate
               user <- userService.upsert(profile.loginInfo, User(None, None, None,
                 HashUtils.hashPassword(refreshToken),
-                profile.screenName, DefaultAvatar, DefaultCover,
+                profile.screenName, DEFAULT_AVATAR, DEFAULT_COVER,
                 GenerateUtils.currentSeconds(),
                 GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TokenExpiry)
+              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
             } yield {
               success(Messages("success.login"), Json.obj(
                 "user_id" -> user.identify,
                 "session_token" -> sessionToken,
                 "refresh_token" -> refreshToken,
-                "expires_in" -> TokenExpiry
+                "expires_in" -> TOKEN_EXPIRY
               ))
             }
           case Some(p: WechatProvider with WechatProfileBuilder) =>
@@ -194,17 +186,17 @@ class AuthController @Inject() (
               refreshToken <- refreshTokenGenerator.generate
               user <- userService.upsert(profile.loginInfo, User(None, None, None,
                 HashUtils.hashPassword(refreshToken),
-                profile.screenName, DefaultAvatar, DefaultCover,
+                profile.screenName, DEFAULT_AVATAR, DEFAULT_COVER,
                 GenerateUtils.currentSeconds(),
                 GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TokenExpiry)
+              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
             } yield {
               success(Messages("success.login"), Json.obj(
                 "user_id" -> user.identify,
                 "session_token" -> sessionToken,
                 "refresh_token" -> refreshToken,
-                "expires_in" -> TokenExpiry
+                "expires_in" -> TOKEN_EXPIRY
               ))
             }
           case Some(p: FacebookProvider with CommonSocialProfileBuilder) =>
@@ -213,17 +205,17 @@ class AuthController @Inject() (
               refreshToken <- refreshTokenGenerator.generate
               user <- userService.upsert(profile.loginInfo, User(None, None, None,
                 HashUtils.hashPassword(refreshToken),
-                profile.fullName.getOrElse("New Liker"), DefaultAvatar, DefaultCover,
+                profile.fullName.getOrElse("New Liker"), DEFAULT_AVATAR, DEFAULT_COVER,
                 GenerateUtils.currentSeconds(),
                 GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TokenExpiry)
+              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
             } yield {
               success(Messages("success.login"), Json.obj(
                 "user_id" -> user.identify,
                 "session_token" -> sessionToken,
                 "refresh_token" -> refreshToken,
-                "expires_in" -> TokenExpiry
+                "expires_in" -> TOKEN_EXPIRY
               ))
             }
           case _ => Future.successful(error(4052, Messages("invalid.socialProvider")))

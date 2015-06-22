@@ -17,16 +17,19 @@ scalacOptions in ThisBuild ++= Seq(
 
 lazy val likeDao = (project in file("like-dao"))
 
-lazy val likeApiServer = (project in file("like-apiserver"))
+lazy val likeApiServer = (project in file("like-api-server"))
   .enablePlugins(PlayScala)
 
-lazy val likeBot = (project in file("like-bot"))
+lazy val likeActorCluster = (project in file("like-actor-cluster"))
+
+lazy val likeBearychatRobot = (project in file("like-bearychat-robot"))
   .enablePlugins(PlayScala)
 
 lazy val root = (project in file(".")).aggregate(
 	likeDao,
 	likeApiServer,
-  likeBot)
+  likeActorCluster,
+  likeBearychatRobot)
 
 resolvers ++= Seq(
 	  Resolver.mavenLocal,

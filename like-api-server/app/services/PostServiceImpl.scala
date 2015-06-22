@@ -22,6 +22,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     with TagsComponent with MarksComponent
     with LikesComponent with CommentsComponent
     with NotificationsComponent with ReportsComponent
+    with RecommendsComponent with FollowsComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -34,6 +35,8 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   private val comments = TableQuery[CommentsTable]
   private val notifications = TableQuery[NotificationsTable]
   private val reports = TableQuery[ReportsTable]
+  private val recommends = TableQuery[RecommendsTable]
+  private val follows = TableQuery[FollowsTable]
 
   override def insert(post: Post): Future[Post] = {
     db.run(posts returning posts.map(_.id) += post).map(id => post.copy(id = Some(id)))
@@ -43,9 +46,26 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(posts.filter(_.userId === userId).result.map(_.length))
   }
 
-  override def getPostsByUserId(userId: Long, page: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
-    val pageSize = 21
+  override def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
     db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).drop(page * pageSize).take(pageSize).result).flatMap { posts =>
+      val futures = posts.map { post =>
+        val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
+        val query = for {
+          (mark, tag) <- marks join tags on (_.tagId === _.id)
+          if mark.id inSet cachedMarks.keySet
+        } yield (mark.id, tag.tagName)
+
+        db.run(query.result).map { list =>
+          val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
+          (post, marklist)
+        }
+      }
+      Future.sequence(futures.toList)
+    }
+  }
+
+  override def getPostsByIds(ids: Set[Long]): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
+    db.run(posts.filter(_.id inSet ids).result).flatMap { posts =>
       val futures = posts.map { post =>
         val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
         val query = for {
@@ -176,4 +196,47 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(reports returning reports.map(_.id) += report).map(id => report.copy(id = Some(id)))
   }
 
+  override def getRecommendedPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+    if (timestamp.isDefined) {
+      db.run(recommends.filter(_.created < timestamp.get).sortBy(_.created.desc).take(pageSize).map(_.postId).result)
+    } else {
+      db.run(recommends.sortBy(_.created.desc).take(pageSize).map(_.postId).result)
+    }
+  }
+
+  override def getFollowingPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+    db.run(follows.filter(_.fromId === userId).take(10000).map(_.toId).result).flatMap { userIds =>
+      if (timestamp.isDefined) {
+        db.run(posts.filter(p => p.userId.inSet(userIds.+:(userId)) && p.created < timestamp.get).sortBy(_.created.desc).take(pageSize).map(_.id).result)
+      } else {
+        db.run(posts.filter(_.userId.inSet(userIds.+:(userId))).sortBy(_.created.desc).take(pageSize).map(_.id).result)
+      }
+    }
+  }
+
+  override def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+    db.run(marks.filter(_.userId === userId).map(_.tagId).groupBy(x => x).map(_._1).take(10000).result).flatMap { tagIds =>
+      if (timestamp.isDefined) {
+        val query = (for {
+          (mark, post) <- marks join posts on (_.postId === _.id)
+          if mark.userId =!= userId && mark.tagId.inSet(tagIds) && mark.created < timestamp.get
+        } yield (post)).groupBy(_.id).map(_._1).sortBy(_.desc).take(pageSize)
+        db.run(query.result)
+      } else {
+        val query = (for {
+          (mark, post) <- marks join posts on (_.postId === _.id)
+          if mark.userId =!= userId && mark.tagId.inSet(tagIds)
+        } yield (post)).groupBy(_.id).map(_._1).sortBy(_.desc).take(pageSize)
+        db.run(query.result)
+      }
+    }
+  }
+
+  override def getRecentPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+    if (timestamp.isDefined) {
+      db.run(posts.filter(_.created < timestamp.get).sortBy(_.created.desc).take(pageSize).map(_.id).result)
+    } else {
+      db.run(posts.sortBy(_.created.desc).take(pageSize).map(_.id).result)
+    }
+  }
 }

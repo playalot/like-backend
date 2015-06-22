@@ -88,7 +88,7 @@ class UserController @Inject() (
   def getPostsForUser(id: Long, page: Int) = SecuredAction.async { implicit request =>
     userService.findById(id).flatMap {
       case Some(user) =>
-        postService.getPostsByUserId(id, page).flatMap { list =>
+        postService.getPostsByUserId(id, page, 21).flatMap { list =>
           val futures = list.map { row =>
             val markIds = row._2.map(_._1)
             markService.checkLikes(request.userId, markIds).map { likedMarks =>

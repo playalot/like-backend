@@ -4,13 +4,13 @@
   gather_facts: True
   tasks:
     - name: Build Playframework Dist package
-      command: chdir=../ sbt "project likeBot" dist
+      command: chdir=../ sbt "project likeBearychat-Robot" dist
 
-- hosts: [like_bot_server]
+- hosts: [like_bearychat_robot_server]
   sudo: True
   serial: 1
   vars:
-    app_name: 'like-bot'
+    app_name: 'like-bearychat-robot'
     app_version: '1.0.0'
     app_port: 9000
     extra_configs: "-Dhttp.port={{ app_port }} "

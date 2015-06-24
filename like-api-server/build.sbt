@@ -1,6 +1,6 @@
 import scalariform.formatter.preferences._
 
-name := """like-apis-erver"""
+name := """like-api-server"""
 
 version := "1.1.0"
 
@@ -20,6 +20,7 @@ libraryDependencies ++= Seq(
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.3",
   "mysql"                     %  "mysql-connector-java" % "5.1.35",
+  "com.typesafe.akka"         %% "akka-remote"      % "2.3.11",
   "com.typesafe.play"         %% "play-slick"       % "1.0.0",
   "com.github.nscala-time"    %% "nscala-time"      % "2.0.0",
   "com.mohiva"                %% "play-silhouette"  % "3.0.0-RC1",

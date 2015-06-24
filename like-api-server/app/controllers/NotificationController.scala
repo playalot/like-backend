@@ -18,7 +18,7 @@ class NotificationController @Inject() (
 
   def notificationCount = SecuredAction.async { implicit request =>
     notificationService.countForUser(request.userId).map { count =>
-      success(Messages("success.found", Json.obj("count" -> count)))
+      success(Messages("success.found"), Json.obj("count" -> count))
     }
   }
 

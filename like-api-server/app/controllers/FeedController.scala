@@ -66,22 +66,29 @@ class FeedController @Inject() (
         val idTsMap = list.map(x => (x._1.id.get, x._1.created)).toMap
         val nextTs = results.map(rs => idTsMap(rs.last)).mkString(",")
         val futures = list.filter(p => uniqueIds.contains(p._1.id.get)).sortBy(-_._1.created).map { row =>
-          val markIds = row._2.map(_._1)
+          val markIds = row._3.map(_._1)
           markService.checkLikes(request.userId.getOrElse(-1L), markIds).map { likedMarks =>
-            val marksJson = row._2.map { fields =>
+            val marksJson = row._3.map { fields =>
               Json.obj(
                 "mark_id" -> fields._1,
-                "tag" -> fields._2,
+                "tag" -> fields._3,
                 "likes" -> fields._3,
                 "is_liked" -> likedMarks.contains(fields._1)
               )
             }
             val post = row._1
+            val user = row._2
             Json.obj(
               "post_id" -> post.id.get,
               "type" -> post.`type`,
               "content" -> QiniuUtil.getPhoto(post.content, "medium"),
               "created" -> post.created,
+              "user" -> Json.obj(
+                "user_id" -> user.identify,
+                "nickname" -> user.nickname,
+                "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+                "likes" -> user.likes
+              ),
               "marks" -> Json.toJson(marksJson)
             )
           }

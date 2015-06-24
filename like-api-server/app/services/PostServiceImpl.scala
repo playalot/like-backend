@@ -64,10 +64,14 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getPostsByIds(ids: Set[Long]): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
-    db.run(posts.filter(_.id inSet ids).result).flatMap { posts =>
-      val futures = posts.map { post =>
-        val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
+  override def getPostsByIds(ids: Set[Long]): Future[Seq[(Post, User, Seq[(Long, String, Int)])]] = {
+    val query = for {
+      (post, user) <- posts join users on (_.userId === _.id)
+      if post.id inSet ids
+    } yield (post, user)
+    db.run(query.result).flatMap { posts =>
+      val futures = posts.map { postAndUser =>
+        val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postAndUser._1.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
         val query = for {
           (mark, tag) <- marks join tags on (_.tagId === _.id)
           if mark.id inSet cachedMarks.keySet
@@ -75,7 +79,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
         db.run(query.result).map { list =>
           val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
-          (post, marklist)
+          (postAndUser._1, postAndUser._2, marklist)
         }
       }
       Future.sequence(futures.toList)
@@ -170,13 +174,19 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }.flatMap { tagId =>
       db.run(marks.filter(m => m.postId === postId && m.tagId === tagId).result.headOption).flatMap {
         case Some(mark) =>
+          // If other people create an existed mark, it equals user like the mark
+          // Note this is actually not executed since front-end disallow create same mark
           if (mark.userId != userId) {
-            db.run(likes += Like(mark.id.get, userId))
-            RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
-            val notifyMarkUser = Notification(None, "LIKE", mark.userId, userId, System.currentTimeMillis / 1000, Some(tagName), Some(postId))
-            db.run(notifications += notifyMarkUser)
+            for {
+              l <- db.run(likes += Like(mark.id.get, userId))
+              n <- db.run(notifications += Notification(None, "LIKE", mark.userId, userId, System.currentTimeMillis / 1000, Some(tagName), Some(postId)))
+            } yield {
+              RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
+              mark
+            }
+          } else {
+            Future.successful(mark)
           }
-          Future.successful(mark)
         case None =>
           val newMark = Mark(None, postId, tagId, userId)
           db.run(marks returning marks.map(_.id) += newMark).map(id => newMark.copy(id = Some(id))).map { mark =>
@@ -220,13 +230,13 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         val query = (for {
           (mark, post) <- marks join posts on (_.postId === _.id)
           if mark.userId =!= userId && mark.tagId.inSet(tagIds) && mark.created < timestamp.get
-        } yield (post)).groupBy(_.id).map(_._1).sortBy(_.desc).take(pageSize)
+        } yield post).groupBy(_.id).map(_._1).sortBy(_.desc).take(pageSize)
         db.run(query.result)
       } else {
         val query = (for {
           (mark, post) <- marks join posts on (_.postId === _.id)
           if mark.userId =!= userId && mark.tagId.inSet(tagIds)
-        } yield (post)).groupBy(_.id).map(_._1).sortBy(_.desc).take(pageSize)
+        } yield post).groupBy(_.id).map(_._1).sortBy(_.desc).take(pageSize)
         db.run(query.result)
       }
     }

@@ -204,7 +204,6 @@ class AuthController @Inject() (
             // Verify token
             if (HashUtils.validateTimestampHash((request.body \ "token").asOpt[String].getOrElse(""))) {
               val nickname = (request.body \ "nickname").asOpt[String].getOrElse("New Liker")
-              println(request.body)
               for {
                 refreshToken <- refreshTokenGenerator.generate
                 user <- userService.upsert(LoginInfo(FacebookProvider.ID, id), User(None, None, None,

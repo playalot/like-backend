@@ -5,7 +5,6 @@ import javax.inject.Inject
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
-import com.likeorz.models._
 import services.{ PostService, MarkService }
 import utils.{ RedisCacheClient, QiniuUtil }
 
@@ -37,7 +36,7 @@ class FeedController @Inject() (
       Future.sequence(Seq(recommendIds, recentIds, followIds, taggedIds))
     } else {
       val recommendIds = postService.getRecommendedPosts(13, times(0))
-      val recentIds = postService.getRecentPosts(5, times(0))
+      val recentIds = postService.getRecentPosts(5, times(1))
       Future.sequence(Seq(recommendIds, recentIds))
     }
 
@@ -66,7 +65,7 @@ class FeedController @Inject() (
       postService.getPostsByIds(resultIds).flatMap { list =>
         val idTsMap = list.map(x => (x._1.id.get, x._1.created)).toMap
         val nextTs = results.map(rs => idTsMap(rs.last)).mkString(",")
-        val futures = list.filter(p => uniqueIds.contains(p._1.id.get)).map { row =>
+        val futures = list.filter(p => uniqueIds.contains(p._1.id.get)).sortBy(-_._1.created).map { row =>
           val markIds = row._2.map(_._1)
           markService.checkLikes(request.userId.getOrElse(-1L), markIds).map { likedMarks =>
             val marksJson = row._2.map { fields =>

@@ -15,7 +15,7 @@ object HashUtils {
 
   def validateTimestampHash(value: String): Boolean = {
     val currentMinutes = System.currentTimeMillis() / 1000 / 60
-    (0 to 4).exists(i => minuteToHash(currentMinutes - i) == value)
+    (0 to 3).exists(i => minuteToHash(currentMinutes - i) == value)
   }
 
   private def minuteToHash(minute: Long): String = {

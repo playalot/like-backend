@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
+import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.util.IDGenerator
 import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
 import com.mohiva.play.silhouette.impl.providers.{ CommonSocialProfileBuilder, OAuth2Info }
@@ -200,23 +201,29 @@ class AuthController @Inject() (
               ))
             }
           case Some(p: FacebookProvider with CommonSocialProfileBuilder) =>
-            for {
-              profile <- p.retrieveProfile(authInfoWithId)
-              refreshToken <- refreshTokenGenerator.generate
-              user <- userService.upsert(profile.loginInfo, User(None, None, None,
-                HashUtils.hashPassword(refreshToken),
-                profile.fullName.getOrElse("New Liker"), DEFAULT_AVATAR, DEFAULT_COVER,
-                GenerateUtils.currentSeconds(),
-                GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
-              sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
-            } yield {
-              success(Messages("success.login"), Json.obj(
-                "user_id" -> user.identify,
-                "session_token" -> sessionToken,
-                "refresh_token" -> refreshToken,
-                "expires_in" -> TOKEN_EXPIRY
-              ))
+            // Verify token
+            if (HashUtils.validateTimestampHash((request.body \ "token").asOpt[String].getOrElse(""))) {
+              val nickname = (request.body \ "nickname").asOpt[String].getOrElse("New Liker")
+              println(request.body)
+              for {
+                refreshToken <- refreshTokenGenerator.generate
+                user <- userService.upsert(LoginInfo(FacebookProvider.ID, id), User(None, None, None,
+                  HashUtils.hashPassword(refreshToken),
+                  nickname, DEFAULT_AVATAR, DEFAULT_COVER,
+                  GenerateUtils.currentSeconds(),
+                  GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
+                sessionToken <- sessionTokenGenerator.generate
+                value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
+              } yield {
+                success(Messages("success.login"), Json.obj(
+                  "user_id" -> user.identify,
+                  "session_token" -> sessionToken,
+                  "refresh_token" -> refreshToken,
+                  "expires_in" -> TOKEN_EXPIRY
+                ))
+              }
+            } else {
+              Future.successful(error(5051, Messages("invalid.authInfo")))
             }
           case _ => Future.successful(error(4052, Messages("invalid.socialProvider")))
         }
@@ -264,11 +271,15 @@ class AuthController @Inject() (
                   response
                 }
               case Some(p: FacebookProvider with CommonSocialProfileBuilder) =>
-                for {
-                  profile <- p.retrieveProfile(authInfoWithId)
-                  link <- userService.linkAccount(request.userId, provider, profile.loginInfo.providerKey)
-                } yield {
-                  response
+                // Verify token
+                if (HashUtils.validateTimestampHash((request.body \ "token").asOpt[String].getOrElse(""))) {
+                  for {
+                    link <- userService.linkAccount(request.userId, provider, id)
+                  } yield {
+                    response
+                  }
+                } else {
+                  Future.successful(error(5051, Messages("invalid.authInfo")))
                 }
               case _ => Future.successful(error(4052, Messages("invalid.socialProvider")))
             }

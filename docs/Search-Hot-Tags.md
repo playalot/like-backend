@@ -1,6 +1,6 @@
-##User Fans
+##Search Hot Tags
 
-获取用户粉丝
+热门标签
 
 ######URL
 
@@ -54,3 +54,4 @@ GET
 |tag|string|标签名称|
 |likes|int|点赞数|
 |image|string|图片地址|
+

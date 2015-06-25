@@ -9,6 +9,7 @@ import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import slick.driver.JdbcProfile
+import slick.driver.MySQLDriver.api._
 import utils.RedisCacheClient
 
 import scala.concurrent.Future
@@ -50,14 +51,23 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).drop(page * pageSize).take(pageSize).result).flatMap { posts =>
       val futures = posts.map { post =>
         val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
-        val query = for {
-          (mark, tag) <- marks join tags on (_.tagId === _.id)
-          if mark.id inSet cachedMarks.keySet
-        } yield (mark.id, tag.tagName)
-
-        db.run(query.result).map { list =>
-          val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
-          (post, marklist)
+        //        val query = for {
+        //          (mark, tag) <- marks join tags on (_.tagId === _.id)
+        //          if mark.id inSet cachedMarks.keySet
+        //        } yield (mark.id, tag.tagName)
+        //        db.run(query.result).map { list =>
+        //          val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
+        //          (post, marklist)
+        //        }
+        if (cachedMarks.size > 0) {
+          val markIds = cachedMarks.keySet.mkString(", ")
+          val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
+          db.run(query).map { list =>
+            val markList = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
+            (post, markList)
+          }
+        } else {
+          Future.successful((post, Seq()))
         }
       }
       Future.sequence(futures.toList)
@@ -72,14 +82,20 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(query.result).flatMap { posts =>
       val futures = posts.map { postAndUser =>
         val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postAndUser._1.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
-        val query = for {
-          (mark, tag) <- marks join tags on (_.tagId === _.id)
-          if mark.id inSet cachedMarks.keySet
-        } yield (mark.id, tag.tagName)
 
-        db.run(query.result).map { list =>
-          val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
-          (postAndUser._1, postAndUser._2, marklist)
+        if (cachedMarks.nonEmpty) {
+          val markIds = cachedMarks.keySet.mkString(", ")
+          val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
+          //        val query = for {
+          //          (mark, tag) <- marks join tags on (_.tagId === _.id)
+          //          if mark.id inSet cachedMarks.keySet
+          //        } yield (mark.id, tag.tagName)
+          db.run(query).map { list =>
+            val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
+            (postAndUser._1, postAndUser._2, marklist)
+          }
+        } else {
+          Future.successful((postAndUser._1, postAndUser._2, Seq()))
         }
       }
       Future.sequence(futures.toList)

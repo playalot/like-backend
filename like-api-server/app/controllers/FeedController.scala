@@ -20,30 +20,29 @@ class FeedController @Inject() (
     postService: PostService) extends BaseController {
 
   def getHomeFeeds(timestamp: Option[String] = None) = UserAwareAction.async { implicit request =>
-
+    // Use phone screen width for output photo size
+    val screenWidth = request.headers.get("LIKE_SCREEN_WIDTH").getOrElse("1280").toInt
     // Parse timestamp used for each data source
     val times = if (timestamp.isDefined) {
       val tsArr = timestamp.get.split(",").map(t => Some(t.toLong)).toSeq
-      if (tsArr.length < 4) tsArr ++ Seq.fill(4 - tsArr.length)(None) else tsArr
-    } else Seq(None, None, None, None)
+      if (tsArr.length < 3) tsArr ++ Seq.fill(3 - tsArr.length)(None) else tsArr
+    } else Seq(None, None, None)
 
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
       val recommendIds = postService.getRecommendedPosts(9, times(0))
-      val recentIds = postService.getRecentPosts(4, times(1))
-      val followIds = postService.getFollowingPosts(request.userId.get, 6, times(2))
-      val taggedIds = postService.getTaggedPosts(request.userId.get, 5, times(3))
-      Future.sequence(Seq(recommendIds, recentIds, followIds, taggedIds))
+      val followIds = postService.getFollowingPosts(request.userId.get, 6, times(1))
+      val taggedIds = postService.getTaggedPosts(request.userId.get, 3, times(2))
+      Future.sequence(Seq(recommendIds, followIds, taggedIds))
     } else {
-      val recommendIds = postService.getRecommendedPosts(13, times(0))
-      val recentIds = postService.getRecentPosts(5, times(1))
-      Future.sequence(Seq(recommendIds, recentIds))
+      val recommendIds = postService.getRecommendedPosts(20, times(0))
+      Future.sequence(Seq(recommendIds))
     }
 
     futureIds.flatMap { results =>
       val resultIds = results.flatten.toSet
-      // Unique result post ids
-      val uniqueIds = if (timestamp.isDefined) { // Page feeds
+      // Unique post ids
+      val uniqueIds = if (timestamp.isDefined) {
         if (request.userId.isDefined) {
           // Remove duplicate ids from user history
           val diffIds = resultIds -- RedisCacheClient.sMembers("posts_seen:" + request.userId.get).map(_.toLong)
@@ -53,7 +52,7 @@ class FeedController @Inject() (
         } else {
           resultIds
         }
-      } else { // Homepage top feeds
+      } else {
         if (request.userId.isDefined) {
           // Clear and initialize history cache
           RedisCacheClient.del("posts_seen:" + request.userId.get)
@@ -71,7 +70,7 @@ class FeedController @Inject() (
             val marksJson = row._3.map { fields =>
               Json.obj(
                 "mark_id" -> fields._1,
-                "tag" -> fields._3,
+                "tag" -> fields._2,
                 "likes" -> fields._3,
                 "is_liked" -> likedMarks.contains(fields._1)
               )
@@ -81,7 +80,7 @@ class FeedController @Inject() (
             Json.obj(
               "post_id" -> post.id.get,
               "type" -> post.`type`,
-              "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+              "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
               "created" -> post.created,
               "user" -> Json.obj(
                 "user_id" -> user.identify,

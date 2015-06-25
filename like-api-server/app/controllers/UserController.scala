@@ -41,7 +41,7 @@ class UserController @Inject() (
             "count" -> Json.obj(
               "post" -> countPosts,
               "follow" -> countFriends,
-              "fan" -> countFriends
+              "fan" -> countFollowers
             )
           ))
         }

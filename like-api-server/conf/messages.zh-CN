@@ -1,6 +1,5 @@
-invalid.mobile = 手机号格式不对
 invalid.mobileExists = 这个手机号已经被使用
-invalid.mobileCode = 短信验证码无效
+invalid.mobileCode = 验证码错误
 invalid.nickname = 无效的昵称
 invalid.nicknameShort = 昵称太短啦
 invalid.nicknameLong = 昵称最多6个字哦
@@ -56,3 +55,8 @@ failed.linkByOthers = 这个账户已经被绑定
 failed.lastAccount = 您至少需要绑定一个账号
 failed.followYourself = 不能关注你自己
 failed.unFollowYourself = 不能对你自己取消关注
+
+notification.comment = {0}评论了你的标签#{1}#
+notification.reply = {0}在标签#{1}#中回复了你
+notification.mark = {0}为你添加了标签#{1}#
+notification.follow = {0}刚刚关注了你

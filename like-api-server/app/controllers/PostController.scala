@@ -6,8 +6,8 @@ import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import play.api.libs.concurrent.Execution.Implicits._
-import com.likeorz.models.{ Post, Report }
-import services.{ UserService, MarkService, PostService, TagService }
+import com.likeorz.models.{ Notification, Post, Report }
+import services._
 import utils.QiniuUtil
 
 import scala.concurrent.Future
@@ -21,7 +21,9 @@ class PostController @Inject() (
     tagService: TagService,
     markService: MarkService,
     userService: UserService,
-    postService: PostService) extends BaseController {
+    postService: PostService,
+    notificationService: NotificationService,
+    pushService: PushService) extends BaseController {
 
   case class PostCommand(content: String, `type`: Option[String], description: Option[String], tags: Seq[String])
 
@@ -190,7 +192,16 @@ class PostController @Inject() (
         else
           postService.getPostById(postId).flatMap {
             case Some(post) =>
-              postService.addMark(postId, post._1.userId, tag, request.userId).map { mark =>
+              for {
+                nickname <- userService.getNickname(request.userId)
+                mark <- postService.addMark(postId, post._1.userId, tag, request.userId)
+              } yield {
+                if (request.userId != post._1.userId) {
+                  val notifyMarkUser = Notification(None, "MARK", post._1.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
+                  notificationService.insert(notifyMarkUser)
+                  println(notifyMarkUser)
+                  pushService.sendPushNotificationToUser(post._1.userId, Messages("notification.mark", nickname, tag), 0)
+                }
                 success(Messages("success.mark"), Json.obj(
                   "mark_id" -> mark.id.get,
                   "tag" -> tag,

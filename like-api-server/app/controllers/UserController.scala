@@ -2,10 +2,11 @@ package controllers
 
 import javax.inject.Inject
 
+import com.likeorz.models.Notification
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ TagService, MarkService, PostService, UserService }
+import services._
 import utils.QiniuUtil
 
 import scala.concurrent.Future
@@ -19,7 +20,9 @@ class UserController @Inject() (
     userService: UserService,
     tagService: TagService,
     markService: MarkService,
-    postService: PostService) extends BaseController {
+    postService: PostService,
+    notificationService: NotificationService,
+    pushService: PushService) extends BaseController {
 
   def getInfo(id: Long) = UserAwareAction.async { implicit request =>
     userService.findById(id).flatMap {
@@ -162,7 +165,14 @@ class UserController @Inject() (
     } else {
       userService.findById(id).flatMap {
         case Some(user) =>
-          userService.follow(request.userId, id).map { following =>
+          for {
+            nickname <- userService.getNickname(request.userId)
+            following <- userService.follow(request.userId, id)
+          } yield {
+            val notifyFollow = Notification(None, "FOLLOW", id, request.userId, System.currentTimeMillis / 1000, None, None)
+            notificationService.insert(notifyFollow)
+            // Send push notification
+            pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), 0)
             success(Messages("success.follow"), Json.obj("is_following" -> following))
           }
         case None =>

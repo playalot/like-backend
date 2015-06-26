@@ -19,15 +19,13 @@ import scala.concurrent.Future
 class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends UserService
     with UsersComponent with SocialAccountsComponent
     with FollowsComponent with BlocksComponent
-    with MarksComponent with NotificationsComponent
-    with HasDatabaseConfigProvider[JdbcProfile] {
+    with MarksComponent with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 
   private val users = TableQuery[UsersTable]
   private val follows = TableQuery[FollowsTable]
   private val blocks = TableQuery[BlocksTable]
-  private val notifications = TableQuery[NotificationsTable]
   private val socials = TableQuery[SocialAccountsTable]
 
   override def findById(id: Long): Future[Option[User]] = db.run(users.filter(_.id === id).result.headOption)
@@ -82,6 +80,8 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
     db.run(users.filter(_.id === userId).map(x => x.mobile).update(mobilePhoneNumber)).map(_ => ())
   }
+
+  override def getNickname(userId: Long): Future[String] = db.run(users.filter(_.id === userId).map(_.nickname).result.headOption).map(_.getOrElse(""))
 
   override def nicknameExists(nickname: String): Future[Boolean] = db.run(users.filter(_.nickname === nickname).result.headOption).map(_.isDefined)
 
@@ -165,17 +165,13 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         db.run(follows.filter(f => f.fromId === toId && f.toId === fromId).result.headOption).flatMap {
           case Some(fd) =>
             val updateQuery = for { f <- follows if f.fromId === toId && f.toId === fromId } yield f.both
-            val notifyFollow = Notification(None, "FOLLOW", toId, fromId, System.currentTimeMillis / 1000, None, None)
             for {
               updateFollower <- db.run(updateQuery.update(true))
               insert <- db.run(follows += Follow(None, fromId, toId, both = true))
-              notify <- db.run(notifications += notifyFollow)
             } yield { 2 }
           case None =>
-            val notifyFollow = Notification(None, "FOLLOW", toId, fromId, System.currentTimeMillis / 1000, None, None)
             for {
               insert <- db.run(follows += Follow(None, fromId, toId, both = false))
-              notify <- db.run(notifications += notifyFollow)
             } yield { 1 }
         }
     }

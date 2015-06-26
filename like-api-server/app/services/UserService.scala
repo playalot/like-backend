@@ -53,6 +53,8 @@ trait UserService {
 
   def isFollowing(fromId: Long, toId: Long): Future[Int]
 
+  def getNickname(userId: Long): Future[String]
+
   def nicknameExists(nickname: String): Future[Boolean]
 
   def follow(fromId: Long, toId: Long): Future[Int]

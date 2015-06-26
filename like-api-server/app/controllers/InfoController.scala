@@ -3,7 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import com.likeorz.models._
-import services.InfoService
+import services.{ UserService, InfoService }
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import utils.AVOSUtils
@@ -16,7 +16,8 @@ import scala.concurrent.Future
  */
 class InfoController @Inject() (
     val messagesApi: MessagesApi,
-    infoService: InfoService) extends BaseController {
+    infoService: InfoService,
+    userService: UserService) extends BaseController {
 
   def feedback = SecuredAction.async(parse.json) { implicit request =>
     (request.body \ "feedback").asOpt[String] match {
@@ -35,7 +36,7 @@ class InfoController @Inject() (
       case (Some(token), Some(t)) => infoService.findInstallation(t, request.userId).flatMap {
         case Some(installation) =>
           val future = if (installation.deviceToken != token) {
-            AVOSUtils.installations(token, t).flatMap { objectId =>
+            AVOSUtils.updateInstallations(installation.objectId, token, t).flatMap { objectId =>
               infoService.updateInstallation(installation.id.get, installation.copy(objectId = objectId, userId = request.userId, status = 1, updated = System.currentTimeMillis() / 1000))
             }
           } else {

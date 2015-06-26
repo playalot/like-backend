@@ -3,6 +3,7 @@ package services
 import com.google.inject.Inject
 import com.likeorz.dao._
 import com.likeorz.models._
+import com.likeorz.models.{ Tag => Tg }
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
@@ -116,31 +117,16 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(query.result)
   }
 
-  override def commentMark(markId: Long, comment: Comment): Future[Comment] = {
+  override def getMarkPostTag(markId: Long): Future[Option[(Mark, Post, Tg)]] = {
     val markQuery = for {
       ((mark, post), tag) <- marks join posts on (_.postId === _.id) join tags on (_._1.tagId === _.id) if mark.id === markId
     } yield (mark, post, tag)
-    db.run(comments returning comments.map(_.id) += comment).map { id =>
-      db.run(markQuery.result.headOption).map {
-        case Some(row) =>
-          val (mark, post, tag) = row
-          if (comment.replyId.isDefined) {
-            val notifyReplier = Notification(None, "REPLY", comment.replyId.get, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id)
-            db.run(notifications += notifyReplier)
-          } else {
-            if (mark.userId != comment.userId) {
-              val notifyMarkUser = Notification(None, "COMMENT", mark.userId, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id)
-              db.run(notifications += notifyMarkUser)
-            }
-            if (post.userId != mark.userId && post.userId != comment.userId) {
-              val notifyPostUser = Notification(None, "COMMENT", post.userId, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id)
-              db.run(notifications += notifyPostUser)
-            }
-          }
-        case None =>
-      }
-      comment.copy(id = Some(id))
-    }
+    markQuery.result.statements.foreach(println)
+    db.run(markQuery.result.headOption)
+  }
+
+  override def commentMark(markId: Long, comment: Comment): Future[Comment] = {
+    db.run(comments returning comments.map(_.id) += comment).map(id => comment.copy(id = Some(id)))
   }
 
   override def deleteCommentFromMark(commentId: Long, userId: Long): Future[Boolean] = {

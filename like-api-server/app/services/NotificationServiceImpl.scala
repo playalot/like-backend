@@ -2,7 +2,7 @@ package services
 
 import com.google.inject.Inject
 import com.likeorz.models._
-import com.likeorz.dao.{ UsersComponent, PostsComponent, NotificationsComponent }
+import com.likeorz.dao._
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
@@ -43,6 +43,7 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
   }
 
   override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 30): Future[Seq[(Notification, User, Option[(Post, User)])]] = {
+    // TODO optimize
     val query = if (timestamp.isDefined) {
       (for {
         ((notification, user), (postAndUser)) <- notifications join users on (_.fromUserId === _.id) joinLeft (posts join users on (_.userId === _.id)) on (_._1.postId === _._1.id)

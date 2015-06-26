@@ -22,6 +22,8 @@ trait MarkService {
 
   def checkLikes(userId: Long, markIds: Seq[Long]): Future[Seq[Long]]
 
+  def getMarkPostTag(markId: Long): Future[Option[(Mark, Post, Tag)]]
+
   def commentMark(markId: Long, comment: Comment): Future[Comment]
 
   def deleteCommentFromMark(commentId: Long, userId: Long): Future[Boolean]

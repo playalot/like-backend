@@ -7,7 +7,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import com.likeorz.models._
-import services.MarkService
+import services._
 import utils.QiniuUtil
 
 import scala.concurrent.Future
@@ -18,7 +18,11 @@ import scala.concurrent.Future
  */
 class CommentController @Inject() (
     val messagesApi: MessagesApi,
-    markService: MarkService) extends BaseController {
+    markService: MarkService,
+    userService: UserService,
+    infoService: InfoService,
+    notificationService: NotificationService,
+    pushService: PushService) extends BaseController {
 
   def commentMark(id: Long) = SecuredAction.async(parse.json) { implicit request =>
     markService.getMark(id).flatMap {
@@ -27,8 +31,40 @@ class CommentController @Inject() (
         val content = (request.body \ "content").as[String].trim
         val location = (request.body \ "location").asOpt[String]
         val created = System.currentTimeMillis / 1000
-        markService.commentMark(id, Comment(None, id, request.userId, replyId, content, created, location))
-          .map(comment => success(Messages("success.comment", Json.obj("comment_id" -> comment.id))))
+        markService.commentMark(id, Comment(None, id, request.userId, replyId, content, created, location)).map { comment =>
+          println("Mark:" + id)
+          for {
+            nickname <- userService.getNickname(request.userId)
+            rowOpt <- markService.getMarkPostTag(id)
+          } yield {
+            rowOpt match {
+              case Some(row) =>
+                val (mark, post, tag) = row
+                if (comment.replyId.isDefined) {
+                  // Notify replied user in DB
+                  val notifyReplier = Notification(None, "REPLY", comment.replyId.get, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id)
+                  notificationService.insert(notifyReplier)
+                  // Send push notification
+                  pushService.sendPushNotificationToUser(comment.replyId.get, Messages("notification.reply", nickname, tag.tagName), 0)
+                } else {
+                  if (mark.userId != request.userId) {
+                    val notifyMarkUser = Notification(None, "COMMENT", mark.userId, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id)
+                    notificationService.insert(notifyMarkUser)
+                    // Send push notification
+                    pushService.sendPushNotificationToUser(mark.userId, Messages("notification.comment", nickname, tag.tagName), 0)
+                  }
+                  if (post.userId != mark.userId && post.userId != comment.userId) {
+                    val notifyPostUser = Notification(None, "COMMENT", post.userId, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id)
+                    notificationService.insert(notifyPostUser)
+                    // Send push notification
+                    pushService.sendPushNotificationToUser(post.userId, Messages("notification.comment", nickname, tag.tagName), 0)
+                  }
+                }
+              case None =>
+            }
+          }
+          success(Messages("success.comment", Json.obj("comment_id" -> comment.id)))
+        }
       case None =>
         Future.successful(error(4022, Messages("invalid.markId")))
     }

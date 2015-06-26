@@ -195,7 +195,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           if (mark.userId != userId) {
             for {
               l <- db.run(likes += Like(mark.id.get, userId))
-              n <- db.run(notifications += Notification(None, "LIKE", mark.userId, userId, System.currentTimeMillis / 1000, Some(tagName), Some(postId)))
+              //n <- db.run(notifications += Notification(None, "LIKE", mark.userId, userId, System.currentTimeMillis / 1000, Some(tagName), Some(postId)))
             } yield {
               RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
               mark
@@ -208,10 +208,6 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           db.run(marks returning marks.map(_.id) += newMark).map(id => newMark.copy(id = Some(id))).map { mark =>
             RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
             db.run(likes += Like(mark.id.get, userId))
-            if (authorId != userId) {
-              val notifyMarkUser = Notification(None, "MARK", authorId, userId, System.currentTimeMillis / 1000, Some(tagName), Some(postId))
-              db.run(notifications += notifyMarkUser)
-            }
             mark
           }
       }

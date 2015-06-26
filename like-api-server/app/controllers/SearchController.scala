@@ -69,4 +69,28 @@ class SearchController @Inject() (
     }
   }
 
+  def searchTagV2(page: Int, name: String) = Action.async { implicit request =>
+    postService.searchByTag(page = page, name = name).map { results =>
+      val posts = results.map {
+        case (post, user) => Json.obj(
+          "post_id" -> post.id,
+          "type" -> post.`type`.toString,
+          "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+          "created" -> post.created,
+          "user" -> Json.obj(
+            "user_id" -> user.id,
+            "nickname" -> user.nickname,
+            "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+            "likes" -> user.likes
+          )
+        )
+      }
+      Ok(Json.obj(
+        "code" -> 1,
+        "message" -> "Record(s) Found",
+        "data" -> Json.toJson(posts)
+      ))
+    }
+  }
+
 }

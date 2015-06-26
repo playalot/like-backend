@@ -30,8 +30,8 @@ class FeedController @Inject() (
 
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
-      val recommendIds = postService.getRecommendedPosts(9, times(0))
-      val followIds = postService.getFollowingPosts(request.userId.get, 6, times(1))
+      val recommendIds = postService.getRecommendedPosts(10, times(0))
+      val followIds = postService.getFollowingPosts(request.userId.get, 5, times(1))
       val taggedIds = postService.getTaggedPosts(request.userId.get, 3, times(2))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
     } else {
@@ -67,7 +67,7 @@ class FeedController @Inject() (
         val futures = list.filter(p => uniqueIds.contains(p._1.id.get)).sortBy(-_._1.created).map { row =>
           val markIds = row._3.map(_._1)
           markService.checkLikes(request.userId.getOrElse(-1L), markIds).map { likedMarks =>
-            val marksJson = row._3.map { fields =>
+            val marksJson = row._3.sortBy(-_._3).map { fields =>
               Json.obj(
                 "mark_id" -> fields._1,
                 "tag" -> fields._2,

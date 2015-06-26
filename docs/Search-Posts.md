@@ -29,8 +29,9 @@ GET
     "data": {
         "info": {
             "id": 123,
-            "tag": "xxxx",
-            "description": "xxxxxxxx"
+            "name": "xxxx",
+            "description": "xxxxxxxx",
+            "avatar": "avatar_123_xxxxxxx.jpg"
         },
         "posts": [
             {

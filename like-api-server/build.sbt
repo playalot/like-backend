@@ -28,7 +28,8 @@ libraryDependencies ++= Seq(
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
   "com.github.cb372"          %% "scalacache-redis" % "0.6.3",
   "com.github.cb372"          %% "scalacache-memcached"      % "0.6.3",
-  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0-RC1" % "test"
+  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0-RC1" % "test",
+  "org.scalatest"             %% "scalatest"                 % "2.2.5"     % "test"
 )
 
 routesGenerator := InjectedRoutesGenerator

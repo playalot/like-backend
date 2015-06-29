@@ -75,30 +75,34 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getPostsByIds(ids: Set[Long]): Future[Seq[(Post, User, Seq[(Long, String, Int)])]] = {
-    val query = for {
-      (post, user) <- posts join users on (_.userId === _.id)
-      if post.id inSet ids
-    } yield (post, user)
-    db.run(query.result).flatMap { posts =>
-      val futures = posts.map { postAndUser =>
-        val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postAndUser._1.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
+    if (ids.size == 0) {
+      Future.successful(Seq[(Post, User, Seq[(Long, String, Int)])]())
+    } else {
+      val query = for {
+        (post, user) <- posts join users on (_.userId === _.id)
+        if post.id inSet ids
+      } yield (post, user)
+      db.run(query.result).flatMap { posts =>
+        val futures = posts.map { postAndUser =>
+          val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postAndUser._1.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
 
-        if (cachedMarks.nonEmpty) {
-          val markIds = cachedMarks.keySet.mkString(", ")
-          val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
-          //        val query = for {
-          //          (mark, tag) <- marks join tags on (_.tagId === _.id)
-          //          if mark.id inSet cachedMarks.keySet
-          //        } yield (mark.id, tag.tagName)
-          db.run(query).map { list =>
-            val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
-            (postAndUser._1, postAndUser._2, marklist)
+          if (cachedMarks.nonEmpty) {
+            val markIds = cachedMarks.keySet.mkString(", ")
+            val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
+            //        val query = for {
+            //          (mark, tag) <- marks join tags on (_.tagId === _.id)
+            //          if mark.id inSet cachedMarks.keySet
+            //        } yield (mark.id, tag.tagName)
+            db.run(query).map { list =>
+              val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
+              (postAndUser._1, postAndUser._2, marklist)
+            }
+          } else {
+            Future.successful((postAndUser._1, postAndUser._2, Seq()))
           }
-        } else {
-          Future.successful((postAndUser._1, postAndUser._2, Seq()))
         }
+        Future.sequence(futures.toList)
       }
-      Future.sequence(futures.toList)
     }
   }
 

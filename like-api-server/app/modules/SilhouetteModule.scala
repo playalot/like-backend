@@ -31,6 +31,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     bind[MarkService].to[MarkServiceImpl]
     bind[InfoService].to[InfoServiceImpl]
     bind[PushService].to[PushServiceImpl]
+    bind[PromoteService].to[PromoteServiceImpl]
     bind[NotificationService].to[NotificationServiceImpl]
     bind[CacheLayer].to[PlayCacheLayer]
     bind[PasswordHasher].toInstance(new BCryptPasswordHasher)

@@ -124,6 +124,15 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  override def getTagPostImage(name: String): Future[Option[String]] = {
+    val query = (for {
+      ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
+      if tag.tagName.toLowerCase === name
+    } yield post)
+      .sortBy(_.likes.desc).map(_.content)
+    db.run(query.result.headOption)
+  }
+
   override def getPostById(postId: Long): Future[Option[(Post, User)]] = {
     val query = for {
       (post, user) <- posts join users on (_.userId === _.id) if post.id === postId

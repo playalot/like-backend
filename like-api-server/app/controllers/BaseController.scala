@@ -1,7 +1,7 @@
 package controllers
 
 import play.api.i18n.{ Messages, I18nSupport }
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc._
 import utils.MemcachedCacheClient
 
@@ -51,7 +51,7 @@ trait BaseController extends Controller with I18nSupport {
     }
   }
 
-  def success(msg: String, data: JsObject) = {
+  def success(msg: String, data: JsValue) = {
     Ok(Json.obj(
       "code" -> 1,
       "message" -> msg,

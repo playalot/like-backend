@@ -10,7 +10,7 @@ class PushNotificationActor extends Actor with ActorLogging {
     case msg: String => log.info(s"PushNotificationActor received message '$msg'")
     case n: PushNotification =>
       log.debug("Send: " + n)
-      AVOSUtils.pushNotificationLocal(n.targetId, n.alert, n.badge, n.extra)
+      AVOSUtils.pushNotification(n.targetId, n.alert, n.badge, n.extra)
       ()
     case _ => log.error("Invalid message!")
   }

@@ -46,6 +46,7 @@ class PostController @Inject() (
    * Publish a post
    */
   def publishPost = SecuredAction.async(parse.json) { implicit request =>
+    val screenWidth = request.headers.get("LIKE_SCREEN_WIDTH").getOrElse("1280").toInt
     request.body.validate[PostCommand].fold(
       errors => {
         Future.successful(error(4012, Messages("invalid.postJson")))
@@ -73,7 +74,7 @@ class PostController @Inject() (
             }
             success(Messages("success.publish"), Json.obj(
               "post_id" -> post.id.get,
-              "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+              "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
               "type" -> post.`type`,
               "description" -> post.description,
               "created" -> post.created,

@@ -88,13 +88,13 @@ class UserController @Inject() (
     }
   }
 
-  def getPostsForUser(id: Long, page: Int) = SecuredAction.async { implicit request =>
+  def getPostsForUser(id: Long, page: Int) = UserAwareAction.async { implicit request =>
     userService.findById(id).flatMap {
       case Some(user) =>
         postService.getPostsByUserId(id, page, 21).flatMap { list =>
           val futures = list.map { row =>
             val markIds = row._2.map(_._1)
-            markService.checkLikes(request.userId, markIds).map { likedMarks =>
+            markService.checkLikes(request.userId.getOrElse(-1L), markIds).map { likedMarks =>
               val marksJson = row._2.map { fields =>
                 Json.obj(
                   "mark_id" -> fields._1,

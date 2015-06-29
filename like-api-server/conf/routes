@@ -57,6 +57,7 @@ GET     /v1/mark/$id<[0-9]+>/comment                controllers.CommentControlle
 GET     /v1/tag/hot                                 controllers.SearchController.hotTags
 GET     /v1/tag/guess/:tag                          controllers.SearchController.autoComplete(tag: String)
 GET     /v1/tag/search/:tag/:page                   controllers.SearchController.searchTag(page: Int, tag: String)
+GET     /v1/search/tag/:tag/:page                   controllers.SearchController.searchTagV2(page: Int, tag: String)
 
 #Notification
 GET     /v1/notification                            controllers.NotificationController.getNotifications(ts: Option[Long] ?= None)

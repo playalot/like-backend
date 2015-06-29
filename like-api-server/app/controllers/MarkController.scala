@@ -5,6 +5,7 @@ import javax.inject.Inject
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.mvc.Action
 import services.MarkService
 import utils.QiniuUtil
 
@@ -36,7 +37,7 @@ class MarkController @Inject() (
     }
   }
 
-  def getLikes(markId: Long) = SecuredAction.async { implicit request =>
+  def getLikes(markId: Long) = Action.async { implicit request =>
     markService.getMark(markId).flatMap {
       case Some(mark) =>
         markService.getLikes(markId).map { rows =>

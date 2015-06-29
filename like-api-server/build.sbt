@@ -18,17 +18,16 @@ libraryDependencies ++= Seq(
   filters,
   "org.nlpcn"                 %  "nlp-lang"         % "0.3",
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
-  "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.3",
+  "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.4",
   "mysql"                     %  "mysql-connector-java" % "5.1.35",
   "com.typesafe.akka"         %% "akka-remote"      % "2.3.11",
   "com.typesafe.play"         %% "play-slick"       % "1.0.0",
   "com.github.nscala-time"    %% "nscala-time"      % "2.0.0",
-  "com.mohiva"                %% "play-silhouette"  % "3.0.0-RC1",
+  "com.mohiva"                %% "play-silhouette"  % "3.0.0-RC2",
   "com.typesafe.play"         %% "play-mailer"      % "3.0.1",
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
-  "com.github.cb372"          %% "scalacache-redis" % "0.6.3",
   "com.github.cb372"          %% "scalacache-memcached"      % "0.6.3",
-  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0-RC1" % "test",
+  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0-RC2" % "test",
   "org.scalatest"             %% "scalatest"                 % "2.2.5"     % "test"
 )
 

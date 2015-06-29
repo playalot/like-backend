@@ -3,9 +3,11 @@ package controllers
 import javax.inject.Inject
 
 import com.likeorz.models.Notification
+import play.api.Play
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.Play.current
 import services._
 import utils.QiniuUtil
 
@@ -23,6 +25,9 @@ class UserController @Inject() (
     postService: PostService,
     notificationService: NotificationService,
     pushService: PushService) extends BaseController {
+
+  val DEFAULT_AVATAR = Play.configuration.getString("default.avatar").get
+  val DEFAULT_COVER = Play.configuration.getString("default.cover").get
 
   def getInfo(id: Long) = UserAwareAction.async { implicit request =>
     userService.findById(id).flatMap {
@@ -77,7 +82,9 @@ class UserController @Inject() (
           user <- userService.findById(request.userId)
           result <- userService.updateAvatar(request.userId, avatar)
         } yield {
-          postService.recordDelete(user.get.avatar)
+          if (user.get.avatar != DEFAULT_AVATAR) {
+            postService.recordDelete(user.get.avatar)
+          }
           success(Messages("success.avatar"))
         }
       case None =>
@@ -92,7 +99,9 @@ class UserController @Inject() (
           user <- userService.findById(request.userId)
           result <- userService.updateCover(request.userId, avatar)
         } yield {
-          postService.recordDelete(user.get.cover)
+          if (user.get.cover != DEFAULT_COVER) {
+            postService.recordDelete(user.get.cover)
+          }
           success(Messages("success.cover"))
         }
       case None =>

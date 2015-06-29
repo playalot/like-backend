@@ -43,9 +43,9 @@ class SearchController @Inject() (
   //    }
   //  }
   def hotTags = Action.async {
-//    promoteService.getPromoteEntities().flatMap { entities =>
-//      entities.map(entity => postService.getTagPostImage(entity.name)
-//    }
+    //    promoteService.getPromoteEntities().flatMap { entities =>
+    //      entities.map(entity => postService.getTagPostImage(entity.name)
+    //    }
     // Random select image for tag
 
     for {

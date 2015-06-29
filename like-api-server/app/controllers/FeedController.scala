@@ -63,7 +63,7 @@ class FeedController @Inject() (
 
       postService.getPostsByIds(resultIds).flatMap { list =>
         // Handle empty results
-        if (list.size == 0) {
+        if (list.isEmpty) {
           Future.successful(success(Messages("success.found"),
             Json.obj(
               "posts" -> Json.arr(),
@@ -72,7 +72,7 @@ class FeedController @Inject() (
         } else {
           val idTsMap = list.map(x => (x._1.id.get, x._1.created)).toMap
           val nextTs = results.map { rs =>
-            if (rs.size == 0) ""
+            if (rs.isEmpty) ""
             else idTsMap.get(rs.last).map(_.toString).getOrElse("")
           }.mkString(",")
 

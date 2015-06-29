@@ -73,7 +73,13 @@ class UserController @Inject() (
   def updateAvatar() = SecuredAction.async(parse.json) { implicit request =>
     (request.body \ "avatar").asOpt[String] match {
       case Some(avatar) =>
-        userService.updateAvatar(request.userId, avatar).map(_ => success(Messages("success.avatar")))
+        for {
+          user <- userService.findById(request.userId)
+          result <- userService.updateAvatar(request.userId, avatar)
+        } yield {
+          postService.recordDelete(user.get.avatar)
+          success(Messages("success.avatar"))
+        }
       case None =>
         Future.successful(error(4041, Messages("invalid.avatar")))
     }
@@ -82,7 +88,13 @@ class UserController @Inject() (
   def updateCover() = SecuredAction.async(parse.json) { implicit request =>
     (request.body \ "cover").asOpt[String] match {
       case Some(avatar) =>
-        userService.updateCover(request.userId, avatar).map(_ => success(Messages("success.cover")))
+        for {
+          user <- userService.findById(request.userId)
+          result <- userService.updateCover(request.userId, avatar)
+        } yield {
+          postService.recordDelete(user.get.cover)
+          success(Messages("success.cover"))
+        }
       case None =>
         Future.successful(error(4041, Messages("invalid.cover")))
     }

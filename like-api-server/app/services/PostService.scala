@@ -40,4 +40,6 @@ trait PostService {
 
   def getRecentPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
+  def recordDelete(photo: String): Future[Unit]
+
 }

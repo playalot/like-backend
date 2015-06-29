@@ -115,3 +115,16 @@ trait BlocksComponent { self: HasDatabaseConfig[JdbcProfile] =>
     override def * = (id.?, userId, blockedUserId, created) <> (Block.tupled, Block.unapply _)
   }
 }
+
+trait DeletedPhotosComponent { self: HasDatabaseConfig[JdbcProfile] =>
+
+  import driver.api._
+
+  class DeletedPhotosTable(tag: Tag) extends Table[DeletedPhoto](tag, "del_photo") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def photo = column[String]("photo")
+    def created = column[Long]("created")
+
+    override def * = (id.?, photo, created) <> (DeletedPhoto.tupled, DeletedPhoto.unapply _)
+  }
+}

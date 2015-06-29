@@ -24,6 +24,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     with LikesComponent with CommentsComponent
     with NotificationsComponent with ReportsComponent
     with RecommendsComponent with FollowsComponent
+    with DeletedPhotosComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -38,6 +39,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   private val reports = TableQuery[ReportsTable]
   private val recommends = TableQuery[RecommendsTable]
   private val follows = TableQuery[FollowsTable]
+  private val deletes = TableQuery[DeletedPhotosTable]
 
   override def insert(post: Post): Future[Post] = {
     db.run(posts returning posts.map(_.id) += post).map(id => post.copy(id = Some(id)))
@@ -274,4 +276,9 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       db.run(posts.sortBy(_.created.desc).take(pageSize).map(_.id).result)
     }
   }
+
+  override def recordDelete(photo: String): Future[Unit] = {
+    db.run(deletes += DeletedPhoto(None, photo)).map(_ => ())
+  }
+
 }

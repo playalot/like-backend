@@ -10,7 +10,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import slick.driver.JdbcProfile
 import slick.driver.MySQLDriver.api._
-import utils.RedisCacheClient
+import utils.{ KeyUtils, RedisCacheClient }
 
 import scala.concurrent.Future
 
@@ -22,31 +22,28 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     with PostsComponent with UsersComponent
     with TagsComponent with MarksComponent
     with LikesComponent with CommentsComponent
-    with NotificationsComponent with ReportsComponent
     with RecommendsComponent with FollowsComponent
-    with DeletedPhotosComponent
+    with ReportsComponent with DeletedPhotosComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 
-  private val posts = TableQuery[PostsTable]
-  private val tags = TableQuery[TagsTable]
-  private val marks = TableQuery[MarksTable]
-  private val likes = TableQuery[LikesTable]
-  private val users = TableQuery[UsersTable]
-  private val comments = TableQuery[CommentsTable]
-  private val notifications = TableQuery[NotificationsTable]
-  private val reports = TableQuery[ReportsTable]
-  private val recommends = TableQuery[RecommendsTable]
-  private val follows = TableQuery[FollowsTable]
-  private val deletes = TableQuery[DeletedPhotosTable]
-
   override def insert(post: Post): Future[Post] = {
-    db.run(posts returning posts.map(_.id) += post).map(id => post.copy(id = Some(id)))
+    db.run(posts returning posts.map(_.id) += post).map { id =>
+      RedisCacheClient.hincrBy(KeyUtils.user(post.userId), "posts", 1)
+      post.copy(id = Some(id))
+    }
   }
 
   override def countByUserId(userId: Long): Future[Long] = {
-    db.run(posts.filter(_.userId === userId).result.map(_.length))
+    Option(RedisCacheClient.hget(KeyUtils.user(userId), "posts")) match {
+      case Some(number) => Future.successful(number.toInt)
+      case None =>
+        db.run(posts.filter(_.userId === userId).length.result).map { number =>
+          RedisCacheClient.hset(KeyUtils.user(userId), "posts", number.toString)
+          number
+        }
+    }
   }
 
   override def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
@@ -61,7 +58,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         //          val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
         //          (post, marklist)
         //        }
-        if (cachedMarks.size > 0) {
+        if (cachedMarks.nonEmpty) {
           val markIds = cachedMarks.keySet.mkString(", ")
           val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
           db.run(query).map { list =>
@@ -77,7 +74,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getPostsByIds(ids: Set[Long]): Future[Seq[(Post, User, Seq[(Long, String, Int)])]] = {
-    if (ids.size == 0) {
+    if (ids.isEmpty) {
       Future.successful(Seq[(Post, User, Seq[(Long, String, Int)])]())
     } else {
       val query = for {
@@ -91,10 +88,12 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           if (cachedMarks.nonEmpty) {
             val markIds = cachedMarks.keySet.mkString(", ")
             val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
-            //        val query = for {
-            //          (mark, tag) <- marks join tags on (_.tagId === _.id)
-            //          if mark.id inSet cachedMarks.keySet
-            //        } yield (mark.id, tag.tagName)
+            /*
+            val query = for {
+              (mark, tag) <- marks join tags on (_.tagId === _.id)
+              if mark.id inSet cachedMarks.keySet
+            } yield (mark.id, tag.tagName)
+            */
             db.run(query).map { list =>
               val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
               (postAndUser._1, postAndUser._2, marklist)
@@ -182,11 +181,13 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       markResults.foreach { mark =>
         val likeNum = RedisCacheClient.zScore("post_mark:" + postId, mark.identify).getOrElse(mark.likes.toDouble)
         RedisCacheClient.zIncrBy("tag_likes", -likeNum, mark.tagId.toString)
+        RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -likeNum.toLong)
         total += likeNum
       }
       RedisCacheClient.zIncrBy("user_likes", -total, userId.toString)
       RedisCacheClient.del("post_mark:" + postId)
       RedisCacheClient.del("push:" + userId)
+      RedisCacheClient.hincrBy(KeyUtils.user(userId), "posts", -1)
 
       val markIds = markResults.map(_.id.getOrElse(-1L))
       for {
@@ -212,6 +213,11 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
               l <- db.run(likes += Like(mark.id.get, userId))
               //n <- db.run(notifications += Notification(None, "LIKE", mark.userId, userId, System.currentTimeMillis / 1000, Some(tagName), Some(postId)))
             } yield {
+              // Increase post author likes count
+              RedisCacheClient.hincrBy(KeyUtils.user(authorId), "likes", 1)
+              // Increase mark author likes count
+              if (mark.userId != authorId) RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", 1)
+              // Increase post mark likes count
               RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
               mark
             }
@@ -220,9 +226,16 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           }
         case None =>
           val newMark = Mark(None, postId, tagId, userId)
-          db.run(marks returning marks.map(_.id) += newMark).map(id => newMark.copy(id = Some(id))).map { mark =>
+          for {
+            mark <- db.run(marks returning marks.map(_.id) += newMark).map(id => newMark.copy(id = Some(id)))
+            l <- db.run(likes += Like(mark.id.get, userId))
+          } yield {
+            // Increase post author likes count
+            RedisCacheClient.hincrBy(KeyUtils.user(authorId), "likes", 1)
+            // Increase mark author likes count
+            if (userId != authorId) RedisCacheClient.hincrBy(KeyUtils.user(userId), "likes", 1)
+            // Increase post mark likes count
             RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
-            db.run(likes += Like(mark.id.get, userId))
             mark
           }
       }

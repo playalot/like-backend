@@ -20,10 +20,6 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
 
   import driver.api._
 
-  private val notifications = TableQuery[NotificationsTable]
-  private val posts = TableQuery[PostsTable]
-  private val users = TableQuery[UsersTable]
-
   override def insert(notification: Notification): Future[Notification] = {
     db.run(notifications returning notifications.map(_.id) += notification).map(id => notification.copy(id = Some(id)))
   }

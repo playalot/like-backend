@@ -26,8 +26,6 @@ class PushServiceImpl @Inject() (system: ActorSystem, protected val dbConfigProv
 
   import driver.api._
 
-  private val installations = TableQuery[InstallationTable]
-
   val hostname = Play.current.configuration.getString("push-actor.hostname").get
   val port = Play.current.configuration.getInt("push-actor.port").get
 

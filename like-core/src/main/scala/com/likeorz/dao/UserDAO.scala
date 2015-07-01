@@ -5,7 +5,6 @@ import play.api.db.slick.HasDatabaseConfig
 import slick.driver.JdbcProfile
 
 trait FollowsComponent { self: HasDatabaseConfig[JdbcProfile] =>
-
   import driver.api._
 
   class FollowsTable(tag: Tag) extends Table[Follow](tag, "follow") {
@@ -14,43 +13,13 @@ trait FollowsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def toId = column[Long]("to_id")
     def both = column[Boolean]("both")
     def created = column[Long]("created")
-
     override def * = (id.?, fromId, toId, both, created) <> (Follow.tupled, Follow.unapply _)
   }
-}
 
-trait CommentsComponent {
-  self: HasDatabaseConfig[JdbcProfile] =>
-  import driver.api._
-
-  class CommentsTable(tag: Tag) extends Table[Comment](tag, "comment") {
-    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
-    def markId = column[Long]("mark_id")
-    def userId = column[Long]("user_id")
-    def replyId = column[Long]("reply_id")
-    def content = column[String]("content")
-    def created = column[Long]("created")
-    def location = column[String]("location")
-
-    override def * = (id.?, markId, userId, replyId.?, content, created, location.?) <> (Comment.tupled, Comment.unapply _)
-  }
-}
-
-trait LikesComponent { self: HasDatabaseConfig[JdbcProfile] =>
-
-  import driver.api._
-
-  class LikesTable(tag: Tag) extends Table[Like](tag, "like") {
-    def markId = column[Long]("mark_id")
-    def userId = column[Long]("user_id")
-    def created = column[Long]("created")
-
-    override def * = (markId, userId, created) <> (Like.tupled, Like.unapply _)
-  }
+  protected val follows = TableQuery[FollowsTable]
 }
 
 trait UsersComponent { self: HasDatabaseConfig[JdbcProfile] =>
-
   import driver.api._
 
   class UsersTable(tag: Tag) extends Table[User](tag, "user") {
@@ -65,13 +34,13 @@ trait UsersComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def updated = column[Long]("updated")
     def likes = column[Long]("likes")
     def refreshToken = column[String]("refresh_token")
-
     override def * = (id.?, mobile.?, email.?, password, nickname, avatar, cover, created, updated, likes, refreshToken.?) <> (User.tupled, User.unapply _)
   }
+
+  protected val users = TableQuery[UsersTable]
 }
 
 trait NotificationsComponent { self: HasDatabaseConfig[JdbcProfile] =>
-
   import driver.api._
 
   class NotificationsTable(tag: Tag) extends Table[Notification](tag, "notify") {
@@ -82,15 +51,13 @@ trait NotificationsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def updated = column[Long]("updated")
     def tagName = column[String]("tag_name")
     def postId = column[Long]("post_id")
-
     override def * = (id.?, `type`, userId, fromUserId, updated, tagName.?, postId.?) <> (Notification.tupled, Notification.unapply _)
   }
 
+  protected val notifications = TableQuery[NotificationsTable]
 }
 
-trait SocialAccountsComponent {
-  self: HasDatabaseConfig[JdbcProfile] =>
-
+trait SocialAccountsComponent { self: HasDatabaseConfig[JdbcProfile] =>
   import driver.api._
 
   class SocialAccountsTable(tag: Tag) extends Table[SocialAccount](tag, "social") {
@@ -100,10 +67,11 @@ trait SocialAccountsComponent {
 
     override def * = (provider, key, userId) <> (SocialAccount.tupled, SocialAccount.unapply _)
   }
+
+  protected val socials = TableQuery[SocialAccountsTable]
 }
 
 trait BlocksComponent { self: HasDatabaseConfig[JdbcProfile] =>
-
   import driver.api._
 
   class BlocksTable(tag: Tag) extends Table[Block](tag, "block") {
@@ -114,17 +82,6 @@ trait BlocksComponent { self: HasDatabaseConfig[JdbcProfile] =>
 
     override def * = (id.?, userId, blockedUserId, created) <> (Block.tupled, Block.unapply _)
   }
-}
 
-trait DeletedPhotosComponent { self: HasDatabaseConfig[JdbcProfile] =>
-
-  import driver.api._
-
-  class DeletedPhotosTable(tag: Tag) extends Table[DeletedPhoto](tag, "del_photo") {
-    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
-    def photo = column[String]("photo")
-    def created = column[Long]("created")
-
-    override def * = (id.?, photo, created) <> (DeletedPhoto.tupled, DeletedPhoto.unapply _)
-  }
+  protected val blocks = TableQuery[BlocksTable]
 }

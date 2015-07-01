@@ -19,9 +19,6 @@ class InfoServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   import driver.api._
 
-  private val feedback = TableQuery[FeedbackTable]
-  private val installations = TableQuery[InstallationTable]
-
   override def addFeedback(fb: Feedback): Future[Feedback] = {
     db.run(feedback returning feedback.map(_.id) += fb).map(id => fb.copy(id = Some(id)))
   }

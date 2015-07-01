@@ -9,4 +9,4 @@ case class Post(
   created: Long,
   updated: Long,
   tagId: Long,
-  likes: Long)
+  likes: Long) extends Identifier

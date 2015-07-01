@@ -9,7 +9,6 @@ import slick.driver.JdbcProfile
  * Date: 6/26/15
  */
 trait EntityComponent { self: HasDatabaseConfig[JdbcProfile] =>
-
   import driver.api._
 
   class EntityTable(tag: Tag) extends Table[Entity](tag, "entity") {
@@ -17,13 +16,13 @@ trait EntityComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def name = column[String]("name")
     def description = column[String]("description")
     def avatar = column[String]("avatar")
-
     override def * = (id.?, name, description, avatar) <> (Entity.tupled, Entity.unapply _)
   }
+
+  protected val entities = TableQuery[EntityTable]
 }
 
 trait PromoteEntityComponent { self: HasDatabaseConfig[JdbcProfile] =>
-
   import driver.api._
 
   class PromoteEntityTable(tag: Tag) extends Table[PromoteEntity](tag, "promote_entity") {
@@ -33,4 +32,6 @@ trait PromoteEntityComponent { self: HasDatabaseConfig[JdbcProfile] =>
 
     override def * = (id.?, entityId, created) <> (PromoteEntity.tupled, PromoteEntity.unapply _)
   }
+
+  protected val promoteEntities = TableQuery[PromoteEntityTable]
 }

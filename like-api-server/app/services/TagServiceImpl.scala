@@ -20,9 +20,6 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
 
   import driver.api._
 
-  private val tags = TableQuery[TagsTable]
-  private val marks = TableQuery[MarksTable]
-
   override def suggestTagsForUser(userId: Long): Future[Seq[Tg]] = {
     val query = (for {
       (mark, tag) <- marks join tags on (_.tagId === _.id)

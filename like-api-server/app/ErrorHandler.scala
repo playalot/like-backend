@@ -4,7 +4,6 @@ import javax.inject._
 
 import play.api.http.DefaultHttpErrorHandler
 import play.api._
-import play.api.i18n.Messages
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.mvc.Results._

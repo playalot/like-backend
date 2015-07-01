@@ -20,9 +20,6 @@ class PromoteServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConf
 
   import driver.api._
 
-  private val entities = TableQuery[EntityTable]
-  private val promoteEntities = TableQuery[PromoteEntityTable]
-
   override def getEntity(id: Long): Future[Option[Entity]] = {
     db.run(entities.filter(_.id === id).result.headOption)
   }

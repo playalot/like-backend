@@ -14,9 +14,11 @@ trait MarkService {
 
   def getMarkWithTagName(markId: Long): Future[Option[(Mark, String)]]
 
-  def like(markId: Long, userId: Long): Future[Unit]
+  def getMarkWithPostAndTag(markId: Long): Future[Option[(Mark, Post, Tag)]]
 
-  def unlike(markId: Long, userId: Long): Future[Unit]
+  def like(mark: Mark, post: Post, userId: Long): Future[Unit]
+
+  def unlike(mark: Mark, post: Post, userId: Long): Future[Unit]
 
   def getLikes(markId: Long): Future[Seq[(Like, User)]]
 

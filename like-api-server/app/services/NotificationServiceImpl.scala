@@ -24,6 +24,10 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
     db.run(notifications returning notifications.map(_.id) += notification).map(id => notification.copy(id = Some(id)))
   }
 
+  override def deleteLikeNotification(fromId: Long, postId: Long, tag: String): Future[Int] = {
+    db.run(notifications.filter(n => n.`type` === "LIKE" && n.fromUserId === fromId && n.postId === postId && n.tagName === tag).delete)
+  }
+
   override def countForUser(userId: Long): Future[Long] = {
     RedisCacheClient.zScore("user_notifies", userId.toString) match {
       case Some(ts) =>

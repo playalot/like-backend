@@ -57,7 +57,8 @@ class PostController @Inject() (
           request.userId, System.currentTimeMillis / 1000,
           System.currentTimeMillis / 1000, 0, 0)).flatMap { post =>
 
-          val futures = postCommand.tags.filter(t => t.length <= 13 && t.length >= 1)
+          val futures = postCommand.tags
+            .filter(t => t.length <= 13 && t.length >= 1)
             .map(tag => postService.addMark(post.id.get, request.userId, tag, request.userId).map(mark => (tag, mark)))
 
           for {
@@ -203,7 +204,6 @@ class PostController @Inject() (
                 if (request.userId != post._1.userId) {
                   val notifyMarkUser = Notification(None, "MARK", post._1.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
                   notificationService.insert(notifyMarkUser)
-                  println(notifyMarkUser)
                   pushService.sendPushNotificationToUser(post._1.userId, Messages("notification.mark", nickname, tag), 0)
                 }
                 success(Messages("success.mark"), Json.obj(

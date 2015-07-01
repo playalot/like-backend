@@ -10,4 +10,6 @@ object KeyUtils {
 
   def user(uid: Long): String = "user:" + uid
 
+  def postMark(pid: Long): String = "post_mark:" + pid
+
 }

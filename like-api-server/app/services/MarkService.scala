@@ -35,4 +35,6 @@ trait MarkService {
   def deleteMark(markId: Long): Future[Unit]
 
   def rebuildMarkCache(): Future[Unit]
+
+  def rebuildLikeCache(): Future[Unit]
 }

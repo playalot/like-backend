@@ -131,13 +131,28 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def rebuildMarkCache(): Future[Unit] = {
-    val query = for {
-      (like, mark) <- likes join marks on (_.markId === _.id)
-    } yield (like.markId, mark.postId)
+    import utils.HelperUtils._
+    db.stream(posts.result).foreach { post =>
+      val query = (for {
+        (like, mark) <- likes join marks on (_.markId === _.id) if mark.postId === post.id.get
+      } yield (like, mark)).groupBy(_._2.id).map(x => (x._1, x._2.length))
+      query.length.result.statements.foreach(println)
+      db.run(query.result).map { rs =>
+        rs.map(x => RedisCacheClient.zAdd(KeyUtils.postMark(post.id.get), x._2, x._1))
+      }
+    }
+  }
 
-    db.stream(query.result).foreach { items =>
-      RedisCacheClient.zIncrBy("post_mark:" + items._2, 1, items._1.toString)
-      ()
+  override def rebuildLikeCache(): Future[Unit] = {
+    import utils.HelperUtils._
+    db.stream(users.result).foreach { user =>
+      val query = for {
+        (like, mark) <- likes join marks on (_.markId === _.id) if mark.userId === user.id.get
+      } yield like
+      //      query.length.result.statements.foreach(println)
+      db.run(query.length.result).map { likes =>
+        RedisCacheClient.hset(KeyUtils.user(user.id.get), "likes", likes)
+      }
     }
   }
 

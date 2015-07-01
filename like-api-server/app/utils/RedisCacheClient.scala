@@ -91,6 +91,30 @@ object RedisCacheClient {
     }
   }
 
+  def hset(key: String, field: String, value: String): Long = {
+    withJedisClient[Long] { client =>
+      client.hset(key, field, value)
+    }
+  }
+
+  def hexists(key: String, field: String): Boolean = {
+    withJedisClient[Boolean] { client =>
+      client.hexists(key, field)
+    }
+  }
+
+  def hmget(key: String, fields: String*): List[String] = {
+    withJedisClient[List[String]] { client =>
+      client.hmget(key, fields.toSeq: _*).toList
+    }
+  }
+
+  def hgetAll(key: String): Map[String, String] = {
+    withJedisClient[Map[String, String]] { client =>
+      client.hgetAll(key).toMap
+    }
+  }
+
   private def withJedisClient[T](f: Jedis => T): T = {
     val jedis = jedisPool.getResource
     try {

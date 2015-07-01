@@ -6,10 +6,11 @@ import com.mohiva.play.silhouette.api.LoginInfo
 import com.likeorz.dao._
 import com.likeorz.models._
 import extensions.MobileProvider
+import play.api.Play
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
-import utils.GenerateUtils
+import utils.{ KeyUtils, RedisCacheClient, GenerateUtils }
 import scala.concurrent.Future
 
 /**
@@ -23,10 +24,8 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   import driver.api._
 
-  private val users = TableQuery[UsersTable]
-  private val follows = TableQuery[FollowsTable]
-  private val blocks = TableQuery[BlocksTable]
-  private val socials = TableQuery[SocialAccountsTable]
+  val DEFAULT_AVATAR = Play.current.configuration.getString("default.avatar").get
+  val DEFAULT_COVER = Play.current.configuration.getString("default.cover").get
 
   override def findById(id: Long): Future[Option[User]] = db.run(users.filter(_.id === id).result.headOption)
 
@@ -81,13 +80,34 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(users.filter(_.id === userId).map(x => x.mobile).update(mobilePhoneNumber)).map(_ => ())
   }
 
-  override def getNickname(userId: Long): Future[String] = db.run(users.filter(_.id === userId).map(_.nickname).result.headOption).map(_.getOrElse(""))
+  override def getNickname(userId: Long): Future[String] = {
+    Option(RedisCacheClient.hget(KeyUtils.user(userId), "nickname")) match {
+      case Some(name) => Future.successful(name)
+      case None =>
+        db.run(users.filter(_.id === userId).map(_.nickname).result.headOption).map {
+          case Some(name) =>
+            // Update cache
+            RedisCacheClient.hset(KeyUtils.user(userId), "nickname", name)
+            name
+          case None => ""
+        }
+    }
+  }
 
   override def nicknameExists(nickname: String): Future[Boolean] = db.run(users.filter(_.nickname === nickname).result.headOption).map(_.isDefined)
 
   override def count(): Future[Int] = db.run(users.length.result)
 
-  override def countFollowers(id: Long): Future[Int] = db.run(follows.filter(_.toId === id).length.result)
+  override def countFollowers(id: Long): Future[Int] = {
+    Option(RedisCacheClient.hget(KeyUtils.user(id), "followers")) match {
+      case Some(number) => Future.successful(number.toInt)
+      case None =>
+        db.run(follows.filter(_.toId === id).length.result).map { number =>
+          RedisCacheClient.hset(KeyUtils.user(id), "followers", number.toString)
+          number
+        }
+    }
+  }
 
   override def getFollowers(userId: Long, page: Int): Future[Seq[User]] = {
     val query = (for {
@@ -97,9 +117,18 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(query.map(_._2).result)
   }
 
-  override def countFriends(id: Long): Future[Int] = db.run(follows.filter(_.fromId === id).length.result)
+  override def countFollowings(id: Long): Future[Int] = {
+    Option(RedisCacheClient.hget(KeyUtils.user(id), "followings")) match {
+      case Some(number) => Future.successful(number.toInt)
+      case None =>
+        db.run(follows.filter(_.fromId === id).length.result).map { number =>
+          RedisCacheClient.hset(KeyUtils.user(id), "followings", number.toString)
+          number
+        }
+    }
+  }
 
-  override def getFriends(userId: Long, page: Int): Future[Seq[User]] = {
+  override def getFollowings(userId: Long, page: Int): Future[Seq[User]] = {
     val query = (for {
       (follow, user) <- follows join users on (_.toId === _.id)
       if follow.fromId === userId
@@ -136,15 +165,30 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def updateNickname(id: Long, nickname: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => x.nickname).update(nickname)).map(_ == 1)
+    db.run(users.filter(_.id === id).map(x => x.nickname).update(nickname)).map { rs =>
+      if (rs == 1) {
+        RedisCacheClient.hset(KeyUtils.user(id), "nickname", nickname)
+        true
+      } else { false }
+    }
   }
 
   override def updateAvatar(id: Long, avatar: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => x.avatar).update(avatar)).map(_ == 1)
+    db.run(users.filter(_.id === id).map(x => x.avatar).update(avatar)).map { rs =>
+      if (rs == 1) {
+        RedisCacheClient.hset(KeyUtils.user(id), "avatar", avatar)
+        true
+      } else { false }
+    }
   }
 
   override def updateCover(id: Long, cover: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => x.cover).update(cover)).map(_ == 1)
+    db.run(users.filter(_.id === id).map(x => x.cover).update(cover)).map { rs =>
+      if (rs == 1) {
+        RedisCacheClient.hset(KeyUtils.user(id), "cover", cover)
+        true
+      } else { false }
+    }
   }
 
   override def isFollowing(fromId: Long, toId: Long): Future[Int] = {
@@ -162,6 +206,10 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(follows.filter(f => f.fromId === fromId && f.toId === toId).result.headOption).flatMap {
       case Some(fs) => Future.successful(if (fs.both) 2 else 1)
       case None =>
+        // Update cache
+        RedisCacheClient.hincrBy(KeyUtils.user(fromId), "followings", 1)
+        RedisCacheClient.hincrBy(KeyUtils.user(toId), "followers", 1)
+        // Update db
         db.run(follows.filter(f => f.fromId === toId && f.toId === fromId).result.headOption).flatMap {
           case Some(fd) =>
             val updateQuery = for { f <- follows if f.fromId === toId && f.toId === fromId } yield f.both
@@ -182,7 +230,11 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     for {
       updateFollower <- db.run(updateQuery.update(false))
       remove <- db.run(follows.filter(f => f.fromId === fromId && f.toId === toId).delete)
-    } yield remove
+    } yield {
+      RedisCacheClient.hincrBy(KeyUtils.user(fromId), "followings", -1)
+      RedisCacheClient.hincrBy(KeyUtils.user(toId), "followers", -1)
+      remove
+    }
   }
 
   override def block(fromId: Long, toId: Long): Future[Int] = {
@@ -194,5 +246,26 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def unBlock(fromId: Long, toId: Long): Future[Int] = {
     db.run(blocks.filter(b => b.userId === fromId && b.blockedUserId === toId).delete)
+  }
+
+  override def getUserInfo(userId: Long): Future[CachedUserInfo] = {
+    import utils.HelperUtils.long2String
+
+    val fields = RedisCacheClient.hmget(KeyUtils.user(userId), "nickname", "avatar", "cover", "likes")
+    if (fields.contains(null)) {
+      findById(userId).map {
+        case Some(user) =>
+          RedisCacheClient.hmset(KeyUtils.user(userId), Map[String, String](
+            "nickname" -> user.nickname,
+            "avatar" -> user.avatar,
+            "cover" -> user.cover,
+            "likes" -> user.likes))
+          CachedUserInfo(user.nickname, user.avatar, user.cover, user.likes)
+        case None =>
+          CachedUserInfo("New Liker", DEFAULT_AVATAR, DEFAULT_COVER, "0")
+      }
+    } else {
+      Future.successful(CachedUserInfo(fields(0), fields(1), fields(2), fields(3)))
+    }
   }
 }

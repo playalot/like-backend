@@ -34,7 +34,7 @@ class UserController @Inject() (
       case Some(user) =>
         for {
           countFollowers <- userService.countFollowers(user.id.get)
-          countFriends <- userService.countFriends(id)
+          countFriends <- userService.countFollowings(id)
           countPosts <- postService.countByUserId(id)
           isFollowing <- if (request.userId.isDefined) userService.isFollowing(request.userId.get, id) else Future.successful(0)
         } yield {
@@ -153,7 +153,7 @@ class UserController @Inject() (
   }
 
   def getFriends(id: Long, page: Int) = SecuredAction.async {
-    userService.getFriends(id, page).map { list =>
+    userService.getFollowings(id, page).map { list =>
       val jsonArr = list.map { user =>
         Json.obj(
           "user_id" -> user.identify,

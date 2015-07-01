@@ -33,9 +33,9 @@ trait UserService {
 
   def getFollowers(userId: Long, page: Int): Future[Seq[User]]
 
-  def countFriends(id: Long): Future[Int]
+  def countFollowings(id: Long): Future[Int]
 
-  def getFriends(userId: Long, page: Int): Future[Seq[User]]
+  def getFollowings(userId: Long, page: Int): Future[Seq[User]]
 
   def insert(user: User): Future[User]
 
@@ -64,4 +64,7 @@ trait UserService {
   def block(fromId: Long, toId: Long): Future[Int]
 
   def unBlock(fromId: Long, toId: Long): Future[Int]
+
+  def getUserInfo(userId: Long): Future[CachedUserInfo]
+
 }

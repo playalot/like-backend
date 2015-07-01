@@ -28,4 +28,6 @@ addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.1.8")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.3.0")
 
+addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.7.0")
+
 addSbtPlugin("com.orrsella" % "sbt-stats" % "1.0.5")

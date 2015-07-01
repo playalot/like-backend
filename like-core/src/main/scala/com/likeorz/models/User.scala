@@ -12,7 +12,7 @@ case class User(
   nickname: String,
   avatar: String,
   cover: String,
-  created: Long,
-  updated: Long,
-  likes: Long,
+  created: Long = System.currentTimeMillis() / 1000,
+  updated: Long = System.currentTimeMillis() / 1000,
+  likes: Long = 0,
   refreshToken: Option[String] = None) extends Identifier

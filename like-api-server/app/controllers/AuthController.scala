@@ -17,7 +17,7 @@ import play.api.mvc._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import services.UserService
-import utils.{ AVOSUtils, MemcachedCacheClient, HashUtils, GenerateUtils }
+import utils._
 
 import scala.concurrent.Future
 
@@ -52,7 +52,7 @@ class AuthController @Inject() (
           if (user.refreshToken.isDefined && HashUtils.validate(refreshToken, user.refreshToken.get)) {
             for {
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
+              value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
               refreshToken <- refreshTokenGenerator.generate
               unit <- userService.updateRefreshToken(id, HashUtils.hashPassword(refreshToken))
             } yield {
@@ -104,7 +104,7 @@ class AuthController @Inject() (
             for {
               // Create new session token
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
+              value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
               // Create new refresh token
               refreshToken <- refreshTokenGenerator.generate
               // Refresh user's refresh token and updated time
@@ -130,7 +130,7 @@ class AuthController @Inject() (
               ))
               link <- userService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone.toInt + " " + smsCode.mobilePhoneNumber)
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
+              value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
             } yield {
               success(Messages("success.login"), Json.obj(
                 "user_id" -> user.identify,
@@ -172,7 +172,7 @@ class AuthController @Inject() (
                 GenerateUtils.currentSeconds(),
                 GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
+              value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
             } yield {
               success(Messages("success.login"), Json.obj(
                 "user_id" -> user.identify,
@@ -191,7 +191,7 @@ class AuthController @Inject() (
                 GenerateUtils.currentSeconds(),
                 GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
               sessionToken <- sessionTokenGenerator.generate
-              value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
+              value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
             } yield {
               success(Messages("success.login"), Json.obj(
                 "user_id" -> user.identify,
@@ -212,7 +212,7 @@ class AuthController @Inject() (
                   GenerateUtils.currentSeconds(),
                   GenerateUtils.currentSeconds(), 0, Some(HashUtils.hashPassword(refreshToken))))
                 sessionToken <- sessionTokenGenerator.generate
-                value <- MemcachedCacheClient.saveAsync[String]("session_user:" + sessionToken, user.identify, TOKEN_EXPIRY)
+                value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
               } yield {
                 success(Messages("success.login"), Json.obj(
                   "user_id" -> user.identify,

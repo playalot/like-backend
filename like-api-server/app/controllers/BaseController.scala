@@ -3,7 +3,7 @@ package controllers
 import play.api.i18n.{ Messages, I18nSupport }
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc._
-import utils.MemcachedCacheClient
+import utils.{ KeyUtils, MemcachedCacheClient }
 
 import scala.concurrent.Future
 
@@ -21,7 +21,7 @@ trait BaseController extends Controller with I18nSupport {
 
     override def invokeBlock[A](request: Request[A], block: (SecuredRequest[A]) => Future[Result]): Future[Result] = {
       request.headers.get("LIKE-SESSION-TOKEN")
-        .flatMap(token => MemcachedCacheClient.findUserId("session_user:" + token))
+        .flatMap(token => MemcachedCacheClient.findUserId(KeyUtils.session(token)))
         .map(userId => block(new SecuredRequest(userId, request)))
         .getOrElse(Future.successful(error(4016, Messages("invalid.sessionToken"))))
     }
@@ -31,7 +31,7 @@ trait BaseController extends Controller with I18nSupport {
 
     override def invokeBlock[A](request: Request[A], block: (UserAwareRequest[A]) => Future[Result]): Future[Result] = {
       request.headers.get("LIKE-SESSION-TOKEN") match {
-        case Some(token) => block(new UserAwareRequest(MemcachedCacheClient.findUserId("session_user:" + token), request))
+        case Some(token) => block(new UserAwareRequest(MemcachedCacheClient.findUserId(KeyUtils.session(token)), request))
         case None        => block(new UserAwareRequest(None, request))
       }
     }

@@ -36,5 +36,7 @@ trait MarkService {
 
   def rebuildMarkCache(): Future[Unit]
 
-  def rebuildLikeCache(): Future[Unit]
+  def rebuildUserLikesCache(): Future[Unit]
+
+  def rebuildUserCountsCache(): Future[Unit]
 }

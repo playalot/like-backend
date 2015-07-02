@@ -3,6 +3,7 @@ package services
 import com.google.inject.Inject
 import com.likeorz.dao._
 import com.likeorz.models.{ Tag => Tg, _ }
+import play.api.Logger
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
@@ -18,7 +19,8 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     with PostsComponent with UsersComponent
     with MarksComponent with TagsComponent
     with LikesComponent with CommentsComponent
-    with NotificationsComponent with HasDatabaseConfigProvider[JdbcProfile] {
+    with NotificationsComponent with FollowsComponent
+    with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 
@@ -132,20 +134,27 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def rebuildMarkCache(): Future[Unit] = {
     import utils.HelperUtils._
-    db.stream(posts.result).foreach { post =>
+    Logger.info("Rebuild post marks start!")
+    val t1 = System.currentTimeMillis()
+    db.stream(posts.result).foreach({ post =>
       val query = (for {
         (like, mark) <- likes join marks on (_.markId === _.id) if mark.postId === post.id.get
       } yield (like, mark)).groupBy(_._2.id).map(x => (x._1, x._2.length))
-      query.length.result.statements.foreach(println)
+      //      query.length.result.statements.foreach(println)
       db.run(query.result).map { rs =>
         rs.map(x => RedisCacheClient.zAdd(KeyUtils.postMark(post.id.get), x._2, x._1))
       }
+    }).map { _ =>
+      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
+      Logger.info("Rebuild post marks done!")
     }
   }
 
-  override def rebuildLikeCache(): Future[Unit] = {
+  override def rebuildUserLikesCache(): Future[Unit] = {
     import utils.HelperUtils._
-    db.stream(users.result).foreach { user =>
+    Logger.info("Rebuild user likes start!")
+    val t1 = System.currentTimeMillis()
+    db.stream(users.result).foreach({ user =>
       val query = for {
         (like, mark) <- likes join marks on (_.markId === _.id) if mark.userId === user.id.get
       } yield like
@@ -153,6 +162,29 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       db.run(query.length.result).map { likes =>
         RedisCacheClient.hset(KeyUtils.user(user.id.get), "likes", likes)
       }
+    }).map { _ =>
+      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
+      Logger.info("Rebuild user likes done!")
+    }
+  }
+
+  override def rebuildUserCountsCache(): Future[Unit] = {
+    import utils.HelperUtils._
+    Logger.info("Rebuild user counts start!")
+    val t1 = System.currentTimeMillis()
+    db.stream(users.result).foreach({ user =>
+      for {
+        posts <- db.run(posts.filter(_.userId === user.id.get).length.result)
+        followings <- db.run(follows.filter(_.fromId === user.id.get).length.result)
+        followers <- db.run(follows.filter(_.toId === user.id.get).length.result)
+      } yield {
+        RedisCacheClient.hset(KeyUtils.user(user.id.get), "posts", posts)
+        RedisCacheClient.hset(KeyUtils.user(user.id.get), "followings", followings)
+        RedisCacheClient.hset(KeyUtils.user(user.id.get), "followers", followers)
+      }
+    }).map { _ =>
+      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
+      Logger.info("Rebuild user counts done!")
     }
   }
 

@@ -44,11 +44,15 @@ class Application @Inject() (
 
     //    pushNotificationService.sendNotification(Notification(None, "LIKE", 715L, 715L, 1234, Some("aaa"), Some(123L)))
 
-    //    markService.rebuildMarkCache()
+    //        MemcachedCacheClient.save[String]("session_user:e5b7f1ef625fc31c62a6577e71bb9ac1d2491177d1b8bee9d4db4b72ef177014", "715", 900000)
+    //    MemcachedCacheClient.save[String]("session_user:187", "187", 900000)
+    //    MemcachedCacheClient.save[String]("session_user:715", "715", 900000)
 
-    //    MemcachedCacheClient.save[String]("session_user:e5b7f1ef625fc31c62a6577e71bb9ac1d2491177d1b8bee9d4db4b72ef177014", "715", 900000)
-    //    MemcachedCacheClient.save[String]("session_user:e5b7f1ef625fc31c62a6577e71bb9ac1d2491177d1b8bee9d4db4b72ef177014", "128", 900000)
-    //    MemcachedCacheClient.save[String]("session_user:420ca1ba7a736e2bed8e23c7e1a78eca", "826", 900000)
+    //    userService.getUserInfo(715).map(println)
+    //    userService.getUserInfo(187).map(println)
+
+    //    println(Json.prettyPrint(Json.toJson(RedisCacheClient.hgetAll(KeyUtils.user(715)))))
+    //    println(Json.prettyPrint(Json.toJson(RedisCacheClient.hgetAll(KeyUtils.user(187)))))
 
     //    println(MemcachedCacheClient.find[Long]("session_user:e5b7f1ef625fc31c62a6577e71bb9ac1d2491177d1b8bee9d4db4b72ef177014"))
 
@@ -91,11 +95,18 @@ class Application @Inject() (
     //      userService.insert(user.get.copy(id = None, mobile = (user.get.mobile.toLong + 3).toString)).map(println)
     //      userService.count().map(println)
     //    }
+
+    //    markService.rebuildMarkCache()
+    //    markService.rebuildLikeCache()
+
     Ok(Json.obj("status" -> "1.1.0"))
   }
 
   def test = SecuredAction { implicit request =>
-    println(request.userId)
+    Logger.error(s"User[$request.userId] run test!!!")
+    //    markService.rebuildMarkCache()
+    //    markService.rebuildUserLikesCache()
+    //    markService.rebuildUserCountsCache()
     Ok("UserId: " + request.userId)
   }
 

@@ -36,14 +36,14 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def countByUserId(userId: Long): Future[Long] = {
-    Option(RedisCacheClient.hget(KeyUtils.user(userId), "posts")) match {
-      case Some(number) => Future.successful(number.toInt)
-      case None =>
-        db.run(posts.filter(_.userId === userId).length.result).map { number =>
-          RedisCacheClient.hset(KeyUtils.user(userId), "posts", number.toString)
-          number
-        }
+    //    Option(RedisCacheClient.hget(KeyUtils.user(userId), "posts")) match {
+    //      case Some(number) => Future.successful(number.toInt)
+    //      case None =>
+    db.run(posts.filter(_.userId === userId).length.result).map { number =>
+      //          RedisCacheClient.hset(KeyUtils.user(userId), "posts", number.toString)
+      number
     }
+    //    }
   }
 
   override def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {

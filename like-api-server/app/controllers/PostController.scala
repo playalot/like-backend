@@ -122,8 +122,11 @@ class PostController @Inject() (
         if (post._1.userId != request.userId) {
           Future.successful(error(4023, Messages("no.permission")))
         } else {
-          postService.deletePostById(id, request.userId).map { _ =>
-            postService.recordDelete(post._1.content)
+          for {
+            p <- postService.deletePostById(id, request.userId)
+            n <- notificationService.deleteAllNotificationForPost(id)
+            r <- postService.recordDelete(post._1.content)
+          } yield {
             success(Messages("success.deletePost"))
           }
         }

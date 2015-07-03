@@ -188,4 +188,25 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  override def exportPostWithTags(): Future[Unit] = {
+
+    Logger.info("Export post csv start!")
+    val t1 = System.currentTimeMillis()
+    val p = new java.io.PrintWriter(new java.io.File("post_tags.csv"))
+    db.stream(posts.result).foreach({ post =>
+      val query = for {
+        (mark, tag) <- marks join tags on (_.tagId === _.id) if mark.postId === post.id.get
+      } yield tag.tagName
+      //      query.length.result.statements.foreach(println)
+      db.run(query.result).map { rs =>
+        //        println(post.id.get + "," + rs.mkString(","))
+        p.println(post.id.get + "," + rs.mkString(","))
+      }
+    }).map { _ =>
+      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
+      Logger.info("Export post csv done!")
+      p.close()
+    }
+  }
+
 }

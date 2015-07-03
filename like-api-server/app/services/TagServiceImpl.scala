@@ -24,7 +24,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     val query = (for {
       (mark, tag) <- marks join tags on (_.tagId === _.id)
       if mark.userId === userId
-    } yield tag).sortBy(_.created.desc).groupBy(_.id).map(_._1).take(21)
+    } yield tag).groupBy(_.id).map(x => (x._1, x._2.length)).sortBy(_._2.desc).map(_._1).take(21)
 
     for {
       tagIds <- db.run(query.result)

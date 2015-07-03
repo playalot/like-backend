@@ -16,7 +16,8 @@ trait EntityComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def name = column[String]("name")
     def description = column[String]("description")
     def avatar = column[String]("avatar")
-    override def * = (id.?, name, description, avatar) <> (Entity.tupled, Entity.unapply _)
+    def images = column[String]("images")
+    override def * = (id.?, name, description, avatar, images.?) <> (Entity.tupled, Entity.unapply _)
   }
 
   protected val entities = TableQuery[EntityTable]

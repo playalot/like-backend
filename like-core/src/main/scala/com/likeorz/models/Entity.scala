@@ -8,4 +8,5 @@ case class Entity(
   id: Option[Long],
   name: String,
   description: String,
-  avatar: String)
+  avatar: String,
+  images: Option[String])

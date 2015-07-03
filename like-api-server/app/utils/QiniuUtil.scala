@@ -48,6 +48,14 @@ object QiniuUtil {
     }
   }
 
+  def getRaw(filename: String): String = {
+    s"$CDN/$filename"
+  }
+
+  def getScale(filename: String, targetSize: Int): String = {
+    s"$CDN/$filename?imageView2/0/w/$targetSize/h/$targetSize"
+  }
+
   def getAvatar(filename: String, size: String): String = {
     s"$CDN/${resizeImage(filename, AvatarSize.get(size).getOrElse(AvatarSize("small")))}"
   }

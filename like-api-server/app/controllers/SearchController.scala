@@ -9,6 +9,8 @@ import play.api.libs.concurrent.Execution.Implicits._
 import services.{ PromoteService, PostService, TagService }
 import utils.QiniuUtil
 
+import scala.util.Random
+
 /**
  * Created by Guan Guan
  * Date: 5/25/15
@@ -53,11 +55,15 @@ class SearchController @Inject() (
       tags <- tagService.hotTags
     } yield {
       val entityArr = entities.map { entity =>
+        val image = entity.images.map { images =>
+          val list = images.split(",").filter(_.trim.length > 0)
+          list(Random.nextInt(list.size))
+        }.getOrElse(entity.avatar)
         Json.obj(
           "id" -> entity.id,
           "tag" -> entity.name,
           "likes" -> 0,
-          "image" -> QiniuUtil.getAvatar(entity.avatar, "medium")
+          "image" -> QiniuUtil.getScale(image, 360)
         )
       }
       val tagArr = tags.filterNot(t => entities.exists(_.name == t.tagName)).map { tag =>
@@ -116,7 +122,7 @@ class SearchController @Inject() (
             "id" -> entityOpt.get.id.get,
             "name" -> entityOpt.get.name,
             "description" -> entityOpt.get.description,
-            "avatar" -> QiniuUtil.getAvatar(entityOpt.get.avatar, "medium")
+            "avatar" -> QiniuUtil.getAvatar(entityOpt.get.avatar, "large")
           ),
           "posts" -> Json.toJson(posts)
         ))

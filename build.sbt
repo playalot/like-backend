@@ -1,6 +1,6 @@
 organization in ThisBuild := "com.likeorz"
 
-scalaVersion in ThisBuild := "2.11.6"
+scalaVersion in ThisBuild := "2.11.7"
 
 scalacOptions in ThisBuild ++= Seq(
   "-target:jvm-1.7",
@@ -21,15 +21,20 @@ lazy val likeApiServer = (project in file("like-api-server"))
   .dependsOn(likeCore)
   .enablePlugins(PlayScala)
 
+lazy val likeML = (project in file("like-ml"))
+  .enablePlugins(JavaServerAppPackaging)
+
 lazy val likeActorCluster = (project in file("like-actor-cluster"))
   .dependsOn(likeCore)
+  .enablePlugins(JavaServerAppPackaging)
 
 lazy val likeBearychatRobot = (project in file("like-bearychat-robot"))
   .enablePlugins(PlayScala)
 
 lazy val root = (project in file(".")).aggregate(
-	likeCore,
-	likeApiServer,
+  likeCore,
+  likeApiServer,
+  likeML,
   likeActorCluster,
   likeBearychatRobot)
 
@@ -40,4 +45,5 @@ resolvers ++= Seq(
 	  Resolver.typesafeRepo("snapshots"),
 	  Resolver.typesafeIvyRepo("releases")
 )
+
 

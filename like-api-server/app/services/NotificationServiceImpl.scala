@@ -47,20 +47,42 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
   }
 
   override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 30): Future[Seq[(Notification, User, Option[(Post, User)])]] = {
-    // TODO optimize
-    val query = if (timestamp.isDefined) {
+
+    val q = if (timestamp.isDefined) {
       (for {
-        ((notification, user), (postAndUser)) <- notifications join users on (_.fromUserId === _.id) joinLeft (posts join users on (_.userId === _.id)) on (_._1.postId === _._1.id)
+        (notification, user) <- notifications join users on (_.fromUserId === _.id)
         if notification.userId === userId && notification.updated < timestamp.get
-      } yield (notification, user, postAndUser)).sortBy(_._1.updated.desc).take(pageSize)
+      } yield (notification, user)).sortBy(_._1.updated.desc).take(pageSize)
     } else {
       (for {
-        ((notification, user), (postAndUser)) <- notifications join users on (_.fromUserId === _.id) joinLeft (posts join users on (_.userId === _.id)) on (_._1.postId === _._1.id)
+        (notification, user) <- notifications join users on (_.fromUserId === _.id)
         if notification.userId === userId
-      } yield (notification, user, postAndUser)).sortBy(_._1.updated.desc).take(pageSize)
+      } yield (notification, user)).sortBy(_._1.updated.desc).take(pageSize)
     }
+
     RedisCacheClient.zAdd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
-    db.run(query.result)
+
+    db.run(q.result).flatMap { notificationAndUser =>
+      val postIds = notificationAndUser.flatMap(_._1.postId).toSet
+
+      if (postIds.nonEmpty) {
+        val queryPost = for {
+          (post, user) <- posts join users on (_.userId === _.id) if post.id inSet (postIds)
+        } yield (post, user)
+        db.run(queryPost.result).map { postAndUser =>
+          val postMap = postAndUser.map(x => (x._1.id -> x)).toMap
+          notificationAndUser.map {
+            case (notification, user) =>
+              (notification, user, postMap.get(notification.postId))
+          }
+        }
+      } else {
+        Future.successful(notificationAndUser.map {
+          case (notification, user) =>
+            (notification, user, None)
+        })
+      }
+    }
   }
 
 }

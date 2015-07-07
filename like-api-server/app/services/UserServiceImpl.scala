@@ -99,14 +99,14 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def count(): Future[Int] = db.run(users.length.result)
 
   override def countFollowers(id: Long): Future[Int] = {
-    Option(RedisCacheClient.hget(KeyUtils.user(id), "followers")) match {
-      case Some(number) => Future.successful(number.toInt)
-      case None =>
-        db.run(follows.filter(_.toId === id).length.result).map { number =>
-          RedisCacheClient.hset(KeyUtils.user(id), "followers", number.toString)
-          number
-        }
+    //    Option(RedisCacheClient.hget(KeyUtils.user(id), "followers")) match {
+    //      case Some(number) => Future.successful(number.toInt)
+    //      case None =>
+    db.run(follows.filter(_.toId === id).length.result).map { number =>
+      RedisCacheClient.hset(KeyUtils.user(id), "followers", number.toString)
+      number
     }
+    //    }
   }
 
   override def getFollowers(userId: Long, page: Int): Future[Seq[User]] = {
@@ -118,14 +118,14 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def countFollowings(id: Long): Future[Int] = {
-    Option(RedisCacheClient.hget(KeyUtils.user(id), "followings")) match {
-      case Some(number) => Future.successful(number.toInt)
-      case None =>
-        db.run(follows.filter(_.fromId === id).length.result).map { number =>
-          RedisCacheClient.hset(KeyUtils.user(id), "followings", number.toString)
-          number
-        }
+    //    Option(RedisCacheClient.hget(KeyUtils.user(id), "followings")) match {
+    //      case Some(number) => Future.successful(number.toInt)
+    //      case None =>
+    db.run(follows.filter(_.fromId === id).length.result).map { number =>
+      RedisCacheClient.hset(KeyUtils.user(id), "followings", number.toString)
+      number
     }
+    //    }
   }
 
   override def getFollowings(userId: Long, page: Int): Future[Seq[User]] = {

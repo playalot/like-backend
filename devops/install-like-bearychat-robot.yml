@@ -4,7 +4,7 @@
   gather_facts: True
   tasks:
     - name: Build Playframework Dist package
-      command: chdir=../ sbt "project likeBearychat-Robot" dist
+      command: chdir=../ sbt "project likeBearychatRobot" dist
 
 - hosts: [like_bearychat_robot_server]
   sudo: True

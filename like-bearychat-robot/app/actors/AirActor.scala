@@ -22,7 +22,7 @@ class AirActor extends Actor with ActorLogging {
 
         log.info(info.toString())
 
-        val rand = scala.util.Random.nextInt(3000) + 1000
+        val rand = scala.util.Random.nextInt(10000) + 1000
         val post = Json.parse(Http("http://api.likeorz.com/v2/post/" + rand).asString.body)
 
         val weatherJson = Json.obj(

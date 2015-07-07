@@ -22,7 +22,7 @@ class Application @Inject() (system: ActorSystem) extends Controller {
 
   system.scheduler.schedule(
     (60 - DateTime.now.minuteOfHour().get()).minutes,
-    60.minutes,
+    180.minutes,
     airActor,
     AirActor.Update
   )

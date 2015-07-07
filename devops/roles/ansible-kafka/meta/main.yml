@@ -1,0 +1,32 @@
+---
+galaxy_info:
+  author: Guan Guan
+  description: Ansible Java Playbook Role
+  company: http://mixpixel.io
+  license: Apache 2
+  min_ansible_version: 1.7
+  platforms:
+  - name: Ubuntu
+    versions:
+      - all
+      - lucid
+      - maverick
+      - natty
+      - oneiric
+      - precise
+      - quantal
+      - raring
+      - saucy
+      - trusty
+  - name: Debian
+    versions:
+      - all
+      - etch
+      - lenny
+      - squeeze
+      - wheezy
+  categories:
+  - clustering
+  - system
+dependencies:
+  - { role: "ansible-scala" }

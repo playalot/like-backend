@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: Guan Guan
+  description: Ansible Scala Playbook Role
+  company: http://mixpixel.io
+  license: Apache 2
+  min_ansible_version: 1.7
+  platforms:
+  - name: Ubuntu
+    versions:
+    - trusty
+  categories:
+  - development
+dependencies:
+  - { role: "ansible-java8-oracle" }

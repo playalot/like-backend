@@ -1,0 +1,6 @@
+---
+- hosts: [kafka_cluster]
+  sudo: True
+  roles:
+    - { role: 'ansible-zookeeper', zookeeper_hosts: "{{ groups.kafka_cluster }}", tags: ['zookeeper'] }
+    - { role: 'ansible-kafka', zookeeper_hostnames: "{{ groups.kafka_cluster | join(':' + zookeeper_client_port + ',') }}:{{ zookeeper_client_port }}", tags: ['kafka'] }

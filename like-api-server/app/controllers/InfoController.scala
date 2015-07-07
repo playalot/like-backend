@@ -35,14 +35,14 @@ class InfoController @Inject() (
     (tokenOpt, typeOpt) match {
       case (Some(token), Some(t)) => infoService.findInstallation(t, request.userId).flatMap {
         case Some(installation) =>
-          val future = if (installation.deviceToken != token) {
+          val tsDiff = ((System.currentTimeMillis() / 1000) - installation.updated) / 3600
+          if (installation.deviceToken != token || tsDiff > 24) {
             AVOSUtils.updateInstallations(installation.objectId, token, t).flatMap { objectId =>
               infoService.updateInstallation(installation.id.get, installation.copy(objectId = objectId, userId = request.userId, status = 1, updated = System.currentTimeMillis() / 1000))
-            }
+            }.map(_ => success(Messages("success.install")))
           } else {
-            infoService.updateInstallation(installation.id.get, installation.copy(userId = request.userId, status = 1, updated = System.currentTimeMillis() / 1000))
+            Future.successful(success(Messages("success.install")))
           }
-          future.map(_ => success(Messages("success.install")))
         case None =>
           AVOSUtils.installations(token, t).flatMap { objectId =>
             infoService.insertInstallation(Installation(None, request.userId, objectId, token, t, 1))

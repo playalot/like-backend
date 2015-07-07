@@ -28,56 +28,127 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
 
 ######JSON示例
 
-<pre>
+```json
 {
-    "code": "1", 
-    "message": "Record(s) Found", 
+    "code": 1,
+    "message": "Record(s) Found",
     "data": {
         "marks": [
             {
-                "mark_id": "8004", 
-                "tag": "标签1", 
-                "likes": "1", 
-                "is_liked": "1", 
-                "created": "1428569376", 
+                "mark_id": 25904,
+                "tag": "手办",
+                "likes": 7,
+                "is_liked": false,
+                "created": 1434428028,
                 "user": {
-                    "user_id": "1", 
-                    "nickname": "小改", 
-                    "avatar": "http://storage.likeorz.com/avatar_8.jpg", 
-                    "likes": "362"
-                }
-            }, 
+                    "user_id": 611,
+                    "nickname": "Resid橘子",
+                    "avatar": "http://cdn.likeorz.com/avatar_611_1435765248.jpg?imageView2/1/w/80/h/80",
+                    "likes": 1351
+                },
+                "total_comments": 2,
+                "comments": [
+                    {
+                        "comment_id": 3497,
+                        "content": "123123.jpg",
+                        "created": 1436300726,
+                        "place": "Beijing",
+                        "user": {
+                            "user_id": 715,
+                            "nickname": "进击の关关",
+                            "avatar": "http://cdn.likeorz.com/avatar_715_1435894969.jpg?imageView2/1/w/80/h/80",
+                            "likes": 1148
+                        },
+                        "reply": null
+                    },
+                    {
+                        "comment_id": 3496,
+                        "content": "123123.jpg",
+                        "created": 1436300725,
+                        "place": "Beijing",
+                        "user": {
+                            "user_id": 715,
+                            "nickname": "进击の关关",
+                            "avatar": "http://cdn.likeorz.com/avatar_715_1435894969.jpg?imageView2/1/w/80/h/80",
+                            "likes": 1148
+                        },
+                        "reply": null
+                    }
+                ],
+                "likers": [
+                    {
+                        "user_id": 872,
+                        "nickname": "SL__小黑",
+                        "avatar": "http://cdn.likeorz.com/avatar_872_1434105061.jpg?imageView2/1/w/80/h/80",
+                        "likes": 605
+                    },
+                    {
+                        "user_id": 39,
+                        "nickname": "like-卖萌机器人",
+                        "avatar": "http://cdn.likeorz.com/avatar_39_1434619446.jpg?imageView2/1/w/80/h/80",
+                        "likes": 1140
+                    },
+                    {
+                        "user_id": 1072,
+                        "nickname": "WGG",
+                        "avatar": "http://cdn.likeorz.com/avatar_1072_1434431953.jpg?imageView2/1/w/80/h/80",
+                        "likes": 1
+                    },
+                    {
+                        "user_id": 178,
+                        "nickname": "果酱",
+                        "avatar": "http://cdn.likeorz.com/avatar_178_1433040430.jpg?imageView2/1/w/80/h/80",
+                        "likes": 1889
+                    },
+                    {
+                        "user_id": 401,
+                        "nickname": "超高校級のガレージキットコン",
+                        "avatar": "http://cdn.likeorz.com/avatar_401_1435058689.jpg?imageView2/1/w/80/h/80",
+                        "likes": 8092
+                    },
+                    {
+                        "user_id": 22,
+                        "nickname": "Tilor",
+                        "avatar": "http://cdn.likeorz.com/avatar_22_1433027475.jpg?imageView2/1/w/80/h/80",
+                        "likes": 215
+                    }
+                ]
+            },
             {
-                "mark_id": "8005", 
-                "tag": "标签2", 
-                "likes": "1", 
-                "is_liked": "1", 
-                "created": "1428569376", 
+                "mark_id": 25902,
+                "tag": "福利",
+                "likes": 3,
+                "is_liked": false,
+                "created": 1434428028,
                 "user": {
-                    "user_id": "1", 
-                    "nickname": "小改", 
-                    "avatar": "http://storage.likeorz.com/avatar_8.jpg", 
-                    "likes": "362"
-                }
-            }, 
-            {
-                "mark_id": "8006", 
-                "tag": "标签3", 
-                "likes": "1", 
-                "is_liked": "1", 
-                "created": "1428569376", 
-                "user": {
-                    "user_id": "1", 
-                    "nickname": "小改", 
-                    "avatar": "http://storage.likeorz.com/avatar_8.jpg", 
-                    "likes": "362"
-                }
+                    "user_id": 611,
+                    "nickname": "Resid橘子",
+                    "avatar": "http://cdn.likeorz.com/avatar_611_1435765248.jpg?imageView2/1/w/80/h/80",
+                    "likes": 1351
+                },
+                "total_comments": 0,
+                "comments": [
+                ],
+                "likers": [
+                    {
+                        "user_id": 173,
+                        "nickname": "akaaa",
+                        "avatar": "http://cdn.likeorz.com/avatar_173_1432458009.jpg?imageView2/1/w/80/h/80",
+                        "likes": 1325
+                    },
+                    {
+                        "user_id": 401,
+                        "nickname": "超高校級のガレージキットコン",
+                        "avatar": "http://cdn.likeorz.com/avatar_401_1435058689.jpg?imageView2/1/w/80/h/80",
+                        "likes": 8092
+                    }
+                ]
             }
-        ], 
-        "next": false
+        ]
     }
 }
-</pre>
+```
+
 
 ######返回字段说明
 |返回值字段|字段类型|字段说明|

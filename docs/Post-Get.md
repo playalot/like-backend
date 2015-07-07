@@ -36,7 +36,9 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
         "type": "PHOTO", 
         "content": "http://storage.likeorz.com/42a477c5614e0fed_1427805894_w_428_h_640_181.jpg", 
         "description": "09R1……", 
-        "created": "1427805894", 
+        "created": "1427805894",
+        "place(optional)": "Beijing",
+        "location(optional)": [11.11, 22.22],
         "is_favored": "0", 
         "user": {
             "user_id": "181", 

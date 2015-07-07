@@ -18,17 +18,19 @@ POST
 |--------|-------|-------|
 |LIKE-SESSION-TOKEN|true|string|Header中带用户授权|
 |content|true|string|内容或资源链接（七牛文件名）|
-|description|false|string|内容描述 |
 |type|true|false|类型（暂时只支持 PHOTO）|
 |tags|true|array|选定的标签数组（格式化成json格式）|
+|place|false|string|城市名称 |
+|location|false|array|经纬度 |
 
 ######请求示例json
 ```json
 {
     "content": "42a477c5614e0fed_1427805894_w_428_h_640_181.jpg",
-    "description(optional)": "xxxxxxxxx",
     "type(optional)": "PHOTO",
-    "tags":["tag1", "tag2"]
+    "tags":["tag1", "tag2"],
+    "place(optional)": "Beijing",
+    "location(optional)": [11.11, 22.22]
 }
 ```
 
@@ -46,6 +48,8 @@ POST
         "type": "PHOTO",
         "description": null,
         "created": 1434585248,
+        "place(optional)": "Beijing",
+        "location(optional)": [11.11, 22.22],
         "user": {
             "user_id": "826",
             "nickname": "Guan Guan",

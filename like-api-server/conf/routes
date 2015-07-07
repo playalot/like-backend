@@ -26,9 +26,9 @@ PUT     /v1/user/nickname                           controllers.UserController.u
 PUT     /v1/user/avatar                             controllers.UserController.updateAvatar()
 PUT     /v1/user/cover                              controllers.UserController.updateCover()
 GET     /v1/user/suggest                            controllers.UserController.suggestTags()
-GET     /v1/user/$id<[0-9]+>/posts/$page<[0-9]+>    controllers.UserController.getPostsForUser(id: Long, page: Int)
-GET     /v1/user/$id<[0-9]+>/follows/$page<[0-9]+>  controllers.UserController.getFriends(id: Long, page: Int)
-GET     /v1/user/$id<[0-9]+>/fans/$page<[0-9]+>     controllers.UserController.getFollowers(id: Long, page: Int)
+GET     /v1/user/$id<[0-9]+>/posts/$pg<[0-9]+>      controllers.UserController.getPostsForUser(id: Long, pg: Int)
+GET     /v1/user/$id<[0-9]+>/follows/$pg<[0-9]+>    controllers.UserController.getFriends(id: Long, pg: Int)
+GET     /v1/user/$id<[0-9]+>/fans/$pg<[0-9]+>       controllers.UserController.getFollowers(id: Long, pg: Int)
 POST    /v1/user/$id<[0-9]+>/follow                 controllers.UserController.follow(id: Long)
 DELETE  /v1/user/$id<[0-9]+>/follow                 controllers.UserController.unFollow(id: Long)
 POST    /v1/user/$id<[0-9]+>/block                  controllers.UserController.block(id: Long)
@@ -39,7 +39,7 @@ GET     /v1/post/uploadToken                        controllers.PostController.g
 POST    /v1/post                                    controllers.PostController.publishPost
 DELETE  /v1/post/$id<[0-9]+>                        controllers.PostController.deletePost(id: Long)
 GET     /v1/post/$id<[0-9]+>                        controllers.PostController.getPost(id: Long)
-GET     /v1/post/$id<[0-9]+>/marks/$page<[0-9]+>    controllers.PostController.getPostMarks(id: Long, page: Int)
+GET     /v1/post/$id<[0-9]+>/marks/$pg<[0-9]+>      controllers.PostController.getPostMarks(id: Long, pg: Int)
 POST    /v1/post/$id<[0-9]+>/mark                   controllers.PostController.addMark(id: Long)
 POST    /v1/post/$id<[0-9]+>/report                 controllers.PostController.report(id: Long)
 
@@ -56,8 +56,8 @@ GET     /v1/mark/$id<[0-9]+>/comment                controllers.CommentControlle
 # Search
 GET     /v1/tag/hot                                 controllers.SearchController.hotTags
 GET     /v1/tag/guess/:tag                          controllers.SearchController.autoComplete(tag: String)
-GET     /v1/tag/search/:tag/:page                   controllers.SearchController.searchTag(page: Int, tag: String)
-GET     /v1/search/tag/:tag/:page                   controllers.SearchController.searchTagV2(page: Int, tag: String)
+GET     /v1/tag/search/:tag/:pg                     controllers.SearchController.searchTag(tag: String, pg: Int)
+GET     /v1/search/tag/:tag/:pg                     controllers.SearchController.searchTagV2(tag: String, pg: Int)
 
 #Notification
 GET     /v1/notification                            controllers.NotificationController.getNotifications(ts: Option[Long] ?= None)

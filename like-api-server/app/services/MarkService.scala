@@ -41,4 +41,6 @@ trait MarkService {
   def rebuildUserCountsCache(): Future[Unit]
 
   def exportPostWithTags(): Future[Unit]
+
+  def exportLikes(): Future[Unit]
 }

@@ -11,10 +11,6 @@ import utils.QiniuUtil
 
 import scala.util.Random
 
-/**
- * Created by Guan Guan
- * Date: 5/25/15
- */
 class SearchController @Inject() (
     val messagesApi: MessagesApi,
     tagService: TagService,
@@ -32,24 +28,7 @@ class SearchController @Inject() (
     }
   }
 
-  //  def hotTags = Action.async {
-  //    tagService.hotTags.map { tags =>
-  //      Ok(Json.obj(
-  //        "code" -> 1,
-  //        "message" -> "Record(s) Found",
-  //        "data" -> Json.toJson(tags.map(tag => Json.obj(
-  //          "id" -> tag.id,
-  //          "tag" -> tag.tagName,
-  //          "likes" -> tag.likes
-  //        )))))
-  //    }
-  //  }
   def hotTags = Action.async {
-    //    promoteService.getPromoteEntities().flatMap { entities =>
-    //      entities.map(entity => postService.getTagPostImage(entity.name)
-    //    }
-    // Random select image for tag
-
     for {
       entities <- promoteService.getPromoteEntities()
       tags <- tagService.hotTags
@@ -77,7 +56,7 @@ class SearchController @Inject() (
     }
   }
 
-  def searchTag(page: Int, name: String) = Action.async { implicit request =>
+  def searchTag(name: String, page: Int) = Action.async { implicit request =>
     postService.searchByTag(page = page, name = name).map { results =>
       val posts = results.map {
         case (post, user) => Json.obj(
@@ -97,7 +76,7 @@ class SearchController @Inject() (
     }
   }
 
-  def searchTagV2(page: Int, name: String) = Action.async { implicit request =>
+  def searchTagV2(name: String, page: Int) = Action.async { implicit request =>
     for {
       entityOpt <- promoteService.getEntitybyName(name)
       results <- postService.searchByTag(page = page, name = name)

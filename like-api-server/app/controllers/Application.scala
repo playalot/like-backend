@@ -97,8 +97,8 @@ class Application @Inject() (
     //    }
 
     //    markService.rebuildMarkCache()
-    //    markService.rebuildLikeCache()
     //    markService.exportPostWithTags()
+    //    markService.exportLikes()
     Ok(Json.obj("status" -> "1.1.0"))
   }
 

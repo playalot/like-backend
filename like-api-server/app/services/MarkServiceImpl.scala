@@ -97,7 +97,6 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val markQuery = for {
       ((mark, post), tag) <- marks join posts on (_.postId === _.id) join tags on (_._1.tagId === _.id) if mark.id === markId
     } yield (mark, post, tag)
-    markQuery.result.statements.foreach(println)
     db.run(markQuery.result.headOption)
   }
 
@@ -189,7 +188,6 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def exportPostWithTags(): Future[Unit] = {
-
     Logger.info("Export post csv start!")
     val t1 = System.currentTimeMillis()
     val p = new java.io.PrintWriter(new java.io.File("post_tags.csv"))
@@ -199,12 +197,28 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       } yield tag.tagName
       //      query.length.result.statements.foreach(println)
       db.run(query.result).map { rs =>
-        //        println(post.id.get + "," + rs.mkString(","))
-        p.println(post.id.get + "," + rs.mkString(","))
+        //        p.println(post.id.get + "," + rs.mkString(","))
       }
     }).map { _ =>
       Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
       Logger.info("Export post csv done!")
+      p.close()
+    }
+  }
+
+  override def exportLikes(): Future[Unit] = {
+    Logger.info("Export post csv start!")
+    val t1 = System.currentTimeMillis()
+    val p = new java.io.PrintWriter(new java.io.File("likes.csv"))
+    val query = for {
+      ((like, mark), tag) <- likes join marks on (_.markId === _.id) joinLeft tags on (_._2.tagId === _.id)
+    } yield (like.userId, mark.postId, tag.map(_.tagName), like.created)
+    db.stream(query.result).foreach {
+      case (uid, pid, tag, ts) =>
+      //        p.println(s"$uid,$pid,${tag.getOrElse("")},$ts")
+    }.map { _ =>
+      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
+      Logger.info("Export likes csv done!")
       p.close()
     }
   }

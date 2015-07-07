@@ -21,6 +21,10 @@ lazy val likeApiServer = (project in file("like-api-server"))
   .dependsOn(likeCore)
   .enablePlugins(PlayScala)
 
+lazy val likeDashboard = (project in file("like-dashboard"))
+  .dependsOn(likeCore)
+  .enablePlugins(PlayScala, SbtWeb)
+
 lazy val likeML = (project in file("like-ml"))
   .enablePlugins(JavaServerAppPackaging)
 
@@ -34,6 +38,7 @@ lazy val likeBearychatRobot = (project in file("like-bearychat-robot"))
 lazy val root = (project in file(".")).aggregate(
   likeCore,
   likeApiServer,
+  likeDashboard,
   likeML,
   likeActorCluster,
   likeBearychatRobot)

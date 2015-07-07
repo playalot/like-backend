@@ -8,6 +8,8 @@ import scala.language.implicitConversions
  */
 object HelperUtils {
 
+  private val rand = new scala.util.Random
+
   implicit def long2String(value: Long): String = value.toString
 
   implicit def int2String(value: Int): String = value.toString
@@ -28,6 +30,14 @@ object HelperUtils {
     } else {
       Seq(None, None, None)
     }
+  }
+
+  def insertAt[A](e: A, n: Int, ls: List[A]): List[A] = ls.splitAt(n) match {
+    case (pre, post) => pre ::: e :: post
+  }
+
+  def random(i: Int, n: Int = 0): Int = {
+    rand.nextInt(i) + n
   }
 
 }

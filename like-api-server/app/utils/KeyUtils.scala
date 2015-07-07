@@ -12,4 +12,6 @@ object KeyUtils {
 
   def postMark(pid: Long): String = "post_mark:" + pid
 
+  def postPromote: String = "post_promote"
+
 }

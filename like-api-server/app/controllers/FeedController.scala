@@ -7,7 +7,7 @@ import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import services.{ PostService, MarkService }
-import utils.{ HelperUtils, RedisCacheClient, QiniuUtil }
+import utils.{ KeyUtils, HelperUtils, RedisCacheClient, QiniuUtil }
 
 import scala.concurrent.Future
 
@@ -36,8 +36,11 @@ class FeedController @Inject() (
       Future.sequence(Seq(recommendIds))
     }
 
+    // Get promoted posts(Ads)
+    val ads = if (timestamp.isEmpty) RedisCacheClient.srandmember(KeyUtils.postPromote).map(_.toLong) else List[Long]()
+
     futureIds.flatMap { results =>
-      val resultIds = results.flatten.toSet
+      val resultIds = results.flatten.toSet ++ ads
       // Unique post ids
       val uniqueIds = if (timestamp.isDefined) {
         if (request.userId.isDefined) {
@@ -75,7 +78,12 @@ class FeedController @Inject() (
             else idTsMap.get(rs.last).map(_.toString).getOrElse("")
           }.mkString(",")
 
-          val futures = list.filter(p => uniqueIds.contains(p._1.id.get)).sortBy(-_._1.created).map { row =>
+          val promotePosts = list.filter(p => ads.contains(p._1.id.get))
+          val postList = list.filter(p => uniqueIds.contains(p._1.id.get) && !ads.contains(p._1.id.get)).sortBy(-_._1.created).toList
+
+          val posts = if (promotePosts.nonEmpty) HelperUtils.insertAt(promotePosts.head, HelperUtils.random(3, 3), postList) else postList
+
+          val futures = posts.map { row =>
             val markIds = row._3.map(_._1)
             markService.checkLikes(request.userId.getOrElse(-1L), markIds).map { likedMarks =>
               val marksJson = row._3.sortBy(-_._3).map { fields =>

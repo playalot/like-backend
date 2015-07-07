@@ -73,6 +73,12 @@ object RedisCacheClient {
     }
   }
 
+  def srandmember(key: String, count: Int = 1) = {
+    withJedisClient[List[String]] { client =>
+      client.srandmember(key, count).toList
+    }
+  }
+
   def hmset(key: String, fields: Map[String, String]) = {
     withJedisClient[String] { client =>
       client.hmset(key, fields)

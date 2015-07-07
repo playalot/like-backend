@@ -6,5 +6,5 @@ case class Notification(
   userId: Long,
   fromUserId: Long,
   updated: Long,
-  tagName: Option[String],
-  postId: Option[Long])
+  tagName: Option[String] = None,
+  postId: Option[Long] = None)

@@ -25,13 +25,14 @@ class PostController @Inject() (
     notificationService: NotificationService,
     pushService: PushService) extends BaseController {
 
-  case class PostCommand(content: String, `type`: Option[String], description: Option[String], tags: Seq[String])
+  case class PostCommand(content: String, `type`: Option[String], tags: Seq[String], place: Option[String], location: Option[Seq[Double]])
 
   implicit val postCommandReads = (
     (__ \ 'content).read[String] and
     (__ \ 'type).readNullable[String] and
-    (__ \ 'description).readNullable[String] and
-    (__ \ 'tags).read[Seq[String]]
+    (__ \ 'tags).read[Seq[String]] and
+    (__ \ 'place).readNullable[String] and
+    (__ \ 'location).readNullable[Seq[Double]]
   )(PostCommand.apply _)
 
   /**
@@ -52,10 +53,9 @@ class PostController @Inject() (
         Future.successful(error(4012, Messages("invalid.postJson")))
       },
       postCommand => {
-        postService.insert(Post(None, postCommand.content,
-          postCommand.description, postCommand.`type`.getOrElse("PHOTO"),
-          request.userId, System.currentTimeMillis / 1000,
-          System.currentTimeMillis / 1000, 0, 0)).flatMap { post =>
+        postService.insert(Post(None, postCommand.content, postCommand.`type`.getOrElse("PHOTO"),
+          request.userId, System.currentTimeMillis / 1000, System.currentTimeMillis / 1000,
+          0, 0, postCommand.place, postCommand.location.map(_.take(2).mkString(" ")))).flatMap { post =>
 
           val futures = postCommand.tags
             .filter(t => t.length <= 13 && t.length >= 1)
@@ -79,6 +79,8 @@ class PostController @Inject() (
               "type" -> post.`type`,
               "description" -> post.description,
               "created" -> post.created,
+              "place" -> post.place,
+              "location" -> post.location.map(_.split(" ").map(_.toDouble)),
               "user" -> Json.obj(
                 "user_id" -> author.get.identify,
                 "nickname" -> author.get.nickname,
@@ -104,6 +106,8 @@ class PostController @Inject() (
           "content" -> QiniuUtil.getPhoto(post.content, "large"),
           "description" -> post.description,
           "created" -> post.created,
+          "place" -> post.place,
+          "location" -> post.location.map(_.split(" ").map(_.toDouble)),
           "user" -> Json.obj(
             "user_id" -> user.identify,
             "nickname" -> user.nickname,
@@ -155,7 +159,7 @@ class PostController @Inject() (
                   "comment_id" -> row._1.id,
                   "content" -> row._1.content,
                   "created" -> row._1.created,
-                  "location" -> row._1.location,
+                  "place" -> row._1.place,
                   "user" -> Json.obj(
                     "user_id" -> row._2.id,
                     "nickname" -> row._2.nickname,

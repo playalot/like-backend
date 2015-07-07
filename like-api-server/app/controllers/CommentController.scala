@@ -29,10 +29,9 @@ class CommentController @Inject() (
       case Some(mark) =>
         val replyId = (request.body \ "reply_id").asOpt[Long]
         val content = (request.body \ "content").as[String].trim
-        val location = (request.body \ "location").asOpt[String]
+        val place = (request.body \ "place").asOpt[String]
         val created = System.currentTimeMillis / 1000
-        markService.commentMark(id, Comment(None, id, request.userId, replyId, content, created, location)).map { comment =>
-          println("Mark:" + id)
+        markService.commentMark(id, Comment(None, id, request.userId, replyId, content, created, place)).map { comment =>
           for {
             nickname <- userService.getNickname(request.userId)
             rowOpt <- markService.getMarkPostTag(id)
@@ -85,7 +84,7 @@ class CommentController @Inject() (
           "comment_id" -> row._1.id,
           "content" -> row._1.content,
           "created" -> row._1.created,
-          "location" -> row._1.location,
+          "place" -> row._1.place,
           "user" -> Json.obj(
             "user_id" -> row._2.id,
             "nickname" -> row._2.nickname,

@@ -64,8 +64,8 @@ trait CommentsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def replyId = column[Long]("reply_id")
     def content = column[String]("content")
     def created = column[Long]("created")
-    def location = column[String]("location")
-    override def * = (id.?, markId, userId, replyId.?, content, created, location.?) <> (Comment.tupled, Comment.unapply _)
+    def place = column[String]("place")
+    override def * = (id.?, markId, userId, replyId.?, content, created, place.?) <> (Comment.tupled, Comment.unapply _)
   }
 
   protected val comments = TableQuery[CommentsTable]

@@ -7,4 +7,4 @@ package com.likeorz.models
 case class PromoteEntity(
   id: Option[Long],
   entityId: Long,
-  created: Long = System.currentTimeMillis() / 10)
+  created: Long = System.currentTimeMillis() / 1000)

@@ -10,8 +10,8 @@ case class Comment(
     userId: Long,
     replyId: Option[Long],
     content: String,
-    created: Long,
-    location: Option[String]) {
+    created: Long = System.currentTimeMillis() / 1000,
+    place: Option[String] = None) {
 
   require(content.length > 0)
 }

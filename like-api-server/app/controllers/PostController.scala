@@ -139,13 +139,17 @@ class PostController @Inject() (
     postService.getPostById(id).flatMap {
       case Some(postAndUser) =>
         postService.getMarksForPost(id, page, request.userId).map { result =>
-          val scores = result._3
-          val likes = result._2
+          // result -> (markList, cachedMarks, likeList, commentsOnMarks)
+          val scores = result._2
+          val likes = result._3.groupBy(_._1.markId)
           val comments = result._4.groupBy(_._1.markId)
 
-          val marksJson = result._1.map { marks =>
-            val totalComments = comments.getOrElse(marks._1, Seq()).length
-            val commentsJson = comments.get(marks._1).map { list =>
+          // Generate json for each mark
+          val marksJson = result._1.map { mark =>
+            val totalComments = comments.getOrElse(mark._1, Seq()).length
+            // Comments json
+            val commentsJson = comments.get(mark._1).map { list =>
+              // Take latest 3 comments
               list.sortBy(_._1.created).reverse.take(3).map { row =>
                 Json.obj(
                   "comment_id" -> row._1.id,
@@ -167,20 +171,33 @@ class PostController @Inject() (
                 )
               }
             }
+            // Likes json
+            val likesJson = likes.get(mark._1).map { list =>
+              list.sortBy(_._1.created).drop(1).reverse.map { row =>
+                Json.obj(
+                  "user_id" -> row._2.id,
+                  "nickname" -> row._2.nickname,
+                  "avatar" -> QiniuUtil.getAvatar(row._2.avatar, "small"),
+                  "likes" -> row._2.likes
+                )
+              }
+            }
+            val isLiked = if (request.userId.isDefined) likes.getOrElse(mark._1, Seq()).map(_._1.userId).contains(request.userId.get) else false
             Json.obj(
-              "mark_id" -> marks._1,
-              "tag" -> marks._2,
-              "likes" -> scores(marks._1),
-              "is_liked" -> likes.contains(marks._1),
-              "created" -> marks._3,
+              "mark_id" -> mark._1,
+              "tag" -> mark._2,
+              "likes" -> scores(mark._1),
+              "is_liked" -> isLiked,
+              "created" -> mark._3,
               "user" -> Json.obj(
-                "user_id" -> marks._4.id,
-                "nickname" -> marks._4.nickname,
-                "avatar" -> QiniuUtil.getAvatar(marks._4.avatar, "small"),
-                "likes" -> marks._4.likes
+                "user_id" -> mark._4.id,
+                "nickname" -> mark._4.nickname,
+                "avatar" -> QiniuUtil.getAvatar(mark._4.avatar, "small"),
+                "likes" -> mark._4.likes
               ),
               "total_comments" -> totalComments,
-              "comments" -> Json.toJson(commentsJson.getOrElse(Seq()))
+              "comments" -> Json.toJson(commentsJson.getOrElse(Seq())),
+              "likers" -> Json.toJson(likesJson.getOrElse(Seq()))
             )
           }
           success(Messages("success.found"), Json.obj("marks" -> Json.toJson(marksJson)))

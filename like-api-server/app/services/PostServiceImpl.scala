@@ -145,19 +145,29 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(query.result.headOption)
   }
 
-  override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])] = {
+  override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Map[Long, Int], Seq[(Like, User)], Seq[(Comment, User, Option[User])])] = {
+    // Get top 10 marks for the post from cache
     val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postId, offset = page * 10, limit = 10).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
+    // Query marks with tagname and user order by created desc
+    // TODO: user from cache
     val marksQuery = (for {
       ((mark, tag), user) <- marks join tags on (_.tagId === _.id) join users on (_._1.userId === _.id)
       if (mark.postId === postId) && (mark.id inSet cachedMarks.keySet)
     } yield (mark.id, tag.tagName, mark.created, user)).sortBy(_._3.desc)
 
-    val likesQuery = for {
-      like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
-    } yield like.markId
+    //    val likesQuery = for {
+    //      like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
+    //    } yield like.markId
 
+    // Query all likes on the given set of marks
+    val likesQuery = for {
+      (like, user) <- likes join users on (_.userId === _.id)
+      if like.markId inSet cachedMarks.keySet
+    } yield (like, user)
+
+    // Query all comments on the give set of marks
     val commentsQuery = for {
       ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
       if comment.markId inSet cachedMarks.keySet
@@ -168,7 +178,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       likeList <- db.run(likesQuery.result)
       commentsOnMarks <- db.run(commentsQuery.result)
     } yield {
-      (markList, likeList.toSet, cachedMarks, commentsOnMarks)
+      (markList, cachedMarks, likeList, commentsOnMarks)
     }
   }
 

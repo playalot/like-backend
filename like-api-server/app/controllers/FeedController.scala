@@ -83,7 +83,10 @@ class FeedController @Inject() (
 
           val posts = if (promotePosts.nonEmpty) HelperUtils.insertAt(promotePosts.head, HelperUtils.random(3, 3), postList) else postList
 
-          val futures = posts.map { row =>
+          // Filter user who is in blacklist
+          val userBlacklist = RedisCacheClient.sMembers(KeyUtils.userBlacklist).map(_.toLong)
+
+          val futures = posts.filterNot(p => userBlacklist.contains(p._1.userId)).map { row =>
             val markIds = row._3.map(_._1)
             markService.checkLikes(request.userId.getOrElse(-1L), markIds).map { likedMarks =>
               val marksJson = row._3.sortBy(-_._3).map { fields =>

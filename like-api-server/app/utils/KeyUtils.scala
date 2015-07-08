@@ -14,4 +14,7 @@ object KeyUtils {
 
   def postPromote: String = "post_promote"
 
+  def userBlacklist: String = "user_blacklist"
+
 }
+

@@ -37,7 +37,9 @@ class FeedController @Inject() (
     }
 
     // Get promoted posts(Ads)
-    val ads = if (timestamp.isEmpty) RedisCacheClient.srandmember(KeyUtils.postPromote).map(_.toLong) else List[Long]()
+
+    val ads = if (request.userId.isDefined && timestamp.isEmpty && HelperUtils.random(100) > 50)
+      RedisCacheClient.srandmember(KeyUtils.postPromote).map(_.toLong) else List[Long]()
 
     futureIds.flatMap { results =>
       val resultIds = results.flatten.toSet ++ ads

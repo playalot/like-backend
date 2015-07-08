@@ -39,12 +39,12 @@ object QiniuUtil {
     if (isParsedFilename) {
       val parts = filename.split("_")
       if (parts.size >= 6) {
-        s"$filename?imageView2/1/w/$targetSize/h/${scala.math.ceil(parts(5).toDouble * (targetSize / parts(3).toDouble))}"
+        s"$filename?imageView2/0/w/$targetSize/h/${scala.math.ceil(parts(5).toDouble * (targetSize / parts(3).toDouble))}"
       } else {
-        s"$filename?imageView2/1/w/$targetSize/h/$targetSize"
+        s"$filename?imageView2/0/w/$targetSize/h/$targetSize"
       }
     } else {
-      s"$filename?imageView2/1/w/$targetSize/h/$targetSize"
+      s"$filename?imageView2/0/w/$targetSize/h/$targetSize"
     }
   }
 
@@ -53,15 +53,15 @@ object QiniuUtil {
   }
 
   def getScale(filename: String, targetSize: Int): String = {
-    s"$CDN/$filename?imageView2/0/w/$targetSize/h/$targetSize"
+    s"$CDN/$filename?imageView2/0/w/$targetSize/h/$targetSize/q/85"
   }
 
   def getAvatar(filename: String, size: String): String = {
-    s"$CDN/${resizeImage(filename, AvatarSize.get(size).getOrElse(AvatarSize("small")))}"
+    s"$CDN/${resizeImage(filename, AvatarSize.get(size).getOrElse(AvatarSize("small")))}/q/85"
   }
 
   def getPhoto(filename: String, size: String): String = {
-    s"$CDN/${resizeImage(filename, PhotoSize.get(size).getOrElse(PhotoSize("small")))}"
+    s"$CDN/${resizeImage(filename, PhotoSize.get(size).getOrElse(PhotoSize("small")))}/q/85"
   }
 
   def getSizedImage(filename: String, screenSize: Int): String = {

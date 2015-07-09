@@ -16,4 +16,6 @@ trait TagService {
 
   def hotTags: Future[Seq[Tag]]
 
+  def validTag(tag: String): Boolean
+
 }

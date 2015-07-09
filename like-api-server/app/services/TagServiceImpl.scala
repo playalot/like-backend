@@ -4,17 +4,14 @@ import javax.inject.Inject
 
 import com.likeorz.models.{ Tag => Tg }
 import com.likeorz.dao.{ MarksComponent, TagsComponent }
+import play.api.Configuration
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 5/25/15
- */
-class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends TagService
+class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, configuration: Configuration) extends TagService
     with TagsComponent with MarksComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
@@ -56,4 +53,9 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     db.run(query.result).map(tags => scala.util.Random.shuffle(tags).take(15))
   }
 
+  override def validTag(tag: String): Boolean = {
+    import scala.collection.JavaConversions._
+    val regexList = configuration.getStringList("tag-blacklist").get.toList
+    !regexList.exists(r => tag.matches(r))
+  }
 }

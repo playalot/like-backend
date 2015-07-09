@@ -1,5 +1,6 @@
 package modules
 
+import actors.EventProducerActor
 import com.google.inject.{ Provides, AbstractModule }
 import com.mohiva.play.silhouette.api.EventBus
 import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
@@ -19,11 +20,12 @@ import play.api.Play.current
 import play.api.Configuration
 import play.api.libs.ws.WSClient
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.concurrent.AkkaGuiceSupport
 
 /**
  * The Guice module which wires all Silhouette dependencies.
  */
-class SilhouetteModule extends AbstractModule with ScalaModule {
+class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
   override def configure(): Unit = {
     bind[TagService].to[TagServiceImpl]
@@ -39,6 +41,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule {
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator(32))
     bind[EventBus].toInstance(EventBus())
     bind[Clock].toInstance(Clock())
+    bindActor[EventProducerActor]("event-producer-actor")
   }
 
   /**

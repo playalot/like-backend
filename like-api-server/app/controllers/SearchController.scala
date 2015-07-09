@@ -1,7 +1,9 @@
 package controllers
 
-import javax.inject.Inject
+import javax.inject.{ Named, Inject }
 
+import akka.actor.ActorRef
+import com.likeorz.event.LikeEvent
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc.Action
@@ -12,6 +14,7 @@ import utils.QiniuUtil
 import scala.util.Random
 
 class SearchController @Inject() (
+    @Named("event-producer-actor") eventProducerActor: ActorRef,
     val messagesApi: MessagesApi,
     tagService: TagService,
     postService: PostService,
@@ -56,7 +59,9 @@ class SearchController @Inject() (
     }
   }
 
-  def searchTag(name: String, page: Int) = Action.async { implicit request =>
+  def searchTag(name: String, page: Int) = UserAwareAction.async { implicit request =>
+    if (request.userId.isDefined && page == 0)
+      eventProducerActor ! LikeEvent(None, "search", "user", request.userId.get.toString, properties = Json.obj("query" -> name))
     postService.searchByTag(page = page, name = name).map { results =>
       val posts = results.map {
         case (post, user) => Json.obj(
@@ -76,7 +81,9 @@ class SearchController @Inject() (
     }
   }
 
-  def searchTagV2(name: String, page: Int) = Action.async { implicit request =>
+  def searchTagV2(name: String, page: Int) = UserAwareAction.async { implicit request =>
+    if (request.userId.isDefined && page == 0)
+      eventProducerActor ! LikeEvent(None, "search", "user", request.userId.get.toString, properties = Json.obj("query" -> name))
     for {
       entityOpt <- promoteService.getEntitybyName(name)
       results <- postService.searchByTag(page = page, name = name)

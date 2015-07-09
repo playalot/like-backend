@@ -275,7 +275,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
-    db.run(marks.filter(_.userId === userId).map(_.tagId).groupBy(x => x).map(_._1).take(10000).result).flatMap { tagIds =>
+    db.run(marks.filter(_.userId === userId).sortBy(_.created.desc).map(_.tagId).take(10000).result).map(_.toSet).flatMap { tagIds =>
       if (timestamp.isDefined) {
         val query = (for {
           (mark, post) <- marks join posts on (_.postId === _.id)

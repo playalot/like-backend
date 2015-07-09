@@ -1,7 +1,9 @@
 package controllers
 
-import javax.inject.Inject
+import javax.inject.{ Named, Inject }
 
+import akka.actor.ActorRef
+import com.likeorz.event.LikeEvent
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -17,6 +19,7 @@ import scala.concurrent.Future
  * Date: 5/28/15
  */
 class PostController @Inject() (
+    @Named("event-producer-actor") eventProducerActor: ActorRef,
     val messagesApi: MessagesApi,
     tagService: TagService,
     markService: MarkService,
@@ -56,6 +59,10 @@ class PostController @Inject() (
         postService.insert(Post(None, postCommand.content, postCommand.`type`.getOrElse("PHOTO"),
           request.userId, System.currentTimeMillis / 1000, System.currentTimeMillis / 1000,
           0, 0, postCommand.place, postCommand.location.map(_.take(2).mkString(" ")))).flatMap { post =>
+
+          // log event
+          eventProducerActor ! LikeEvent(None, "publish", "user", request.userId.toString, Some("post"), Some(post.identify),
+            properties = Json.obj("tags" -> Json.toJson(postCommand.tags), "img" -> postCommand.content))
 
           val futures = postCommand.tags
             .filter(t => t.length <= 13 && t.length >= 1)
@@ -148,6 +155,10 @@ class PostController @Inject() (
           val likes = result._3.groupBy(_._1.markId)
           val comments = result._4.groupBy(_._1.markId)
 
+          // log event
+          eventProducerActor ! LikeEvent(None, "view", "user", request.userId.toString, Some("post"), Some(id.toString),
+            properties = Json.obj("tags" -> Json.toJson(result._1.map(_._2))))
+
           // Generate json for each mark
           val marksJson = result._1.map { mark =>
             val totalComments = comments.getOrElse(mark._1, Seq()).length
@@ -221,6 +232,10 @@ class PostController @Inject() (
         else
           postService.getPostById(postId).flatMap {
             case Some(post) =>
+
+              // log event
+              eventProducerActor ! LikeEvent(None, "mark", "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag))
+
               for {
                 nickname <- userService.getNickname(request.userId)
                 mark <- postService.addMark(postId, post._1.userId, tag, request.userId)

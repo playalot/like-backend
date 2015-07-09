@@ -1,7 +1,9 @@
 package controllers
 
-import javax.inject.Inject
+import javax.inject.{ Named, Inject }
 
+import akka.actor.{ ActorRef, ActorPath, ActorSystem }
+import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ User, Notification }
 import play.api._
 import play.api.i18n.{ Lang, Messages, MessagesApi }
@@ -15,6 +17,8 @@ import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration._
 
 class Application @Inject() (
+    system: ActorSystem,
+    @Named("event-producer-actor") eventProducerActor: ActorRef,
     val messagesApi: MessagesApi,
     userService: UserService,
     markService: MarkService,
@@ -28,6 +32,18 @@ class Application @Inject() (
     Logger.debug(Messages("invalid.sessionToken")(Messages(Lang("en"), messagesApi)))
 
     Logger.debug(Messages("invalid.mobileCode"))
+
+    //    eventProducerActor ! "PING"
+
+    //    val remotePushActor = system.actorSelection(s"akka.tcp://LikeClusterSystem@127.0.0.1:2552/user/EventActor")
+
+    //    val event = LikeEvent(None, "test", "user", "123", None, None, Json.obj("test" -> "111", "field1" -> "value1"))
+    //
+    //    import com.likeorz.event.LikeEvent.likeEventFormat
+    //
+    //    println(Json.toJson(event).toString())
+
+    //    remotePushActor ! Json.toJson(event).toString()
 
     //    val hgg = "5542ea3be4b0679ef5cb6190"
     //    val gg = "55573daee4b076f1c3914798"

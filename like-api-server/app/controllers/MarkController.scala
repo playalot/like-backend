@@ -1,7 +1,9 @@
 package controllers
 
-import javax.inject.Inject
+import javax.inject.{ Named, Inject }
 
+import akka.actor.ActorRef
+import com.likeorz.event.LikeEvent
 import com.likeorz.models.Notification
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
@@ -17,6 +19,7 @@ import scala.concurrent.Future
  * Date: 6/2/15
  */
 class MarkController @Inject() (
+    @Named("event-producer-actor") eventProducerActor: ActorRef,
     val messagesApi: MessagesApi,
     markService: MarkService,
     notificationService: NotificationService) extends BaseController {
@@ -24,6 +27,8 @@ class MarkController @Inject() (
   def like(markId: Long) = SecuredAction.async { implicit request =>
     markService.getMarkWithPostAndTag(markId).flatMap {
       case Some((mark, post, tag)) =>
+        // log event
+        eventProducerActor ! LikeEvent(None, "like", "user", request.userId.toString, Some("mark"), Some(markId.toString), properties = Json.obj("tag" -> tag.tagName))
         markService.like(mark, post, request.userId).map { _ =>
           if (mark.userId != request.userId) {
             val notifyMarkUser = Notification(None, "LIKE", mark.userId, request.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id)

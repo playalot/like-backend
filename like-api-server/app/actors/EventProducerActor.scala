@@ -2,8 +2,12 @@ package actors
 
 import akka.actor._
 import javax.inject.{ Inject, Singleton }
-import com.likeorz.event.LikeEvent
 import play.api.Configuration
+import play.api.libs.json.Json
+
+import com.likeorz.event.LikeEvent
+import com.likeorz.event.LikeEvent._
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -16,10 +20,11 @@ class EventProducerActor @Inject() (configuration: Configuration) extends Actor 
   override def preStart() = {
     // Discovery remote event consumer
     log.warning("Discovering remote event consumers...")
-    configuration.getString("event-consumer.address").get.split(",").foreach { address =>
+    configuration.getString("event-consumer.address").get.split(",").filter(_.nonEmpty).foreach { address =>
       try {
         val ref = Await.result(context.actorSelection(s"akka.tcp://LikeClusterSystem@$address/user/EventActor")
           .resolveOne(3.seconds), 3.seconds)
+        context watch ref
         remotes = remotes :+ ref
       } catch {
         case e: Throwable =>
@@ -35,7 +40,7 @@ class EventProducerActor @Inject() (configuration: Configuration) extends Actor 
       log.warning("No remote actors registered")
     case event: LikeEvent =>
       counter = (counter + 1) % remotes.size
-      remotes(counter) forward event
+      remotes(counter) forward Json.toJson(event).toString()
     case "PING" =>
       counter = (counter + 1) % remotes.size
       remotes(counter) forward "PING"

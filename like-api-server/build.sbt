@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.4",
   "mysql"                     %  "mysql-connector-java" % "5.1.36",
   "redis.clients"             %  "jedis"            % "2.7.2",
-  "com.typesafe.akka"         %% "akka-remote"      % "2.3.11",
+  "com.typesafe.akka"         %% "akka-remote"      % "2.3.12",
   "com.github.nscala-time"    %% "nscala-time"      % "2.0.0",
   "com.mohiva"                %% "play-silhouette"  % "3.0.0-RC2",
   "com.typesafe.play"         %% "play-mailer"      % "3.0.1",

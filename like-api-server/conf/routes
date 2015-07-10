@@ -45,6 +45,7 @@ POST    /v1/post/$id<[0-9]+>/mark                   controllers.PostController.a
 POST    /v1/post/$id<[0-9]+>/report                 controllers.PostController.report(id: Long)
 
 # Mark
+GET     /v1/mark/$id<[0-9]+>                        controllers.MarkController.getMark(id: Long)
 POST    /v1/mark/$id<[0-9]+>/like                   controllers.MarkController.like(id: Long)
 DELETE  /v1/mark/$id<[0-9]+>/like                   controllers.MarkController.unlike(id: Long)
 GET     /v1/mark/$id<[0-9]+>/likes                  controllers.MarkController.getLikes(id: Long)

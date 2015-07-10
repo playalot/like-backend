@@ -8,8 +8,8 @@ libraryDependencies ++= Seq(
   ws,
   "org.jsoup"         %  "jsoup"        % "1.8.2",
   "org.scalaj"        %% "scalaj-http"  % "1.1.5",
-  "com.typesafe.akka" %% "akka-actor"   % "2.3.11",
-  "com.typesafe.akka" %% "akka-testkit" % "2.3.11" % "test"
+  "com.typesafe.akka" %% "akka-actor"   % "2.3.12",
+  "com.typesafe.akka" %% "akka-testkit" % "2.3.12" % "test"
 )
 
 routesGenerator := InjectedRoutesGenerator

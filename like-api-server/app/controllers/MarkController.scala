@@ -78,4 +78,24 @@ class MarkController @Inject() (
     }
   }
 
+  def getMark(markId: Long) = UserAwareAction.async { implicit request =>
+    markService.getMarkWithUserAndLikes(markId, request.userId).map {
+      case Some(row) =>
+        val (mark, user, likes, isLiked) = row
+        val json = Json.obj(
+          "mark_id" -> mark.identify,
+          "user" -> Json.obj(
+            "user_id" -> user.id.get.toString,
+            "nickname" -> user.nickname,
+            "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+            "likes" -> user.likes
+          ),
+          "likes" -> likes,
+          "is_liked" -> isLiked
+        )
+        success(Messages("success.found"), json)
+      case None => error(4022, Messages("invalid.markId"))
+    }
+  }
+
 }

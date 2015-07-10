@@ -68,6 +68,7 @@ class NotificationController @Inject() (
               )
             )),
             "tag" -> row._1.tagName,
+            "mark_id" -> row._1.markId,
             "timestamp" -> row._1.updated
           )
         }

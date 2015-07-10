@@ -28,6 +28,22 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(marks.filter(_.id === markId).result.headOption)
   }
 
+  override def getMarkWithUserAndLikes(markId: Long, fromUserId: Option[Long]): Future[Option[(Mark, User, Int, Boolean)]] = {
+    val query = for {
+      (mark, user) <- marks join users on (_.userId === _.id) if mark.id === markId
+    } yield (mark, user)
+    for {
+      markAndUserOpt <- db.run(query.result.headOption)
+      likeNum <- db.run(likes.filter(_.markId === markId).length.result)
+      isLiked <- { if (fromUserId.isDefined) db.run(likes.filter(l => l.markId === markId && l.userId === fromUserId.get).result.headOption) else Future.successful(None) }
+    } yield {
+      markAndUserOpt.map {
+        case (mark, user) =>
+          (mark, user, likeNum, isLiked.nonEmpty)
+      }
+    }
+  }
+
   override def getMarkWithTagName(markId: Long): Future[Option[(Mark, String)]] = {
     val query = for {
       (mark, tag) <- marks join tags on (_.tagId === _.id) if mark.id === markId

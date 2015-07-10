@@ -51,7 +51,8 @@ trait NotificationsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def updated = column[Long]("updated")
     def tagName = column[String]("tag_name")
     def postId = column[Long]("post_id")
-    override def * = (id.?, `type`, userId, fromUserId, updated, tagName.?, postId.?) <> (Notification.tupled, Notification.unapply _)
+    def markId = column[Long]("mark_id")
+    override def * = (id.?, `type`, userId, fromUserId, updated, tagName.?, postId.?, markId.?) <> (Notification.tupled, Notification.unapply _)
   }
 
   protected val notifications = TableQuery[NotificationsTable]

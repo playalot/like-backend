@@ -28,7 +28,7 @@ lazy val likeDashboard = (project in file("like-dashboard"))
 lazy val likeML = (project in file("like-ml"))
   .enablePlugins(JavaServerAppPackaging)
 
-lazy val likeActorCluster = (project in file("like-actor-cluster"))
+lazy val likeEventCluster = (project in file("like-event-cluster"))
   .dependsOn(likeCore)
   .enablePlugins(JavaServerAppPackaging)
 
@@ -40,7 +40,7 @@ lazy val root = (project in file(".")).aggregate(
   likeApiServer,
   likeDashboard,
   likeML,
-  likeActorCluster,
+  likeEventCluster,
   likeBearychatRobot)
 
 resolvers ++= Seq(

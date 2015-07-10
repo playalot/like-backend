@@ -113,12 +113,12 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       (for {
         ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
         if comment.markId === markId && (comment.created < created.get)
-      } yield (comment, user, reply)).sortBy(_._1.created.desc)
+      } yield (comment, user, reply)).sortBy(_._1.created)
     } else {
       (for {
         ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
         if comment.markId === markId
-      } yield (comment, user, reply)).sortBy(_._1.created.desc)
+      } yield (comment, user, reply)).sortBy(_._1.created)
     }
     db.run(query.result)
   }

@@ -87,7 +87,7 @@ class PostController @Inject() (
               "description" -> post.description,
               "created" -> post.created,
               "place" -> post.place,
-              "location" -> post.location.map(_.split(" ").map(_.toDouble)),
+              "location" -> Json.toJson(postCommand.location),
               "user" -> Json.obj(
                 "user_id" -> author.get.identify,
                 "nickname" -> author.get.nickname,
@@ -107,6 +107,11 @@ class PostController @Inject() (
     postService.getPostById(id).map {
       case Some(postAndUser) =>
         val (post, user) = postAndUser
+        val location = try {
+          post.location.map(_.split(" ").map(_.toDouble))
+        } catch {
+          case _: Throwable => None
+        }
         success(Messages("success.found"), Json.obj(
           "post_id" -> id,
           "type" -> post.`type`,
@@ -114,7 +119,7 @@ class PostController @Inject() (
           "description" -> post.description,
           "created" -> post.created,
           "place" -> post.place,
-          "location" -> post.location.map(_.split(" ").map(_.toDouble)),
+          "location" -> location,
           "user" -> Json.obj(
             "user_id" -> user.identify,
             "nickname" -> user.nickname,

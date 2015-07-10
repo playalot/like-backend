@@ -37,13 +37,11 @@ class EventProducerActor @Inject() (configuration: Configuration) extends Actor 
 
   override def receive = {
     case event: LikeEvent if remotes.isEmpty =>
-      log.warning("No remote actors registered")
+      log.info("No remote actors registered")
     case event: LikeEvent =>
       counter = (counter + 1) % remotes.size
       remotes(counter) forward Json.toJson(event).toString()
-    case "PING" =>
-      counter = (counter + 1) % remotes.size
-      remotes(counter) forward "PING"
+    case "STATUS" => sender() ! remotes.size
     case "JOIN" if !remotes.contains(sender()) =>
       log.warning(s"Remote actor[${sender()}] joined")
       context watch sender()

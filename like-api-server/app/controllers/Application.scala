@@ -3,6 +3,7 @@ package controllers
 import javax.inject.{ Named, Inject }
 
 import akka.actor.{ ActorRef, ActorPath, ActorSystem }
+import akka.pattern.ask
 import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ User, Notification }
 import play.api._
@@ -124,6 +125,18 @@ class Application @Inject() (
     //    markService.rebuildUserLikesCache()
     //    markService.rebuildUserCountsCache()
     Ok("UserId: " + request.userId)
+  }
+
+  def status = UserAwareAction { implicit request =>
+    val remotes = try {
+      Await.result(eventProducerActor.ask("STATUS")(1.second).map(_.asInstanceOf[Int]), 2.seconds)
+    } catch {
+      case _: Throwable => 0
+    }
+    Ok(Json.obj(
+      "version" -> "1.1.0",
+      "nf-event-actor" -> remotes
+    ))
   }
 
 }

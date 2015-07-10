@@ -9,3 +9,12 @@ root_path=/root/
 ansible_connection=ssh
 ansible_ssh_private_key_file=~/Keys/pub_like_api.pem
 ansible_ssh_user=root
+
+[like_event_cluster]
+182.92.177.148 ip=182.92.177.148 in-ip=10.172.173.138
+
+[like_event_cluster:vars]
+root_path=/root/
+ansible_connection=ssh
+ansible_ssh_private_key_file=~/Keys/pub_like_api.pem
+ansible_ssh_user=root

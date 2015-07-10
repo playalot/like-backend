@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: True
+  tasks:
+    - name: Build Playframework Dist package
+      command: chdir=../ sbt "project likeEventCluster" dist
+
+- hosts: [like_event_cluster]
+  sudo: True
+  serial: 1
+  vars:
+    app_name: 'like-event-cluster'
+    app_port: 6635
+    app_version: '1.0.0'
+    extra_configs: "-Devent-producer.address='120.26.201.254:2550' -DACTOR_CLUSTER_HOSTNAME={{ ip }}"
+  tasks:
+    - debug: msg="location={{ inventory_hostname }}:{{ app_port }}"
+  roles:
+    - { role: 'ansible-sbt-native-package', tags: ['play'] }
+
+

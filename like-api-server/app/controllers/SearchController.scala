@@ -36,7 +36,7 @@ class SearchController @Inject() (
       entities <- promoteService.getPromoteEntities()
       tags <- tagService.hotTags
     } yield {
-      val entityArr = Random.shuffle(entities).take(1).map { entity =>
+      val entityArr = Random.shuffle(entities).take(2).map { entity =>
         val image = entity.images.map { images =>
           val list = images.split(",").filter(_.trim.length > 0)
           list(Random.nextInt(list.size))
@@ -55,7 +55,7 @@ class SearchController @Inject() (
           "likes" -> tag.likes
         )
       }
-      success(Messages("success.found"), Json.toJson(entityArr ++ tagArr))
+      success(Messages("success.found"), Json.toJson(Random.shuffle(entityArr ++ tagArr)))
     }
   }
 

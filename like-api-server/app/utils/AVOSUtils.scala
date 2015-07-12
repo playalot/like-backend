@@ -26,12 +26,12 @@ object AVOSUtils {
 
   def verifySmsCode(mobilePhoneNumber: String, zone: String, code: String): Future[Boolean] = {
     Logger.debug(s"[AVOSCloud] Debug verifying SMS mobile: $mobilePhoneNumber, code: $code")
-    WS.url(s"$AVOSCloudApplicationUrl/verifySmsCode/$code?mobilePhoneNumber=$mobilePhoneNumber&countryCode=$zone")
+    WS.url(s"$AVOSCloudApplicationUrl/verifySmsCode/$code?mobilePhoneNumber=$mobilePhoneNumber")
       .withHeaders(
         "X-AVOSCloud-Application-Id" -> AVOSCloudApplicationId,
         "X-AVOSCloud-Application-Key" -> AVOSCloudApplicationKey,
         "Content-Type" -> "application/json"
-      ).post("").map(response => response.status == 200)
+      ).post("").map(response => { println(response.body); response.status == 200 })
   }
 
   def installations(deviceToken: String, deviceType: String): Future[String] = {

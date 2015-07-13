@@ -83,7 +83,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       } yield (post, user)
       db.run(query.result).flatMap { posts =>
         val futures = posts.map { postAndUser =>
-          val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postAndUser._1.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
+          val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postAndUser._1.id.get, offset = 0, limit = 50).map(v => (v._1.toLong, v._2.toInt)).toMap
 
           if (cachedMarks.nonEmpty) {
             val markIds = cachedMarks.keySet.mkString(", ")

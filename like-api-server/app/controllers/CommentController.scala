@@ -76,8 +76,8 @@ class CommentController @Inject() (
     }
   }
 
-  def getCommentsForMark(markId: Long) = Action.async { implicit request =>
-    markService.getCommentsForMark(markId).map { results =>
+  def getCommentsForMark(markId: Long, order: String) = Action.async { implicit request =>
+    markService.getCommentsForMark(markId, order).map { results =>
       val totalComments = results.length
       val commentsJson = results.map { row =>
         Json.obj(

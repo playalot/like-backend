@@ -53,7 +53,7 @@ GET     /v1/mark/$id<[0-9]+>/likes                  controllers.MarkController.g
 # Comment
 POST    /v1/mark/$id<[0-9]+>/comment                controllers.CommentController.commentMark(id: Long)
 DELETE  /v1/comment/$id<[0-9]+>                     controllers.CommentController.deleteCommentFromMark(id: Long)
-GET     /v1/mark/$id<[0-9]+>/comment                controllers.CommentController.getCommentsForMark(id: Long)
+GET     /v1/mark/$id<[0-9]+>/comment                controllers.CommentController.getCommentsForMark(id: Long, order: String ?= "desc")
 
 # Search
 GET     /v1/tag/hot                                 controllers.SearchController.hotTags

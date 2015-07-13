@@ -127,12 +127,12 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(comments.filter(c => c.id === commentId && c.userId === userId).delete).map(_ > 0)
   }
 
-  override def getCommentsForMark(markId: Long, pageSize: Int, created: Option[Long] = None): Future[Seq[(Comment, User, Option[User])]] = {
-    val query = if (created.isDefined) {
+  override def getCommentsForMark(markId: Long, order: String): Future[Seq[(Comment, User, Option[User])]] = {
+    val query = if (order == "desc") {
       (for {
         ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
-        if comment.markId === markId && (comment.created < created.get)
-      } yield (comment, user, reply)).sortBy(_._1.created)
+        if comment.markId === markId
+      } yield (comment, user, reply)).sortBy(_._1.created.desc)
     } else {
       (for {
         ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
@@ -215,7 +215,7 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       val query = sql"""select t.tag from mark m inner join tag t on m.tag_id = t.id  where m.post_id=(#$post_id)""".as[String]
       //      query.statements.foreach(println)
       db.run(query).map { rs =>
-        p.println(post.id.get + "," + rs.mkString(","))
+        p.println(post.id.get + "," + post.userId + "," + rs.mkString(","))
       }
     }).onComplete { _ =>
       Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")

@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "org.webjars"    % "requirejs-text"  % "2.0.14",
   "org.webjars"    % "react-router"    % "0.13.2",
   "org.webjars"    % "react"           % "0.13.3",
-  "org.webjars"    % "react-bootstrap" % "0.19.1",
+  "org.webjars"    % "react-bootstrap" % "0.23.7",
   "org.webjars"    % "momentjs"        % "2.10.3",
   "org.webjars"    % "Pikaday"         % "1.3.0",
   "org.webjars"    % "json3"           % "3.3.2"

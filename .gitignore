@@ -36,4 +36,5 @@ api-browser-client/src/main/resources/public/core-compiled.js
 
 snippets-*.html
 
-.DS_Store
+# Temporary data folder
+data

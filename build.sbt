@@ -17,8 +17,10 @@ scalacOptions in ThisBuild ++= Seq(
 
 lazy val likeCore = (project in file("like-core"))
 
+lazy val likeAkkaCommon = (project in file("like-akka-common"))
+
 lazy val likeApiServer = (project in file("like-api-server"))
-  .dependsOn(likeCore)
+  .dependsOn(likeCore, likeAkkaCommon)
   .enablePlugins(PlayScala)
 
 lazy val likeDashboard = (project in file("like-dashboard"))
@@ -29,7 +31,7 @@ lazy val likeML = (project in file("like-ml"))
   .enablePlugins(JavaServerAppPackaging)
 
 lazy val likeEventCluster = (project in file("like-event-cluster"))
-  .dependsOn(likeCore)
+  .dependsOn(likeCore, likeAkkaCommon)
   .enablePlugins(JavaServerAppPackaging)
 
 lazy val likeBearychatRobot = (project in file("like-bearychat-robot"))
@@ -37,6 +39,7 @@ lazy val likeBearychatRobot = (project in file("like-bearychat-robot"))
 
 lazy val root = (project in file(".")).aggregate(
   likeCore,
+  likeAkkaCommon,
   likeApiServer,
   likeDashboard,
   likeML,

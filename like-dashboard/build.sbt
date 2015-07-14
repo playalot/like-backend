@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "mysql"                     %  "mysql-connector-java" % "5.1.36",
   "redis.clients"             %  "jedis"            % "2.7.2",
-  "com.typesafe.akka"         %% "akka-remote"      % "2.3.11",
+  "com.typesafe.akka"         %% "akka-remote"      % "2.3.12",
   "com.mohiva"                %% "play-silhouette"  % "3.0.0-RC2",
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
   "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0-RC2" % "test",

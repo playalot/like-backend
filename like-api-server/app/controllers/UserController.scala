@@ -8,6 +8,7 @@ import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.Play.current
+import play.api.mvc.Action
 import services._
 import utils.QiniuUtil
 
@@ -152,7 +153,7 @@ class UserController @Inject() (
     }
   }
 
-  def getFriends(id: Long, page: Int) = SecuredAction.async {
+  def getFriends(id: Long, page: Int) = Action.async {
     userService.getFollowings(id, page).map { list =>
       val jsonArr = list.map { user =>
         Json.obj(
@@ -166,7 +167,7 @@ class UserController @Inject() (
     }
   }
 
-  def getFollowers(id: Long, page: Int) = SecuredAction.async {
+  def getFollowers(id: Long, page: Int) = Action.async {
     userService.getFollowers(id, page).map { list =>
       val jsonArr = list.map { user =>
         Json.obj(

@@ -12,9 +12,9 @@ POST    /v1/sendSmsCode                             controllers.AuthController.s
 POST    /v1/authenticate/mobile                     controllers.AuthController.mobileAuthenticate
 POST    /v1/authenticate/:provider                  controllers.AuthController.socialAuthenticate(provider: String)
 GET     /v1/account/list                            controllers.AuthController.getLinkedAccounts
+POST    /v1/account/link/mobile                     controllers.AuthController.linkMobileAccount
 POST    /v1/account/link/:provider                  controllers.AuthController.linkSocialAccount(provider: String)
 DELETE  /v1/account/link/:provider                  controllers.AuthController.unlinkSocialAccount(provider: String)
-POST    /v1/account/link/mobile                     controllers.AuthController.linkMobileAccount
 
 # Feed
 GET     /v1/homefeeds                               controllers.FeedController.getHomeFeeds(ts: Option[String] ?= None)

@@ -27,7 +27,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play"         %% "play-mailer"      % "3.0.1",
   "net.ceedubs"               %% "ficus"            % "1.1.2",
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
-  "com.github.cb372"          %% "scalacache-memcached"      % "0.6.3",
+  "com.github.cb372"          %% "scalacache-memcached"      % "0.6.4",
   "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0-RC2" % "test",
   "org.scalatest"             %% "scalatest"                 % "2.2.5"     % "test"
 )

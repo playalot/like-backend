@@ -15,9 +15,16 @@ object Test {
 
     val model = Word2VecModel.load(sc, "tag-w2v.model")
 
+    println("=========")
+    model.findSynonyms("eva", 100).map(_._1).foreach(println)
+    println("=========")
+    model.findSynonyms("古董", 100).map(_._1).foreach(println)
+    println("=========")
+    model.findSynonyms("摇滚", 100).map(_._1).foreach(println)
+    println("=========")
     val cluster = KMeansModel.load(sc, "tag-cluster.model")
 
-    val p1 = Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔")
+    val p1 = Seq("EVA")
     val v1 = new DenseVector(MLUtils.divArray(p1.map(m => MLUtils.wordToVector(m, model).toArray).reduceLeft(MLUtils.sumArray), p1.length)).asInstanceOf[Vector]
     val p2 = Seq("高达模型吧", "RG", "飞翼")
     val v2 = new DenseVector(MLUtils.divArray(p2.map(m => MLUtils.wordToVector(m, model).toArray).reduceLeft(MLUtils.sumArray), p2.length)).asInstanceOf[Vector]

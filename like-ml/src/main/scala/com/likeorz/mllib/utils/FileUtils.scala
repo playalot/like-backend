@@ -26,13 +26,14 @@ object FileUtils {
   }
 
   def writeString(path: String, content: String): Unit = {
-    val file = pathToFile(unifyPath(path))
-    if (!file.exists()) {
-      file.getParentFile.mkdirs()
-    }
-    val writer = new java.io.PrintWriter(file)
-    writer.write(content)
-    writer.close()
+    import java.nio.file.{ Paths, Files }
+    import java.nio.charset.StandardCharsets
+    Files.write(Paths.get(path), content.getBytes(StandardCharsets.UTF_8))
+  }
+
+  def deleteFile(path: String): Unit = {
+    import java.nio.file.{ Paths, Files }
+    Files.delete(Paths.get(path))
   }
 
   def deleteDir(path: String): Unit = {

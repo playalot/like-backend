@@ -12,16 +12,28 @@ libraryDependencies ++= Seq(
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "joda-time"                 %  "joda-time"        % "2.8.1",
   "org.joda"                  %  "joda-convert"     % "1.7",
+  "mysql"                     %  "mysql-connector-java" % "5.1.36",
   "org.apache.spark"          %% "spark-core"       % "1.4.0",
   "org.apache.spark"          %% "spark-mllib"      % "1.4.0",
   "org.clapper"               %% "grizzled-slf4j"   % "1.0.2",
-  "com.typesafe.akka"         %% "akka-actor"       % "2.3.12",
-  "com.typesafe.akka"         %% "akka-remote"      % "2.3.12",
-  "com.typesafe.akka"         %% "akka-http-core-experimental"  % "1.0-RC4",
-  "com.typesafe.akka"         %% "akka-stream-experimental"     % "1.0-RC4",
   "com.github.scopt"          %% "scopt"            % "3.3.0",
   "org.scalatest"             %% "scalatest"        % "2.2.5" % "test"
 )
+
+mappings in Universal += {
+  // we are using the reference.conf as default application.conf
+  // the user can override settings here
+  val conf = (resourceDirectory in Compile).value / "application.prod.conf"
+  conf -> "conf/application.conf"
+}
+
+mappings in Universal += {
+  // we are using the reference.conf as default application.conf
+  // the user can override settings here
+  val conf = (resourceDirectory in Compile).value / "log4j.properties"
+  conf -> "conf/log4j.properties"
+}
+
 
 //********************************************************
 // Scalariform settings

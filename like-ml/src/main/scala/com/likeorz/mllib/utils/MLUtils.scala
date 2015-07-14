@@ -36,7 +36,11 @@ object MLUtils {
 
   def wordsToVector(tags: Seq[String], model: Word2VecModel): Vector = {
     // Sum vector and then divide vector to get average vector
-    new DenseVector(MLUtils.divArray(tags.map(tag => MLUtils.wordToVector(tag, model).toArray).reduceLeft(MLUtils.sumArray), tags.length)).asInstanceOf[Vector]
+    if (tags.isEmpty) {
+      MLUtils.wordToVector("", model)
+    } else {
+      new DenseVector(MLUtils.divArray(tags.map(tag => MLUtils.wordToVector(tag, model).toArray).reduceLeft(MLUtils.sumArray), tags.length)).asInstanceOf[Vector]
+    }
   }
 
 }

@@ -49,7 +49,7 @@ object RedisUtils {
     }
   }
 
-  def zIncrBy(key: String, score: Double, member: String) = {
+  def zincrby(key: String, score: Double, member: String) = {
     withJedisClient[Double] { client =>
       client.zincrby(key: String, score, member)
     }
@@ -118,6 +118,24 @@ object RedisUtils {
   def hgetAll(key: String): Map[String, String] = {
     withJedisClient[Map[String, String]] { client =>
       client.hgetAll(key).toMap
+    }
+  }
+
+  def lpush(key: String, fields: String*): Long = {
+    withJedisClient[Long] { client =>
+      client.lpush(key, fields.toSeq: _*)
+    }
+  }
+
+  def lrange(key: String, start: Long, end: Long): List[String] = {
+    withJedisClient[List[String]] { client =>
+      client.lrange(key, start, end).toList
+    }
+  }
+
+  def ltrim(key: String, start: Long, end: Long): String = {
+    withJedisClient[String] { client =>
+      client.ltrim(key, start, end)
     }
   }
 

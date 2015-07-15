@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.out</target>
         <encoder>
             <pattern>[%level][%date{MM/dd HH:mm:ss}][%logger{0}]: %msg%n</pattern>
@@ -16,9 +16,12 @@
     </appender>
 
     <logger name="akka" level="INFO" />
+    <logger name="com.datastax.driver" level="WARN" />
+    <logger name="com.datastax.spark" level="WARN" />
+    <logger name="org.apache.spark" level="WARN" />
 
-    <root level="DEBUG">
-        <appender-ref ref="CONSOLE"/>
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
 

@@ -1,4 +1,4 @@
-package utils
+package com.likeorz.cluster.utils
 
 import play.api.libs.json.Json
 import play.api.{ Logger, Play }

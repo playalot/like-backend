@@ -1,4 +1,4 @@
-package com.likeorz.utils
+package com.likeorz.cluster.utils
 
 import com.mongodb.casbah.Imports._
 import com.mongodb.util.JSON

@@ -43,7 +43,7 @@ object RedisUtils {
     }
   }
 
-  def zAdd(key: String, score: Double, member: String) = {
+  def zadd(key: String, score: Double, member: String) = {
     withJedisClient[Long] { client =>
       client.zadd(key: String, score, member)
     }
@@ -55,9 +55,31 @@ object RedisUtils {
     }
   }
 
-  def zRem(key: String, member: String) = {
+  def zrangebyscore(key: String, min: Double, max: Double) = {
+    withJedisClient[Set[String]] { client =>
+      client.zrangeByScore(key: String, min, max).toSet
+    }
+  }
+
+  def zremrangebyscore(key: String, min: Double, max: Double) = {
+    withJedisClient[Long] { client =>
+      client.zremrangeByScore(key: String, min, max)
+    }
+  }
+
+  def zrem(key: String, member: String) = {
     withJedisClient[Long] { client =>
       client.zrem(key, member)
+    }
+  }
+
+  def zrem(key: String, member: Set[String]) = {
+    if (member.isEmpty) {
+      0L
+    } else {
+      withJedisClient[Long] { client =>
+        client.zrem(key, member.toSeq: _*)
+      }
     }
   }
 

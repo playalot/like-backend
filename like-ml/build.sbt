@@ -34,6 +34,8 @@ mappings in Universal += {
   conf -> "conf/log4j.properties"
 }
 
+bashScriptExtraDefines += """addJava "-Dconfig.resource=application.prod.conf""""
+
 
 //********************************************************
 // Scalariform settings

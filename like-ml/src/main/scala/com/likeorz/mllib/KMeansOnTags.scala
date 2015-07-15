@@ -7,6 +7,8 @@ import org.apache.spark.mllib.feature.{ Word2VecModel, Word2Vec }
 import org.apache.spark.{ SparkConf, SparkContext }
 import java.io._
 
+import org.joda.time.DateTime
+
 /**
  * Created by Guan Guan
  * Date: 7/3/15
@@ -137,11 +139,13 @@ object KMeansOnTags {
       .set("spark.ui.port", "4041")
       .set("spark.driver.allowMultipleContexts", "true")
     val sc = new SparkContext(sparkConf)
-    println("Build post category cache start!")
+    println("Build post category cache start...")
     try {
       val model = Word2VecModel.load(sc, s"$PREFIX/tag-w2v.model")
       val cluster = KMeansModel.load(sc, s"$PREFIX/tag-cluster.model")
 
+      val tsNow = System.currentTimeMillis / 1000
+      println(s"Timestamp: $tsNow")
       sc.textFile(s"$PREFIX/post_tags.csv").map { line =>
         val fields = line.split(",", 3)
         fields(0) -> fields(2).split(",").toSeq.flatMap(tag => MLUtils.cleanTag(tag))
@@ -149,10 +153,24 @@ object KMeansOnTags {
         val (id, tags) = x
         val cat = cluster.predict(MLUtils.wordsToVector(tags, model))
         RedisUtils.zincrby(s"cat:$cat", 1, id)
-        RedisUtils.zincrby(s"cat_ts:$cat", System.currentTimeMillis / 1000, id)
+        RedisUtils.zadd(s"cat_ts:$cat", tsNow, id)
         ()
       }
+
+      val CLUSTER_NUM = conf.getInt("train.cluster-num")
+      println("Remove expired items from cache...")
+      val tsOld = DateTime.now().minusDays(30).getMillis / 1000
+      // remove posts older than 30 days
+      println(s"Timestamp of 30 days ago: $tsOld")
+      for (cat <- 0 until CLUSTER_NUM) {
+        val removeItems = RedisUtils.zrangebyscore(s"cat_ts:$cat", 0, tsOld)
+        RedisUtils.zrem(s"cat_ts:$cat", removeItems)
+        RedisUtils.zrem(s"cat:$cat", removeItems)
+        println(s"Category[$cat] removed ${removeItems.size} old items")
+      }
+
       println("Build post category cache done!")
+
     } catch {
       case e: Throwable => throw e
     } finally {

@@ -13,9 +13,9 @@
     app_name: 'like-event-cluster'
     app_port: 6635
     app_version: '1.0.0'
-    extra_configs: "-Devent-producer.address='120.26.201.254:2550' -DACTOR_CLUSTER_HOSTNAME={{ ip }}"
+    extra_configs: "-DREMOTE_ADDRESS={{ remote_address }} -DEVENT_CLUSTER_HOSTNAME={{ private_ip }} -J-Xmx1048M -J-Xms512M"
   tasks:
-    - debug: msg="location={{ inventory_hostname }}:{{ app_port }}"
+    - debug: msg="-DREMOTE_ADDRESS={{ remote_address }} -DEVENT_CLUSTER_HOSTNAME={{ private_ip }}"
   roles:
     - { role: 'ansible-sbt-native-package', tags: ['play'] }
 

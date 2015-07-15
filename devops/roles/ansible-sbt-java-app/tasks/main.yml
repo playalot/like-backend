@@ -1,0 +1,8 @@
+---
+# This role contains a play that will work for any playframework based service
+
+- name: Install unzip
+  apt: pkg=unzip state=present
+
+- name: Copy Dist package to target server
+  unarchive: src={{dist_pkg_path}} dest={{root_path}}

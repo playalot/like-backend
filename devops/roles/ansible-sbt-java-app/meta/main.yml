@@ -1,7 +1,7 @@
 ---
 galaxy_info:
   author: Guan Guan
-  description: Ansible Playframework Playbook Role
+  description: Ansible Java App Playbook Role
   company: http://likeorz.com
   license: Apache 2
   min_ansible_version: 1.7
@@ -12,3 +12,4 @@ galaxy_info:
   categories:
   - development
 dependencies:
+  - { role: "ansible-java8-oracle" }

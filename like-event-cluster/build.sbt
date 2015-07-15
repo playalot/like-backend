@@ -45,6 +45,7 @@ mappings in Universal <++= (packageBin in Compile, sourceDirectory ) map { (_, s
 // when starting the application
 scriptClasspath := Seq("../config/") ++ scriptClasspath.value
 
+bashScriptExtraDefines += """addJava "-Dconfig.resource=application.prod.conf""""
 
 //********************************************************
 // Scalariform settings

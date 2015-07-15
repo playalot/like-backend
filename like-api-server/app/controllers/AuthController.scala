@@ -287,7 +287,7 @@ class AuthController @Inject() (
     }
   }
 
-  def unlinkSocialAccount(provider: String) = SecuredAction.async(parse.json) { implicit request =>
+  def unlinkSocialAccount(provider: String) = SecuredAction.async { implicit request =>
     userService.listLinkedAccounts(request.userId).flatMap { accounts =>
       if (accounts.size <= 1) {
         Future.successful(error(4055, Messages("failed.lastAccount")))

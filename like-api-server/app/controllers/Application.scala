@@ -4,6 +4,7 @@ import javax.inject.{ Named, Inject }
 
 import akka.actor.{ ActorRef, ActorPath, ActorSystem }
 import akka.pattern.ask
+import com.likeorz.common.ApiServerRemoteCount
 import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ User, Notification }
 import play.api._
@@ -129,7 +130,7 @@ class Application @Inject() (
 
   def status = UserAwareAction { implicit request =>
     val remotes = try {
-      Await.result(eventProducerActor.ask("STATUS")(1.second).map(_.asInstanceOf[Int]), 2.seconds)
+      Await.result(eventProducerActor.ask(ApiServerRemoteCount)(1.second).map(_.asInstanceOf[Int]), 2.seconds)
     } catch {
       case _: Throwable => 0
     }

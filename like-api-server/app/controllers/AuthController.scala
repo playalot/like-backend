@@ -128,7 +128,7 @@ class AuthController @Inject() (
                 GenerateUtils.currentSeconds(),
                 0, Some(HashUtils.hashPassword(refreshToken))
               ))
-              link <- userService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone.toInt + " " + smsCode.mobilePhoneNumber)
+              link <- userService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone + " " + smsCode.mobilePhoneNumber)
               sessionToken <- sessionTokenGenerator.generate
               value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
             } yield {

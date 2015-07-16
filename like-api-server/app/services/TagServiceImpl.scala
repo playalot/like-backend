@@ -4,10 +4,12 @@ import javax.inject.Inject
 
 import com.likeorz.models.{ Tag => Tg }
 import com.likeorz.dao.{ MarksComponent, TagsComponent }
+import com.likeorz.utils.KeyUtils
 import play.api.Configuration
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
+import utils.RedisCacheClient
 
 import scala.concurrent.Future
 
@@ -42,15 +44,22 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     val query = (for {
       tag <- tags if tag.tagName startsWith name.toLowerCase
     } yield tag).take(10)
-
     db.run(query.result)
   }
 
-  override def hotTags: Future[Seq[Tg]] = {
-    val query = (for {
-      tag <- tags
-    } yield tag).sortBy(_.likes.desc).take(150)
-    db.run(query.result).map(tags => scala.util.Random.shuffle(tags).take(15))
+  override def hotTags: Future[Seq[String]] = {
+    val cachedTags = RedisCacheClient.srandmember(KeyUtils.hotTags, 15)
+    if (cachedTags.isEmpty) {
+      val query = (for {
+        tag <- tags
+      } yield tag).sortBy(_.likes.desc).take(120)
+      db.run(query.result).map { tags =>
+        RedisCacheClient.sadd(KeyUtils.hotTags, tags.map(_.tagName))
+        RedisCacheClient.srandmember(KeyUtils.hotTags, 15)
+      }
+    } else {
+      Future.successful(cachedTags)
+    }
   }
 
   override def validTag(tag: String): Boolean = {

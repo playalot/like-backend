@@ -14,7 +14,7 @@ trait TagService {
 
   def autoComplete(name: String): Future[Seq[Tag]]
 
-  def hotTags: Future[Seq[Tag]]
+  def hotTags: Future[Seq[String]]
 
   def validTag(tag: String): Boolean
 

@@ -5,6 +5,7 @@ import javax.inject.Inject
 import com.likeorz.models._
 import com.likeorz.dao._
 import com.likeorz.utils.KeyUtils
+import org.nlpcn.commons.lang.jianfan
 import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
@@ -110,8 +111,8 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def searchByTag(page: Int = 0, pageSize: Int = 18, name: String = "%"): Future[Seq[(Post, User)]] = {
     val offset = pageSize * page
 
-    val jian = JianFan.f2J(name)
-    val fan = JianFan.j2F(name)
+    val jian = JianFan.f2j(name)
+    val fan = JianFan.j2f(name)
 
     val query = (for {
       ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)

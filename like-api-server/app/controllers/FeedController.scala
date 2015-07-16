@@ -50,7 +50,7 @@ class FeedController @Inject() (
           // Remove already seen ids from user history
           val unseenIds = resultIds -- RedisCacheClient.smembers(KeyUtils.postSeen(request.userId.get)).map(_.toLong)
           // Update user history
-          if (unseenIds.nonEmpty) RedisCacheClient.sadd(KeyUtils.postSeen(request.userId.get), unseenIds.map(_.toString))
+          if (unseenIds.nonEmpty) RedisCacheClient.sadd(KeyUtils.postSeen(request.userId.get), unseenIds.toSeq.map(_.toString))
 
           unseenIds
         } else {
@@ -61,7 +61,7 @@ class FeedController @Inject() (
         if (request.userId.isDefined) {
           // Clear and initialize history cache
           RedisCacheClient.del(KeyUtils.postSeen(request.userId.get))
-          RedisCacheClient.sadd(KeyUtils.postSeen(request.userId.get), results.flatten.map(_.toString).toSet)
+          RedisCacheClient.sadd(KeyUtils.postSeen(request.userId.get), results.flatten.map(_.toString))
         }
         resultIds
       }

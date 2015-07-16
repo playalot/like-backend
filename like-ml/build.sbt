@@ -13,8 +13,8 @@ libraryDependencies ++= Seq(
   "joda-time"                 %  "joda-time"        % "2.8.1",
   "org.joda"                  %  "joda-convert"     % "1.7",
   "mysql"                     %  "mysql-connector-java" % "5.1.36",
-  "org.apache.spark"          %% "spark-core"       % "1.4.0",
-  "org.apache.spark"          %% "spark-mllib"      % "1.4.0",
+  "org.apache.spark"          %% "spark-core"       % "1.4.1",
+  "org.apache.spark"          %% "spark-mllib"      % "1.4.1",
   "org.clapper"               %% "grizzled-slf4j"   % "1.0.2",
   "com.github.scopt"          %% "scopt"            % "3.3.0",
   "org.scalatest"             %% "scalatest"        % "2.2.5" % "test"

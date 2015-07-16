@@ -42,19 +42,12 @@ class SearchController @Inject() (
           list(Random.nextInt(list.size))
         }.getOrElse(entity.avatar)
         Json.obj(
-          "id" -> entity.id,
           "tag" -> entity.name,
-          "likes" -> 0,
           "image" -> QiniuUtil.getScale(image, 360)
         )
       }
-      val tagArr = tags.filterNot(t => entities.exists(_.name == t.tagName)).map { tag =>
-        Json.obj(
-          "id" -> tag.id,
-          "tag" -> tag.tagName,
-          "likes" -> tag.likes
-        )
-      }
+      val tagArr = tags.filterNot(t => entities.exists(_.name == t)).map { tag => Json.obj("tag" -> tag) }
+
       success(Messages("success.found"), Json.toJson(Random.shuffle(entityArr ++ tagArr)))
     }
   }
@@ -118,6 +111,10 @@ class SearchController @Inject() (
         ))
       }
     }
+  }
+
+  def expore(tag: String, timestamp: Option[String] = None) = UserAwareAction { implicit request =>
+    Ok
   }
 
 }

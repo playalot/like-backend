@@ -73,9 +73,9 @@ object RedisCacheClient {
     }
   }
 
-  def sadd(key: String, members: Set[String]) = {
+  def sadd(key: String, members: Seq[String]) = {
     withJedisClient[Long] { client =>
-      client.sadd(key, members.toSeq: _*)
+      client.sadd(key, members: _*)
     }
   }
 
@@ -86,8 +86,8 @@ object RedisCacheClient {
   }
 
   def srandmember(key: String, count: Int = 1) = {
-    withJedisClient[List[String]] { client =>
-      client.srandmember(key, count).toList
+    withJedisClient[Seq[String]] { client =>
+      client.srandmember(key, count).toSeq
     }
   }
 

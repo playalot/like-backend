@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
   ws,
   cache,
   filters,
-  "org.nlpcn"                 %  "nlp-lang"         % "0.3",
+  "org.nlpcn"                 %  "nlp-lang"         % "1.0",
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.4",
   "mysql"                     %  "mysql-connector-java" % "5.1.36",

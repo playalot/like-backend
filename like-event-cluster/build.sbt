@@ -14,8 +14,8 @@ libraryDependencies ++= Seq(
   "ch.qos.logback"    %  "logback-classic"% "1.1.3",
   "org.spark-project.akka" %% "akka-actor"  % "2.3.4-1-spark",
   "org.spark-project.akka" %% "akka-remote" % "2.3.4-1-spark",
-  "org.apache.spark"  %% "spark-core"     % "1.4.0",
-  "org.apache.spark"  %% "spark-mllib"    % "1.4.0",
+  "org.apache.spark"  %% "spark-core"     % "1.4.1",
+  "org.apache.spark"  %% "spark-mllib"    % "1.4.1",
   "org.mongodb"       %% "casbah"         % "2.8.1",
   "com.typesafe.play" %% "play-ws"        % "2.4.2",
   "com.typesafe.akka" %% "akka-actor"     % "2.3.12",
@@ -23,8 +23,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-slf4j"     % "2.3.12",
   "com.typesafe.akka" %% "akka-contrib"   % "2.3.12",
   "com.typesafe.akka" %% "akka-cluster"   % "2.3.12",
-  "com.typesafe.akka" %% "akka-http-core-experimental"  % "1.0-RC4",
-  "com.typesafe.akka" %% "akka-stream-experimental"     % "1.0-RC4",
+  "com.typesafe.akka" %% "akka-http-core-experimental"  % "1.0",
+  "com.typesafe.akka" %% "akka-stream-experimental"     % "1.0",
   "com.typesafe.akka" %% "akka-testkit"   % "2.3.12"  % "test",
   "org.scalatest"     %% "scalatest"      % "2.2.5"   % "test"
 )

@@ -42,19 +42,26 @@ object LikeEventClusterApp extends App {
   loadModel()
 
   // Initialize classify actors
-  val classifyActor = system.actorOf(ClassifyActor.props(model, cluster), "ClassifyActor")
+  val classifyRouter = system.actorOf(RoundRobinPool(5).props(ClassifyActor.props(model, cluster)), "ClassifyRouter")
+  //  val classifyActor = system.actorOf(ClassifyActor.props(model, cluster), "ClassifyActor")
+  // Discovery remote event producer
+  println("Looking up remote classify actors and register...")
+  producers.foreach { address =>
+    val ref = system.actorSelection(s"akka.tcp://like-api-server@$address/user/classification-actor")
+    ref.tell(JoinApiServer, classifyRouter)
+  }
 
-  import akka.pattern.ask
-  import scala.concurrent.duration._
-  implicit val timeout = akka.util.Timeout(5.minutes)
-  import scala.concurrent.ExecutionContext.Implicits.global
-  classifyActor.ask(com.likeorz.common.Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔"))).map(println)
-  //  classifyActor.ask(com.likeorz.common.Tags(Seq("EVA"))).map(println)
-  //  classifyActor.ask("EVA").map(println)
-  //  println(Await.result(classifyActor.ask(Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔"))), 5.seconds))
-  //  println(Await.result(classifyActor.ask(Tags(Seq("高达模型吧", "RG", "飞翼"))), 5.seconds))
-  //  println(Await.result(classifyActor.ask(Tags(Seq("背面照", "这个应该是买不到了", "こんにちは、これは丸子", "miku", "ミク", "看心情发正面"))), 5.seconds))
-  //  println(Await.result(classifyActor.ask(Tags(Seq("键盘", "漂亮", "OL", "黑丝好评", "好腿prpr", "凛凛蝶"))), 5.seconds))
+//  import akka.pattern.ask
+//  import scala.concurrent.duration._
+//  implicit val timeout = akka.util.Timeout(5.minutes)
+//  import scala.concurrent.ExecutionContext.Implicits.global
+//  classifyRouter.ask(com.likeorz.common.Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔"))).map(println)
+//  classifyRouter.ask(com.likeorz.common.Tags(Seq("EVA"))).map(println)
+//  classifyRouter.ask("EVA").map(println)
+//    println(Await.result(classifyActor.ask(Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔"))), 5.seconds))
+//    println(Await.result(classifyActor.ask(Tags(Seq("高达模型吧", "RG", "飞翼"))), 5.seconds))
+//    println(Await.result(classifyActor.ask(Tags(Seq("背面照", "这个应该是买不到了", "こんにちは、これは丸子", "miku", "ミク", "看心情发正面"))), 5.seconds))
+//    println(Await.result(classifyActor.ask(Tags(Seq("键盘", "漂亮", "OL", "黑丝好评", "好腿prpr", "凛凛蝶"))), 5.seconds))
 
   startHTTP()
 
@@ -99,7 +106,7 @@ object LikeEventClusterApp extends App {
           e.printStackTrace()
           None
       } finally {
-        if (in != null) in.close
+        if (in != null) in.close()
       }
     }
 

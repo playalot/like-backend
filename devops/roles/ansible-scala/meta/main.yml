@@ -11,5 +11,4 @@ galaxy_info:
     - trusty
   categories:
   - development
-dependencies:
-  - { role: "ansible-java8-oracle" }
+dependencies: []

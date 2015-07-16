@@ -1,27 +1,38 @@
 ---
-- name: Download Scala
-  get_url: url=http://www.scala-lang.org/files/archive/scala-{{ scala_version }}.tgz
-           dest=/usr/local/src/scala-{{ scala_version }}.tgz
+- name: Create scala lib dir
+  file: path={{scala_lib_path}} state=directory
 
-- name: Extract and install Scala
-  command: tar -C /opt -xzf /usr/local/src/scala-{{ scala_version }}.tgz
-           creates=/opt/scala-{{ scala_version }}
+- name: Clean existing Scala {{scala_version_name}} if it exists
+  file: path={{scala_lib_path_target}} state=absent
 
-- name: Symlink Scala into /usr/local/bin
-  file: src=/opt/scala-{{ scala_version }}/bin/{{ item }}
-        dest=/usr/local/bin/{{ item }}
-        state=link
-  with_items:
-    - fsc
-    - scala
-    - scalac
-    - scaladoc
-    - scalap
+- name: Download scala v{{scala_version}}
+  get_url: url={{scala_download_url}}
+    dest=/tmp/{{scala_archive_file}}
+    force=no
 
-- name: Download SBT package
-  get_url: url=https://dl.bintray.com/sbt/debian/sbt-{{ scala_sbt_version }}.deb
-           dest=/usr/local/src/sbt-{{ scala_sbt_version }}.deb
+- name: Unpack Scala
+  command: tar -xvf {{scala_archive_file}} chdir=/tmp/
 
-- name: Install SBT
-  apt: deb=/usr/local/src/sbt-{{ scala_sbt_version }}.deb
-       state=installed
+- name: Move (by force) Scala to lib
+  command: mv /tmp/{{scala_version_name}} {{scala_lib_path_target}} chdir=/tmp/
+
+- name: Link scala
+  command: ln -sf {{scala_lib_path_target}}/bin/scala {{scala_link_target}}
+
+- name: Link scalac
+  command: ln -sf {{scala_lib_path_target}}/bin/scalac {{scala_link_target}}
+
+- name: Link fsc
+  command: ln -sf {{scala_lib_path_target}}/bin/fsc {{scala_link_target}}
+
+- name: Link sbaz
+  command: ln -sf {{scala_lib_path_target}}/bin/sbaz {{scala_link_target}}
+
+- name: Link sbaz-setup
+  command: ln -sf {{scala_lib_path_target}}/bin/sbaz-setup {{scala_link_target}}
+
+- name: Link scaladoc
+  command: ln -sf {{scala_lib_path_target}}/bin/scaladoc {{scala_link_target}}
+
+- name: Link scalap
+  command: ln -sf {{scala_lib_path_target}}/bin/scalap {{scala_link_target}}

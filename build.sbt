@@ -31,7 +31,7 @@ lazy val likeML = (project in file("like-ml"))
   .enablePlugins(JavaServerAppPackaging)
 
 lazy val likeEventCluster = (project in file("like-event-cluster"))
-  .dependsOn(likeCore, likeAkkaCommon)
+  .dependsOn(likeAkkaCommon)
   .enablePlugins(JavaServerAppPackaging)
 
 lazy val likeBearychatRobot = (project in file("like-bearychat-robot"))

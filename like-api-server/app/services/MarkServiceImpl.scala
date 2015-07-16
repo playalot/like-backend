@@ -3,11 +3,12 @@ package services
 import com.google.inject.Inject
 import com.likeorz.dao._
 import com.likeorz.models.{ Tag => Tg, _ }
+import com.likeorz.utils.KeyUtils
 import play.api.Logger
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
-import utils.{ KeyUtils, RedisCacheClient }
+import utils.RedisCacheClient
 
 import scala.concurrent.Future
 
@@ -67,10 +68,10 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       case Some(like) => Future.successful(())
       case None =>
         db.run(likes += Like(mark.id.get, userId)).map { _ =>
-          RedisCacheClient.zIncrBy("post_mark:" + post.identify, 1, mark.identify)
-          RedisCacheClient.zIncrBy("tag_likes", 1, mark.tagId.toString)
-          RedisCacheClient.zIncrBy("user_likes", 1, post.userId.toString)
-          if (post.userId != mark.userId) RedisCacheClient.zIncrBy("user_likes", 1, mark.userId.toString)
+          RedisCacheClient.zincrby("post_mark:" + post.identify, 1, mark.identify)
+          RedisCacheClient.zincrby("tag_likes", 1, mark.tagId.toString)
+          RedisCacheClient.zincrby("user_likes", 1, post.userId.toString)
+          if (post.userId != mark.userId) RedisCacheClient.zincrby("user_likes", 1, mark.userId.toString)
           // Increate user info cache
           RedisCacheClient.hincrBy(KeyUtils.user(post.userId), "likes", 1)
           if (post.userId != mark.userId) RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", 1)
@@ -82,14 +83,14 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def unlike(mark: Mark, post: Post, userId: Long): Future[Unit] = {
     db.run(likes.filter(l => l.markId === mark.id.get && l.userId === userId).delete).map { result =>
       if (result > 0) {
-        RedisCacheClient.zIncrBy("post_mark:" + mark.postId, -1, mark.identify)
-        if (RedisCacheClient.zScore("post_mark:" + mark.postId, mark.identify).getOrElse(-1.0) <= 0) {
-          RedisCacheClient.zRem("post_mark:" + mark.postId, mark.identify)
+        RedisCacheClient.zincrby("post_mark:" + mark.postId, -1, mark.identify)
+        if (RedisCacheClient.zscore("post_mark:" + mark.postId, mark.identify).getOrElse(-1.0) <= 0) {
+          RedisCacheClient.zrem("post_mark:" + mark.postId, mark.identify)
           db.run(marks.filter(_.id === mark.id).delete)
         }
-        RedisCacheClient.zIncrBy("tag_likes", -1, mark.tagId.toString)
-        RedisCacheClient.zIncrBy("user_likes", -1, post.userId.toString)
-        if (post.userId != mark.userId) RedisCacheClient.zIncrBy("user_likes", -1, mark.userId.toString)
+        RedisCacheClient.zincrby("tag_likes", -1, mark.tagId.toString)
+        RedisCacheClient.zincrby("user_likes", -1, post.userId.toString)
+        if (post.userId != mark.userId) RedisCacheClient.zincrby("user_likes", -1, mark.userId.toString)
         // Decreate user info cache
         RedisCacheClient.hincrBy(KeyUtils.user(post.userId), "likes", -1)
         if (post.userId != mark.userId) RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -1)
@@ -160,7 +161,7 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       } yield (like, mark)).groupBy(_._2.id).map(x => (x._1, x._2.length))
       //      query.length.result.statements.foreach(println)
       db.run(query.result).map { rs =>
-        rs.map(x => RedisCacheClient.zAdd(KeyUtils.postMark(post.id.get), x._2, x._1))
+        rs.map(x => RedisCacheClient.zadd(KeyUtils.postMark(post.id.get), x._2, x._1))
       }
     }).map { _ =>
       Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")

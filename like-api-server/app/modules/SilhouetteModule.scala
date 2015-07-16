@@ -1,10 +1,10 @@
 package modules
 
-import actors.EventProducerActor
+import actors.{ ClassificationActor, EventProducerActor }
 import com.google.inject.{ Provides, AbstractModule }
 import com.mohiva.play.silhouette.api.EventBus
 import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
-import com.mohiva.play.silhouette.impl.providers.oauth2.state.{ CookieStateProvider, CookieStateSettings, DummyStateProvider }
+import com.mohiva.play.silhouette.impl.providers.oauth2.state.{ CookieStateProvider, CookieStateSettings }
 import com.mohiva.play.silhouette.impl.providers.{ OAuth2StateProvider, OAuth2Settings }
 import extensions.{ WechatProvider, WeiboProvider, ProviderEnv, MobileProvider }
 import net.codingwell.scalaguice.ScalaModule
@@ -42,6 +42,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     bind[EventBus].toInstance(EventBus())
     bind[Clock].toInstance(Clock())
     bindActor[EventProducerActor]("event-producer-actor")
+    bindActor[ClassificationActor]("classification-actor")
   }
 
   /**

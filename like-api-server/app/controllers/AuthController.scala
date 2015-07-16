@@ -9,6 +9,7 @@ import com.mohiva.play.silhouette.impl.providers.{ CommonSocialProfileBuilder, O
 import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
 import extensions._
 import com.likeorz.models._
+import com.likeorz.utils.KeyUtils
 import play.api.{ Logger, Play }
 import play.api.Play.current
 import play.api.i18n.{ MessagesApi, Messages }

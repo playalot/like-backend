@@ -13,7 +13,7 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.libs.concurrent.Execution.Implicits._
 import services.{ PushService, MarkService, NotificationService, UserService }
-import utils.{ KeyUtils, AVOSUtils, RedisCacheClient, MemcachedCacheClient }
+import utils.{ AVOSUtils, RedisCacheClient, MemcachedCacheClient }
 
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration._
@@ -21,6 +21,7 @@ import scala.concurrent.duration._
 class Application @Inject() (
     system: ActorSystem,
     @Named("event-producer-actor") eventProducerActor: ActorRef,
+    @Named("classification-actor") classificationActor: ActorRef,
     val messagesApi: MessagesApi,
     userService: UserService,
     markService: MarkService,
@@ -35,6 +36,18 @@ class Application @Inject() (
 
     Logger.debug(Messages("invalid.mobileCode"))
 
+    //    var preprocessStart = System.nanoTime()
+    //    var response = Await.result(classificationActor.ask(com.likeorz.common.Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔")))(10.second).map(_.asInstanceOf[Int]), 20.seconds)
+    //    var preprocessElapsed = (System.nanoTime() - preprocessStart) / 1e9
+    //    println(response + ":" + preprocessElapsed + "ms")
+    //    preprocessStart = System.nanoTime()
+    //    response = Await.result(classificationActor.ask(com.likeorz.common.Tags(Seq("高达")))(10.second).map(_.asInstanceOf[Int]), 20.seconds)
+    //    preprocessElapsed = (System.nanoTime() - preprocessStart) / 1e9
+    //    println(response + ":" + preprocessElapsed + "ms")
+    //    preprocessStart = System.nanoTime()
+    //    response = Await.result(classificationActor.ask(com.likeorz.common.Tags(Seq("美食")))(10.second).map(_.asInstanceOf[Int]), 20.seconds)
+    //    preprocessElapsed = (System.nanoTime() - preprocessStart) / 1e9
+    //    println(response + ":" + preprocessElapsed + "ms")
     //    eventProducerActor ! "PING"
 
     //    val remotePushActor = system.actorSelection(s"akka.tcp://LikeClusterSystem@127.0.0.1:2552/user/EventActor")

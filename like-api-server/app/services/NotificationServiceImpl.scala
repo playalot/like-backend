@@ -33,7 +33,7 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
   }
 
   override def countForUser(userId: Long): Future[Long] = {
-    RedisCacheClient.zScore("user_notifies", userId.toString) match {
+    RedisCacheClient.zscore("user_notifies", userId.toString) match {
       case Some(ts) =>
         for {
           count <- db.run(notifications.filter(x => x.userId === userId && x.updated >= ts.toLong).length.result)
@@ -41,7 +41,7 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
           count
         }
       case None =>
-        RedisCacheClient.zAdd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
+        RedisCacheClient.zadd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
         Future.successful(0)
     }
   }
@@ -60,7 +60,7 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
       } yield (notification, user)).sortBy(_._1.updated.desc).take(pageSize)
     }
 
-    RedisCacheClient.zAdd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
+    RedisCacheClient.zadd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
 
     db.run(q.result).flatMap { notificationAndUser =>
       val postIds = notificationAndUser.flatMap(_._1.postId).toSet

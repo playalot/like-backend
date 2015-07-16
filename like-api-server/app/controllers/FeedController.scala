@@ -2,12 +2,13 @@ package controllers
 
 import javax.inject.Inject
 
+import com.likeorz.utils.KeyUtils
 import org.joda.time.DateTime
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
 import services.{ PostService, MarkService }
-import utils.{ KeyUtils, HelperUtils, RedisCacheClient, QiniuUtil }
+import utils.{ HelperUtils, RedisCacheClient, QiniuUtil }
 
 import scala.concurrent.Future
 
@@ -22,7 +23,7 @@ class FeedController @Inject() (
 
   def getHomeFeeds(timestamp: Option[String] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
-    val screenWidth = request.headers.get("LIKE_SCREEN_WIDTH").getOrElse("1280").toInt
+    val screenWidth = request.headers.get("LIKE-SCREEN-WIDTH").getOrElse("1280").toInt
     // Parse timestamp list used for each data source
     val ts = HelperUtils.parseTimestamp(timestamp)
     // Get post ids from different data source
@@ -47,9 +48,9 @@ class FeedController @Inject() (
       val uniqueIds = if (timestamp.isDefined) {
         if (request.userId.isDefined) {
           // Remove already seen ids from user history
-          val unseenIds = resultIds -- RedisCacheClient.sMembers("posts_seen:" + request.userId.get).map(_.toLong)
+          val unseenIds = resultIds -- RedisCacheClient.smembers(KeyUtils.postSeen(request.userId.get)).map(_.toLong)
           // Update user history
-          if (unseenIds.nonEmpty) RedisCacheClient.sAdd("posts_seen:" + request.userId.get, unseenIds.map(_.toString).toSeq: _*)
+          if (unseenIds.nonEmpty) RedisCacheClient.sadd(KeyUtils.postSeen(request.userId.get), unseenIds.map(_.toString))
 
           unseenIds
         } else {
@@ -59,8 +60,8 @@ class FeedController @Inject() (
         // Initial home feeds request
         if (request.userId.isDefined) {
           // Clear and initialize history cache
-          RedisCacheClient.del("posts_seen:" + request.userId.get)
-          RedisCacheClient.sAdd("posts_seen:" + request.userId.get, results.flatten.map(_.toString): _*)
+          RedisCacheClient.del(KeyUtils.postSeen(request.userId.get))
+          RedisCacheClient.sadd(KeyUtils.postSeen(request.userId.get), results.flatten.map(_.toString).toSet)
         }
         resultIds
       }
@@ -86,7 +87,7 @@ class FeedController @Inject() (
           val posts = if (promotePosts.nonEmpty) HelperUtils.insertAt(promotePosts.head, HelperUtils.random(3, 3), postList) else postList
 
           // Filter user who is in blacklist
-          val userBlacklist = RedisCacheClient.sMembers(KeyUtils.userBlacklist).map(_.toLong)
+          val userBlacklist = RedisCacheClient.smembers(KeyUtils.userBlacklist).map(_.toLong)
 
           val futures = posts.filterNot(p => userBlacklist.contains(p._1.userId)).map { row =>
             val markIds = row._3.map(_._1)

@@ -2,6 +2,7 @@ package services
 
 import javax.inject.Inject
 
+import com.likeorz.utils.KeyUtils
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.likeorz.dao._
 import com.likeorz.models._
@@ -10,7 +11,7 @@ import play.api.Play
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
-import utils.{ KeyUtils, RedisCacheClient, GenerateUtils }
+import utils.{ RedisCacheClient, GenerateUtils }
 import scala.concurrent.Future
 
 /**

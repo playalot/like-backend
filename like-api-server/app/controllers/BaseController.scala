@@ -1,9 +1,10 @@
 package controllers
 
+import com.likeorz.utils.KeyUtils
 import play.api.i18n.{ Messages, I18nSupport }
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc._
-import utils.{ KeyUtils, MemcachedCacheClient }
+import utils.MemcachedCacheClient
 
 import scala.concurrent.Future
 
@@ -38,7 +39,7 @@ trait BaseController extends Controller with I18nSupport {
   }
 
   def getScreenWidth(implicit request: Request[AnyContent]): Int = {
-    request.headers.get("LIKE_SCREEN_WIDTH") match {
+    request.headers.get("LIKE-SCREEN-WIDTH") match {
       case Some(width) => try {
         val w = width.toInt
         if (w > 1242) 1242

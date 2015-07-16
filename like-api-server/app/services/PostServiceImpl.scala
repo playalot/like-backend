@@ -4,13 +4,13 @@ import javax.inject.Inject
 
 import com.likeorz.models._
 import com.likeorz.dao._
+import com.likeorz.utils.KeyUtils
 import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import slick.driver.JdbcProfile
-import slick.driver.MySQLDriver.api._
-import utils.{ KeyUtils, RedisCacheClient }
+import utils.RedisCacheClient
 
 import scala.concurrent.Future
 
@@ -49,7 +49,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
     db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).drop(page * pageSize).take(pageSize).result).flatMap { posts =>
       val futures = posts.map { post =>
-        val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
+        val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
         //        val query = for {
         //          (mark, tag) <- marks join tags on (_.tagId === _.id)
         //          if mark.id inSet cachedMarks.keySet
@@ -83,7 +83,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       } yield (post, user)
       db.run(query.result).flatMap { posts =>
         val futures = posts.map { postAndUser =>
-          val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postAndUser._1.id.get, offset = 0, limit = 50).map(v => (v._1.toLong, v._2.toInt)).toMap
+          val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + postAndUser._1.id.get, offset = 0, limit = 50).map(v => (v._1.toLong, v._2.toInt)).toMap
 
           if (cachedMarks.nonEmpty) {
             val markIds = cachedMarks.keySet.mkString(", ")
@@ -147,7 +147,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Map[Long, Int], Seq[(Like, User)], Seq[(Comment, User, Option[User])])] = {
     // Get top 10 marks for the post from cache
-    val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postId, offset = page * 10, limit = 10).map(v => (v._1.toLong, v._2.toInt)).toMap
+    val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + postId, offset = page * 10, limit = 10).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
     // Query marks with tagname and user order by created desc
@@ -183,18 +183,18 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def deletePostById(postId: Long, userId: Long): Future[Unit] = {
-    val cachedMarks = RedisCacheClient.zRevRangeByScore("post_mark:" + postId, offset = 0, limit = 1000).map(v => (v._1.toLong, v._2.toInt)).toMap
+    val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + postId, offset = 0, limit = 1000).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
     db.run(marks.filter(_.postId === postId).result).flatMap { markResults =>
       var total: Double = 0
       markResults.foreach { mark =>
-        val likeNum = RedisCacheClient.zScore("post_mark:" + postId, mark.identify).getOrElse(mark.likes.toDouble)
-        RedisCacheClient.zIncrBy("tag_likes", -likeNum, mark.tagId.toString)
+        val likeNum = RedisCacheClient.zscore("post_mark:" + postId, mark.identify).getOrElse(mark.likes.toDouble)
+        RedisCacheClient.zincrby("tag_likes", -likeNum, mark.tagId.toString)
         RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -likeNum.toLong)
         total += likeNum
       }
-      RedisCacheClient.zIncrBy("user_likes", -total, userId.toString)
+      RedisCacheClient.zincrby("user_likes", -total, userId.toString)
       RedisCacheClient.del("post_mark:" + postId)
       RedisCacheClient.del("push:" + userId)
       RedisCacheClient.hincrBy(KeyUtils.user(userId), "posts", -1)
@@ -228,7 +228,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
               // Increase mark author likes count
               if (mark.userId != authorId) RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", 1)
               // Increase post mark likes count
-              RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
+              RedisCacheClient.zincrby("post_mark:" + postId, 1, mark.identify)
               mark
             }
           } else {
@@ -245,7 +245,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
             // Increase mark author likes count
             if (userId != authorId) RedisCacheClient.hincrBy(KeyUtils.user(userId), "likes", 1)
             // Increase post mark likes count
-            RedisCacheClient.zIncrBy("post_mark:" + postId, 1, mark.identify)
+            RedisCacheClient.zincrby("post_mark:" + postId, 1, mark.identify)
             mark
           }
       }
@@ -302,6 +302,28 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def recordDelete(photo: String): Future[Unit] = {
     db.run(deletes += DeletedPhoto(None, photo)).map(_ => ())
+  }
+
+  override def getPersonalizedPostsForUser(userId: Long, ratio: Double): Seq[Long] = {
+    try {
+      RedisCacheClient.lrange(KeyUtils.userCategory(userId), 0, 20).zipWithIndex.map {
+        case (num, i) =>
+          val n = (num.toDouble * ratio).toInt
+          if (n > 0) {
+            // get posts with least view
+            val ids = RedisCacheClient.zrangebyscore(KeyUtils.category(i), 0, Int.MaxValue, 0, n)
+            // Increase view count
+            ids.foreach(id => RedisCacheClient.zincrby(KeyUtils.category(i), 1, id))
+            ids.map(_.toLong)
+          } else {
+            Set[Long]()
+          }
+      }.toSeq.flatMap(x => x)
+    } catch {
+      case e: Throwable =>
+        e.printStackTrace()
+        Seq()
+    }
   }
 
 }

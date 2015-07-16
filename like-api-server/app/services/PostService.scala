@@ -42,4 +42,6 @@ trait PostService {
 
   def recordDelete(photo: String): Future[Unit]
 
+  def getPersonalizedPostsForUser(userId: Long, ratio: Double): Seq[Long]
+
 }

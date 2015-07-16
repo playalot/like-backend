@@ -51,17 +51,17 @@ object LikeEventClusterApp extends App {
     ref.tell(JoinApiServer, classifyRouter)
   }
 
-//  import akka.pattern.ask
-//  import scala.concurrent.duration._
-//  implicit val timeout = akka.util.Timeout(5.minutes)
-//  import scala.concurrent.ExecutionContext.Implicits.global
-//  classifyRouter.ask(com.likeorz.common.Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔"))).map(println)
-//  classifyRouter.ask(com.likeorz.common.Tags(Seq("EVA"))).map(println)
-//  classifyRouter.ask("EVA").map(println)
-//    println(Await.result(classifyActor.ask(Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔"))), 5.seconds))
-//    println(Await.result(classifyActor.ask(Tags(Seq("高达模型吧", "RG", "飞翼"))), 5.seconds))
-//    println(Await.result(classifyActor.ask(Tags(Seq("背面照", "这个应该是买不到了", "こんにちは、これは丸子", "miku", "ミク", "看心情发正面"))), 5.seconds))
-//    println(Await.result(classifyActor.ask(Tags(Seq("键盘", "漂亮", "OL", "黑丝好评", "好腿prpr", "凛凛蝶"))), 5.seconds))
+  //  import akka.pattern.ask
+  //  import scala.concurrent.duration._
+  //  implicit val timeout = akka.util.Timeout(5.minutes)
+  //  import scala.concurrent.ExecutionContext.Implicits.global
+  //  classifyRouter.ask(com.likeorz.common.Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔"))).map(println)
+  //  classifyRouter.ask(com.likeorz.common.Tags(Seq("EVA"))).map(println)
+  //  classifyRouter.ask("EVA").map(println)
+  //  println(Await.result(classifyActor.ask(Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔"))), 5.seconds))
+  //  println(Await.result(classifyActor.ask(Tags(Seq("高达模型吧", "RG", "飞翼"))), 5.seconds))
+  //  println(Await.result(classifyActor.ask(Tags(Seq("背面照", "这个应该是买不到了", "こんにちは、これは丸子", "miku", "ミク", "看心情发正面"))), 5.seconds))
+  //  println(Await.result(classifyActor.ask(Tags(Seq("键盘", "漂亮", "OL", "黑丝好评", "好腿prpr", "凛凛蝶"))), 5.seconds))
 
   startHTTP()
 

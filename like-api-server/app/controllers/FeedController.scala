@@ -23,7 +23,8 @@ class FeedController @Inject() (
 
   def getHomeFeeds(timestamp: Option[String] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
-    val screenWidth = request.headers.get("LIKE-SCREEN-WIDTH").getOrElse("1280").toInt
+    val screenWidth = getScreenWidth
+
     // Parse timestamp list used for each data source
     val ts = HelperUtils.parseTimestamp(timestamp)
     // Get post ids from different data source

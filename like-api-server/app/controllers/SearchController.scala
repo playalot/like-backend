@@ -4,6 +4,7 @@ import javax.inject.{ Named, Inject }
 
 import akka.actor.ActorRef
 import com.likeorz.event.LikeEvent
+import play.api.cache.Cached
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc.Action
@@ -18,6 +19,7 @@ class SearchController @Inject() (
     val messagesApi: MessagesApi,
     tagService: TagService,
     postService: PostService,
+    cached: Cached,
     promoteService: PromoteService) extends BaseController {
 
   def autoComplete(name: String) = Action.async {
@@ -113,8 +115,40 @@ class SearchController @Inject() (
     }
   }
 
-  def explore(tag: String, timestamp: Option[Long] = None) = UserAwareAction { implicit request =>
-    Ok
+  def explore(tag: String) = cached(_ => "explore:" + tag, duration = 1200) {
+    UserAwareAction.async { implicit request =>
+      for {
+        hotUsers <- postService.get30DayHotUsers(15)
+        results <- postService.findHotPostForTag(tag)
+      } yield {
+        val hotUsersJson = Json.toJson(hotUsers.map { user =>
+          Json.obj(
+            "user_id" -> user.id,
+            "nickname" -> user.nickname,
+            "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+            "likes" -> user.likes
+          )
+        })
+        val posts = results.map {
+          case (post, user) => Json.obj(
+            "post_id" -> post.id,
+            "type" -> post.`type`.toString,
+            "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+            "created" -> post.created,
+            "user" -> Json.obj(
+              "user_id" -> user.id,
+              "nickname" -> user.nickname,
+              "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+              "likes" -> user.likes
+            )
+          )
+        }
+        success(Messages("success.found"), Json.obj(
+          "hot_users" -> hotUsersJson,
+          "posts" -> Json.toJson(posts)
+        ))
+      }
+    }
   }
 
   def hotUsers = UserAwareAction.async {

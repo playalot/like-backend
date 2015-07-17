@@ -22,6 +22,8 @@ trait PostService {
 
   def searchByTag(page: Int = 0, pageSize: Int = 20, name: String): Future[Seq[(Post, User)]]
 
+  def findHotPostForTag(name: String, page: Int = 0, pageSize: Int = 20): Future[Seq[(Post, User)]]
+
   def getTagPostImage(name: String): Future[Option[String]]
 
   def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Map[Long, Int], Seq[(Like, User)], Seq[(Comment, User, Option[User])])]

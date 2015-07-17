@@ -4,7 +4,7 @@
 
 ######URL
 
-http://api.likeorz.com/v1/explore/hot/高达
+http://api.likeorz.com/v1/explore/tag/高达
 
 ######支持格式
 JSON

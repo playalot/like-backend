@@ -6,7 +6,6 @@ import com.likeorz.models._
 import com.likeorz.dao._
 import com.likeorz.utils.KeyUtils
 import org.joda.time.DateTime
-import org.nlpcn.commons.lang.jianfan
 import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
@@ -130,6 +129,25 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       } yield (post, user)).sortBy(_._1.likes.desc)
       db.run(q.result)
     }
+  }
+
+  override def findHotPostForTag(name: String, page: Int = 0, pageSize: Int = 20): Future[Seq[(Post, User)]] = {
+    val offset = pageSize * page
+    val query = (for {
+      ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
+      if tag.tagName.toLowerCase === name.toLowerCase
+    } yield post.id)
+      .sortBy(_.desc)
+      .drop(offset)
+      .take(100)
+    db.run(query.result).flatMap { pool =>
+      val ids = Random.shuffle(pool).take(pageSize)
+      val q = (for {
+        (post, user) <- posts join users on (_.userId === _.id) if post.id inSet ids
+      } yield (post, user)).sortBy(_._1.likes.desc)
+      db.run(q.result)
+    }
+
   }
 
   override def getTagPostImage(name: String): Future[Option[String]] = {

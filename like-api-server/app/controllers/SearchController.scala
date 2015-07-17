@@ -33,13 +33,13 @@ class SearchController @Inject() (
 
   def hotTags = Action.async {
     for {
-      entities <- promoteService.getPromoteEntities()
-      tags <- tagService.hotTags
+      entities <- promoteService.getPromoteEntities(2)
+      tags <- tagService.hotTags(15)
     } yield {
-      val entityArr = Random.shuffle(entities).take(2).map { entity =>
+      val entityArr = entities.map { entity =>
         val image = entity.images.map { images =>
           val list = images.split(",").filter(_.trim.length > 0)
-          list(Random.nextInt(list.size))
+          list(Random.nextInt(list.length))
         }.getOrElse(entity.avatar)
         Json.obj(
           "tag" -> entity.name,
@@ -113,8 +113,63 @@ class SearchController @Inject() (
     }
   }
 
-  def expore(tag: String, timestamp: Option[String] = None) = UserAwareAction { implicit request =>
+  def explore(tag: String, timestamp: Option[Long] = None) = UserAwareAction { implicit request =>
     Ok
+  }
+
+  def hotUsers = UserAwareAction.async {
+    for {
+      hotUsers <- postService.get30DayHotUsers(3)
+      newUsers <- postService.get30DayHotUsers(3)
+    } yield {
+      val hotJson = Json.toJson(hotUsers.map { user =>
+        Json.obj(
+          "user_id" -> user.id,
+          "nickname" -> user.nickname,
+          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+          "likes" -> user.likes
+        )
+      })
+      val newJson = Json.toJson(newUsers.map { user =>
+        Json.obj(
+          "user_id" -> user.id,
+          "nickname" -> user.nickname,
+          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+          "likes" -> user.likes
+        )
+      })
+      success(Messages("success.found"), Json.obj(
+        "hot_users" -> hotJson,
+        "new_users" -> newJson
+      ))
+    }
+  }
+
+  def hotTagsAndUsers = UserAwareAction.async {
+    for {
+      entities <- promoteService.getPromoteEntities(2)
+      tags <- tagService.hotTags(13)
+      hotUsers <- postService.get30DayHotUsers(15)
+    } yield {
+      val entityArr = entities.map { entity => Json.obj("tag" -> entity.name) }
+      val tagArr = tags.filterNot(t => entities.exists(_.name == t)).map { tag => Json.obj("tag" -> tag) }
+
+      val hotTagsJson = Json.toJson(Random.shuffle(entityArr ++ tagArr))
+
+      val hotUsersJson = Json.toJson(hotUsers.map { user =>
+        Json.obj(
+          "user_id" -> user.id,
+          "nickname" -> user.nickname,
+          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+          "likes" -> user.likes
+        )
+      })
+
+      success(Messages("success.found"), Json.obj(
+        "hot_tags" -> hotTagsJson,
+        "hot_users" -> hotUsersJson
+      ))
+    }
   }
 
 }

@@ -22,5 +22,8 @@ object KeyUtils {
 
   def category(cid: Long): String = "cat:" + cid
 
+  def hotTags: String = "hot_tags"
+
+  def hotUsers: String = "hot_users"
 }
 

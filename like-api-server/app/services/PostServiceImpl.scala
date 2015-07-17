@@ -5,6 +5,7 @@ import javax.inject.Inject
 import com.likeorz.models._
 import com.likeorz.dao._
 import com.likeorz.utils.KeyUtils
+import org.joda.time.DateTime
 import org.nlpcn.commons.lang.jianfan
 import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.Logger
@@ -14,6 +15,7 @@ import slick.driver.JdbcProfile
 import utils.RedisCacheClient
 
 import scala.concurrent.Future
+import scala.util.Random
 
 /**
  * Created by Guan Guan
@@ -324,6 +326,42 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       case e: Throwable =>
         e.printStackTrace()
         Seq()
+    }
+  }
+
+  override def get30DayHotUsers(num: Int): Future[Seq[User]] = {
+    val cachedUsers = RedisCacheClient.srandmember(KeyUtils.hotUsers, 15)
+    if (cachedUsers.isEmpty) {
+      val ts30ago = DateTime.now().minusDays(30).getMillis / 1000
+      val query = posts.filter(_.created > ts30ago)
+        .groupBy(_.userId)
+        .map(x => (x._1, x._2.size))
+        .sortBy(_._2.desc)
+        .take(100)
+      db.run(query.result).flatMap { pool =>
+        RedisCacheClient.sadd(KeyUtils.hotUsers, pool.map(_._1.toString))
+        val userIds = Random.shuffle(pool).take(num).map(_._1)
+        db.run(users.filter(u => (u.id inSet userIds) && u.avatar =!= "default_avatar.jpg").result)
+      }
+    } else {
+      db.run(users.filter(u => (u.id inSet cachedUsers.map(_.toLong)) && u.avatar =!= "default_avatar.jpg").result)
+    }
+  }
+
+  override def get7DayHotUsers(num: Int): Future[Seq[User]] = {
+    val ts7ago = DateTime.now().minusDays(7).getMillis / 1000
+    val query = (for {
+      (post, user) <- posts join users on (_.userId === _.id)
+      if user.created > ts7ago && user.avatar =!= "default_avatar.jpg"
+    } yield user).groupBy(_.id).map(x => (x._1, x._2.size))
+      .sortBy(_._2.desc)
+      .take(30)
+
+    db.run(query.result).flatMap { pool =>
+      println(pool)
+      val userIds = Random.shuffle(pool).take(num).map(_._1)
+      println(userIds)
+      db.run(users.filter(_.id inSet userIds).result)
     }
   }
 

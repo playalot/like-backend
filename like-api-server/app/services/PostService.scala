@@ -44,4 +44,7 @@ trait PostService {
 
   def getPersonalizedPostsForUser(userId: Long, ratio: Double): Seq[Long]
 
+  def get30DayHotUsers(num: Int): Future[Seq[User]]
+
+  def get7DayHotUsers(num: Int): Future[Seq[User]]
 }

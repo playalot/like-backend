@@ -14,6 +14,6 @@ trait PromoteService {
 
   def getEntitybyName(name: String): Future[Option[Entity]]
 
-  def getPromoteEntities(): Future[Seq[Entity]]
+  def getPromoteEntities(num: Int): Future[Seq[Entity]]
 
 }

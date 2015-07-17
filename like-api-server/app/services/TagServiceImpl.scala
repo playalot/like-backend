@@ -47,15 +47,15 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     db.run(query.result)
   }
 
-  override def hotTags: Future[Seq[String]] = {
-    val cachedTags = RedisCacheClient.srandmember(KeyUtils.hotTags, 15)
+  override def hotTags(num: Int): Future[Seq[String]] = {
+    val cachedTags = RedisCacheClient.srandmember(KeyUtils.hotTags, num)
     if (cachedTags.isEmpty) {
       val query = (for {
         tag <- tags
       } yield tag).sortBy(_.likes.desc).take(120)
       db.run(query.result).map { tags =>
         RedisCacheClient.sadd(KeyUtils.hotTags, tags.map(_.tagName))
-        RedisCacheClient.srandmember(KeyUtils.hotTags, 15)
+        RedisCacheClient.srandmember(KeyUtils.hotTags, num)
       }
     } else {
       Future.successful(cachedTags)

@@ -9,6 +9,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
 
 import scala.concurrent.Future
+import scala.util.Random
 
 /**
  * Created by Guan Guan
@@ -28,8 +29,9 @@ class PromoteServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConf
     db.run(entities.filter(_.name === name).result.headOption)
   }
 
-  override def getPromoteEntities(): Future[Seq[Entity]] = {
-    db.run(promoteEntities.sortBy(_.created.desc).map(_.entityId).result).flatMap { ids =>
+  override def getPromoteEntities(num: Int): Future[Seq[Entity]] = {
+    db.run(promoteEntities.sortBy(_.created.desc).map(_.entityId).result).flatMap { all =>
+      val ids = Random.shuffle(all).take(num)
       db.run(entities.filter(_.id inSet ids).result)
     }
   }

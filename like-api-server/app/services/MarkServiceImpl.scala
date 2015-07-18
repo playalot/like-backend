@@ -29,7 +29,7 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(marks.filter(_.id === markId).result.headOption)
   }
 
-  override def getMarkWithUserAndLikes(markId: Long, fromUserId: Option[Long]): Future[Option[(Mark, User, String, Int, Boolean)]] = {
+  override def getMarkWithUserAndLikes(markId: Long, fromUserId: Option[Long]): Future[Option[(Mark, User, Int, Boolean)]] = {
     val query = for {
       (mark, user) <- marks join users on (_.userId === _.id) if mark.id === markId
     } yield (mark, user)
@@ -37,17 +37,17 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(query.result.headOption).flatMap {
       case Some((mark, user)) =>
         for {
-          tagOpt <- db.run(tags.filter(_.id === mark.tagId).result.headOption)
           likeNum <- db.run(likes.filter(_.markId === markId).length.result)
           isLiked <- { if (fromUserId.isDefined) db.run(likes.filter(l => l.markId === markId && l.userId === fromUserId.get).result.headOption) else Future.successful(None) }
         } yield {
-          Some(mark, user, tagOpt.map(_.tagName).getOrElse(""), likeNum, isLiked.nonEmpty)
+          Some(mark, user, likeNum, isLiked.nonEmpty)
         }
       case _ => Future.successful(None)
     }
 
   }
 
+  @deprecated("legacy", "1.1.0")
   override def getMarkWithTagName(markId: Long): Future[Option[(Mark, String)]] = {
     val query = for {
       (mark, tag) <- marks join tags on (_.tagId === _.id) if mark.id === markId

@@ -8,6 +8,7 @@ case class Mark(
   id: Option[Long],
   postId: Long,
   tagId: Long,
+  tagName: Option[String] = None,
   userId: Long,
   created: Long = System.currentTimeMillis / 1000,
   updated: Long = System.currentTimeMillis / 1000,

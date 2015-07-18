@@ -20,15 +20,10 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   import driver.api._
 
   override def suggestTagsForUser(userId: Long): Future[Seq[Tg]] = {
-    val mostUsedQuery = (for {
-      (mark, tag) <- marks join tags on (_.tagId === _.id)
-      if mark.userId === userId
-    } yield tag).groupBy(_.id).map(x => (x._1, x._2.length)).sortBy(_._2.desc).map(_._1).take(20)
 
-    val recentUsedQuery = (for {
-      (mark, tag) <- marks join tags on (_.tagId === _.id)
-      if mark.userId === userId
-    } yield (mark, tag)).sortBy(_._1.created.desc).map(_._2.id).take(5)
+    val mostUsedQuery = marks.filter(_.userId === userId).map(_.tagId).groupBy(x => x).map(x => (x._1, x._2.length)).sortBy(_._2.desc).map(_._1).take(20)
+
+    val recentUsedQuery = marks.filter(_.userId === userId).sortBy(_.created.desc).map(_.tagId).take(5)
 
     for {
       mostUsedIds <- db.run(mostUsedQuery.result)

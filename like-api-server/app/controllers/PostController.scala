@@ -3,11 +3,11 @@ package controllers
 import javax.inject.{ Named, Inject }
 
 import akka.actor.ActorRef
-import com.likeorz.event.LikeEvent
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import play.api.libs.concurrent.Execution.Implicits._
+import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ Notification, Post, Report }
 import services._
 import utils.QiniuUtil
@@ -170,7 +170,7 @@ class PostController @Inject() (
             // Comments json
             val commentsJson = comments.get(mark._1).map { list =>
               // Take latest 3 comments
-              list.sortBy(_._1.created).reverse.take(3).reverse.map { row =>
+              list.sortBy(_._1.created).takeRight(3).map { row =>
                 Json.obj(
                   "comment_id" -> row._1.id,
                   "content" -> row._1.content,

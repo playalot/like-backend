@@ -174,9 +174,9 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     // Query marks with tagname and user order by created desc
     // TODO: user from cache
     val marksQuery = (for {
-      ((mark, tag), user) <- marks join tags on (_.tagId === _.id) join users on (_._1.userId === _.id)
+      (mark, user) <- marks join users on (_.userId === _.id)
       if (mark.postId === postId) && (mark.id inSet cachedMarks.keySet)
-    } yield (mark.id, tag.tagName, mark.created, user)).sortBy(_._3.desc)
+    } yield (mark.id, mark.tagName, mark.created, user)).sortBy(_._3.desc)
 
     //    val likesQuery = for {
     //      like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
@@ -256,7 +256,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
             Future.successful(mark)
           }
         case None =>
-          val newMark = Mark(None, postId, tagId, userId)
+          val newMark = Mark(None, postId, tagId, Some(tagName), userId)
           for {
             mark <- db.run(marks returning marks.map(_.id) += newMark).map(id => newMark.copy(id = Some(id)))
             l <- db.run(likes += Like(mark.id.get, userId))

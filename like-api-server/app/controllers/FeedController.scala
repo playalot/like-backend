@@ -29,11 +29,11 @@ class FeedController @Inject() (
     val ts = HelperUtils.parseTimestamp(timestamp)
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
-      val recommendIds = postService.getRecommendedPosts(6, ts.head)
-      val followIds = postService.getFollowingPosts(request.userId.get, 3, ts(1))
-      val taggedIds = postService.getTaggedPosts(request.userId.get, 3, ts(2))
-      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.5))
-      Future.sequence(Seq(recommendIds, followIds, taggedIds, categoryIds))
+      val recommendIds = postService.getRecommendedPosts(10, ts.head)
+      val followIds = postService.getFollowingPosts(request.userId.get, 5, ts(1))
+      val taggedIds = postService.getTaggedPosts(request.userId.get, 5, ts(2))
+      //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.5))
+      Future.sequence(Seq(recommendIds, followIds, taggedIds))
     } else {
       val recommendIds = postService.getRecommendedPosts(20, ts.head)
       Future.sequence(Seq(recommendIds))

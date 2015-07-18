@@ -31,11 +31,12 @@ trait MarksComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def postId = column[Long]("post_id")
     def tagId = column[Long]("tag_id")
+    def tagName = column[String]("tag")
     def userId = column[Long]("user_id")
     def created = column[Long]("created")
     def updated = column[Long]("updated")
     def likes = column[Long]("likes")
-    override def * = (id.?, postId, tagId, userId, created, updated, likes) <> (Mark.tupled, Mark.unapply _)
+    override def * = (id.?, postId, tagId, tagName.?, userId, created, updated, likes) <> (Mark.tupled, Mark.unapply _)
   }
 
   protected val marks = TableQuery[MarksTable]

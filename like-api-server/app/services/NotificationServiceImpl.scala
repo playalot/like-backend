@@ -32,7 +32,7 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
     db.run(notifications.filter(n => n.postId === postId).delete)
   }
 
-  override def countForUser(userId: Long): Future[Long] = {
+  override def countForUser(userId: Long): Future[Int] = {
     RedisCacheClient.zscore("user_notifies", userId.toString) match {
       case Some(ts) =>
         for {

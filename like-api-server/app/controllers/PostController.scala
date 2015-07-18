@@ -237,7 +237,6 @@ class PostController @Inject() (
         else
           postService.getPostById(postId).flatMap {
             case Some(post) =>
-
               // log event
               eventProducerActor ! LikeEvent(None, "mark", "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag))
 
@@ -247,8 +246,12 @@ class PostController @Inject() (
               } yield {
                 if (request.userId != post._1.userId) {
                   val notifyMarkUser = Notification(None, "MARK", post._1.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
-                  notificationService.insert(notifyMarkUser)
-                  pushService.sendPushNotificationToUser(post._1.userId, Messages("notification.mark", nickname, tag), 0)
+                  for {
+                    notify <- notificationService.insert(notifyMarkUser)
+                    count <- notificationService.countForUser(post._1.userId)
+                  } yield {
+                    pushService.sendPushNotificationToUser(post._1.userId, Messages("notification.mark", nickname, tag), count)
+                  }
                 }
                 success(Messages("success.mark"), Json.obj(
                   "mark_id" -> mark.id.get,

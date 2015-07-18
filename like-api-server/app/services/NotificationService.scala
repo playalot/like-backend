@@ -16,7 +16,7 @@ trait NotificationService {
 
   def deleteAllNotificationForPost(postId: Long): Future[Int]
 
-  def countForUser(userId: Long): Future[Long]
+  def countForUser(userId: Long): Future[Int]
 
   def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 20): Future[Seq[(Notification, User, Option[(Post, User)])]]
 

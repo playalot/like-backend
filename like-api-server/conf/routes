@@ -62,7 +62,7 @@ GET     /v1/tag/search/:tag/:pg                     controllers.SearchController
 GET     /v1/search/tag/:tag/:pg                     controllers.SearchController.searchTagV2(tag: String, pg: Int)
 GET     /v1/explore/hot/user                        controllers.SearchController.hotUsers
 GET     /v1/explore/hot                             controllers.SearchController.hotTagsAndUsers
-GET     /v1/explore/tag/:tag                        controllers.SearchController.explore(tag: String, ts: Option[Long] ?= None)
+GET     /v1/explore/tag/:tag                        controllers.SearchController.explore(tag: String)
 
 
 #Notification

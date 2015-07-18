@@ -192,9 +192,13 @@ class UserController @Inject() (
             following <- userService.follow(request.userId, id)
           } yield {
             val notifyFollow = Notification(None, "FOLLOW", id, request.userId, System.currentTimeMillis / 1000, None, None)
-            notificationService.insert(notifyFollow)
-            // Send push notification
-            pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), 0)
+            for {
+              notify <- notificationService.insert(notifyFollow)
+              count <- notificationService.countForUser(id)
+            } yield {
+              // Send push notification
+              pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), 0)
+            }
             success(Messages("success.follow"), Json.obj("is_following" -> following))
           }
         case None =>

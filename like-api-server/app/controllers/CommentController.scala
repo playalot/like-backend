@@ -48,9 +48,13 @@ class CommentController @Inject() (
                 } else {
                   if (mark.userId != request.userId) {
                     val notifyMarkUser = Notification(None, "COMMENT", mark.userId, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id, mark.id)
-                    notificationService.insert(notifyMarkUser)
-                    // Send push notification
-                    pushService.sendPushNotificationToUser(mark.userId, Messages("notification.comment", nickname, tag.tagName), 0)
+                    for {
+                      notify <- notificationService.insert(notifyMarkUser)
+                      count <- notificationService.countForUser(mark.userId)
+                    } yield {
+                      // Send push notification
+                      pushService.sendPushNotificationToUser(mark.userId, Messages("notification.comment", nickname, tag.tagName), 0)
+                    }
                   }
                   if (post.userId != mark.userId && post.userId != comment.userId) {
                     val notifyPostUser = Notification(None, "COMMENT", post.userId, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id, mark.id)

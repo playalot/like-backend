@@ -35,16 +35,19 @@ object QiniuUtil {
   }
 
   def resizeImage(filename: String, targetSize: Int, isParsedFilename: Boolean = false): String = {
-
     if (isParsedFilename) {
       val parts = filename.split("_")
       if (parts.size >= 6) {
-        s"$filename?imageView2/0/w/$targetSize/h/${scala.math.ceil(parts(5).toDouble * (targetSize / parts(3).toDouble)).toInt}"
+        if (parts(3).toDouble < targetSize) {
+          s"$filename?imageView2/0/q/90"
+        } else {
+          s"$filename?imageView2/0/w/$targetSize/q/90"
+        }
       } else {
-        s"$filename?imageView2/0/w/$targetSize/h/$targetSize"
+        s"$filename?imageView2/0/w/$targetSize/h/$targetSize/q/90"
       }
     } else {
-      s"$filename?imageView2/0/w/$targetSize/h/$targetSize"
+      s"$filename?imageView2/0/w/$targetSize/h/$targetSize/q/90"
     }
   }
 

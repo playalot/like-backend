@@ -18,6 +18,7 @@ DELETE  /v1/account/link/:provider                  controllers.AuthController.u
 
 # Feed
 GET     /v1/homefeeds                               controllers.FeedController.getHomeFeeds(ts: Option[String] ?= None)
+GET     /v1/friendfeeds                             controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
 
 # User
 GET     /v1/user/$id<[0-9]+>                        controllers.UserController.getInfo(id: Long)

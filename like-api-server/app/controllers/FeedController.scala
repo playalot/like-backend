@@ -128,4 +128,58 @@ class FeedController @Inject() (
 
   }
 
+  def getFriendsFeeds(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
+    if (request.userId.isDefined) {
+      // Use phone screen width for output photo size
+      val screenWidth = getScreenWidth
+
+      postService.getFollowingPosts(request.userId.get, 20, timestamp).flatMap { ids =>
+        if (ids.isEmpty) {
+          Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
+        } else {
+          postService.getPostsByIds(ids.toSet).flatMap { list =>
+            if (list.isEmpty) {
+              Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
+            } else {
+              val sortedList = list.sortBy(-_._1.created)
+              val futures = sortedList.map { row =>
+                val markIds = row._3.map(_._1)
+                markService.checkLikes(request.userId.getOrElse(-1L), markIds).map { likedMarks =>
+                  val marksJson = row._3.sortBy(-_._3).map { fields =>
+                    Json.obj(
+                      "mark_id" -> fields._1,
+                      "tag" -> fields._2,
+                      "likes" -> fields._3,
+                      "is_liked" -> likedMarks.contains(fields._1)
+                    )
+                  }
+                  val post = row._1
+                  val user = row._2
+                  Json.obj(
+                    "post_id" -> post.id.get,
+                    "type" -> post.`type`,
+                    "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                    "created" -> post.created,
+                    "user" -> Json.obj(
+                      "user_id" -> user.identify,
+                      "nickname" -> user.nickname,
+                      "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+                      "likes" -> user.likes
+                    ),
+                    "marks" -> Json.toJson(marksJson)
+                  )
+                }
+              }
+              Future.sequence(futures).map { posts =>
+                success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts), "next" -> list.last._1.created))
+              }
+            }
+          }
+        }
+
+      }
+    } else {
+      Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
+    }
+  }
 }

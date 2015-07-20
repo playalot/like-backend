@@ -115,7 +115,7 @@ class PostController @Inject() (
         success(Messages("success.found"), Json.obj(
           "post_id" -> id,
           "type" -> post.`type`,
-          "content" -> QiniuUtil.getPhoto(post.content, "large"),
+          "content" -> QiniuUtil.getRaw(post.content),
           "description" -> post.description,
           "created" -> post.created,
           "place" -> post.place,

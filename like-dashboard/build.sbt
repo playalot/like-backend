@@ -13,15 +13,18 @@ resolvers += "nlpcn-mvn-repo" at "http://maven.nlpcn.org/"
 libraryDependencies ++= Seq(
   jdbc,
   cache,
+  filters,
   ws,
-  "org.nlpcn"                 %  "nlp-lang"         % "0.3",
+  "org.nlpcn"                 %  "nlp-lang"         % "1.0",
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "mysql"                     %  "mysql-connector-java" % "5.1.36",
   "redis.clients"             %  "jedis"            % "2.7.2",
   "com.typesafe.akka"         %% "akka-remote"      % "2.3.12",
-  "com.mohiva"                %% "play-silhouette"  % "3.0.0-RC2",
+  "com.mohiva"                %% "play-silhouette"  % "3.0.0",
+  "com.adrianhurt"            %% "play-bootstrap3"  % "0.4.4-P24",
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
-  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0-RC2" % "test",
+  "net.ceedubs"               %% "ficus"            % "1.1.2",
+  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0" % "test",
   "org.scalatest"             %% "scalatest"                 % "2.2.5"     % "test",
   specs2                      %  Test
 )

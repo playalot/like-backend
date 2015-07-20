@@ -1,7 +1,58 @@
 @(message: String)
 
-@main("Welcome to Play") {
+@main("Like - Dashboard") {
 
-    @play20.welcome(message)
+    <div class="site-index">
+
+        <div class="jumbotron">
+            <h1>Like</h1>
+            <P>We will change the world.</P>
+
+            <P><em><small>Innovation distinguishes between a leader and a follower.</small></em></P>
+            <footer>
+                — Steve Jobs
+            </footer>
+        </div>
+
+        <div class="row text-center">
+            <div class="col-xs-6 col-sm-3">
+                <h5>User</h5>
+                <h3 class="text-muted"><?=$counts['user'];?></h3>
+            </div>
+            <div class="col-xs-6 col-sm-3">
+                <h5>Post</h5>
+                <h3 class="text-muted"><?=$counts['post'];?></h3>
+            </div>
+            <div class="col-xs-6 col-sm-3">
+                <h5>Mark</h5>
+                <h3 class="text-muted"><?=$counts['mark'];?></h3>
+            </div>
+            <div class="col-xs-6 col-sm-3">
+                <h5>Tag</h5>
+                <h3 class="text-muted"><?=$counts['tag'];?></h3>
+            </div>
+        </div>
+
+        <div class="row text-center">
+            <div class="col-xs-6 col-sm-3">
+                <h5>Like</h5>
+                <h3 class="text-muted"><?=$counts['like'];?></h3>
+            </div>
+            <div class="col-xs-6 col-sm-3">
+                <h5>Follow</h5>
+                <h3 class="text-muted"><?=$counts['follow'];?></h3>
+            </div>
+            <div class="col-xs-6 col-sm-3">
+                <h5>Favor</h5>
+                <h3 class="text-muted"><?=$counts['favor'];?></h3>
+            </div>
+            <div class="col-xs-6 col-sm-3">
+                <h5>Comment</h5>
+                <h3 class="text-muted"><?=$counts['comment'];?></h3>
+            </div>
+        </div>
+
+    </div>
+
 
 }

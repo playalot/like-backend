@@ -1,6 +1,6 @@
 package utils
 
-import _root_.redis.clients.jedis.{ Jedis, JedisPool, JedisPoolConfig }
+import redis.clients.jedis.{ JedisPoolConfig, JedisPool, Jedis }
 import play.api.Play
 import scala.collection.JavaConversions._
 
@@ -20,6 +20,18 @@ object RedisCacheClient {
   def zRevRangeByScore(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
     withJedisClient[Set[(String, Double)]] { client =>
       client.zrevrangeByScoreWithScores(key, max, min, offset, limit).map(x => (x.getElement, x.getScore)).toSet
+    }
+  }
+
+  def zrangebyscore(key: String, min: Double, max: Double) = {
+    withJedisClient[Set[String]] { client =>
+      client.zrangeByScore(key: String, min, max).toSet
+    }
+  }
+
+  def zrangebyscore(key: String, min: Double, max: Double, offset: Int, count: Int) = {
+    withJedisClient[Set[String]] { client =>
+      client.zrangeByScore(key: String, min, max, offset, count).toSet
     }
   }
 
@@ -118,6 +130,24 @@ object RedisCacheClient {
   def hgetAll(key: String): Map[String, String] = {
     withJedisClient[Map[String, String]] { client =>
       client.hgetAll(key).toMap
+    }
+  }
+
+  def lpush(key: String, fields: String*): Long = {
+    withJedisClient[Long] { client =>
+      client.lpush(key, fields.toSeq: _*)
+    }
+  }
+
+  def lrange(key: String, start: Long, end: Long): List[String] = {
+    withJedisClient[List[String]] { client =>
+      client.lrange(key, start, end).toList
+    }
+  }
+
+  def ltrim(key: String, start: Long, end: Long): String = {
+    withJedisClient[String] { client =>
+      client.ltrim(key, start, end)
     }
   }
 

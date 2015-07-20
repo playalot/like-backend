@@ -1,0 +1,228 @@
+html, body {
+    height: 100%;
+}
+
+.wrap {
+    min-height: 100%;
+    height: auto;
+    margin: 0 auto -60px;
+    padding: 0 0 60px;
+}
+
+.wrap > .container {
+    padding: 70px 15px 20px;
+}
+
+.footer {
+    height: 60px;
+    background-color: #f5f5f5;
+    border-top: 1px solid #ddd;
+    padding-top: 20px;
+}
+
+.jumbotron {
+    text-align: center;
+    background-color: transparent;
+}
+
+.jumbotron .btn {
+    font-size: 21px;
+    padding: 14px 24px;
+}
+
+.not-set {
+    color: #c55;
+    font-style: italic;
+}
+
+/* add sorting icons to gridview sort links */
+a.asc:after, a.desc:after {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    padding-left: 5px;
+}
+
+a.asc:after {
+    content: /*"\e113"*/ "\e151";
+}
+
+a.desc:after {
+    content: /*"\e114"*/ "\e152";
+}
+
+.sort-numerical a.asc:after {
+    content: "\e153";
+}
+
+.sort-numerical a.desc:after {
+    content: "\e154";
+}
+
+.sort-ordinal a.asc:after {
+    content: "\e155";
+}
+
+.sort-ordinal a.desc:after {
+    content: "\e156";
+}
+
+.grid-view th {
+    white-space: nowrap;
+}
+
+.hint-block {
+    display: block;
+    margin-top: 5px;
+    color: #999;
+}
+
+.error-summary {
+    color: #a94442;
+    background: #fdf7f7;
+    border-left: 3px solid #eed3d7;
+    padding: 10px 20px;
+    margin: 0 0 15px 0;
+}
+
+.table > tbody > tr > td {
+    vertical-align: middle;
+}
+
+.post-caption {
+    padding: 10px 15px 0 15px;
+}
+
+.post-image {
+    position: relative;
+    /*padding: 2px;*/
+}
+
+.media, .media-body {
+    overflow: hidden;
+    zoom: 1;
+}
+
+.media .media-object {
+    margin: 10px 10px 10px 0px;
+}
+
+.media .media-body {
+    padding: 10px 15px 10px 0;
+}
+
+.thumb.thumb-sm {
+    width: 40px;
+}
+
+.thumb {
+    width: 60px;
+    display: inline-block;
+}
+
+.block {
+    display: block;
+}
+
+.post-heading {
+    padding:0;
+}
+
+
+.post-heading>a {
+    display: block;
+    padding:5px 10px;
+    clear: both;
+    font-weight: 400;
+    line-height: 1.42857143;
+    color: #333;
+    white-space: nowrap
+}
+
+.post-heading>a:focus,.post-heading>a:hover {
+    color: #262626;
+    text-decoration: none;
+    background-color: #f5f5f5;
+}
+
+.post-summary {
+    padding: 0 0 15px 15px;
+}
+
+.panel-default > .panel-heading {
+    background-color: #fdfdfd;
+}
+
+.user-profile {
+    display: inline-block;
+    color: #979898;
+    vertical-align: middle;
+    padding: 0 0 0 10px;
+}
+
+.user-profile h2 {
+    margin-top: 5px;
+    margin-bottom: 0px;
+}
+
+img.img-corona {
+    -webkit-box-shadow: 0 0 0 4px rgba(221,221,221,.3);
+    -moz-box-shadow: 0 0 0 4px rgba(221,221,221,.3);
+    box-shadow: 0 0 0 4px rgba(221,221,221,.3);
+}
+
+.user-info {
+
+}
+
+.publish-btn {
+    padding-top: 28px;
+}
+
+.empty {
+    padding:15px;
+}
+
+.post-pagination {
+    padding-right:15px;
+}
+
+.post-image .thumb-pane {
+    position: absolute;
+    bottom: 50px;
+    width: 100%;
+    opacity: 0.8;
+    background-color: #000;
+}
+
+.thumb-pane ul {
+    list-style: none;
+}
+
+.thumb-pane ul li {
+    float: left;
+    padding: 5px 0;
+    margin-right: 20px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.thumbnail-text p {
+    margin: 0;
+}
+
+.post-info {
+    display: inline-block;
+    color: #979898;
+    vertical-align: middle;
+    padding: 0 0 0 10px;
+}
+
+.post-info .glyphicon {
+    font-size: 18px;
+}

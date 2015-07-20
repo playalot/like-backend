@@ -10,8 +10,10 @@ import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.MySQLDriver.api._
 import slick.driver.JdbcProfile
 import utils.RedisCacheClient
+import com.likeorz.utils.KeyUtils
 
 import scala.concurrent.Future
+import scala.util.Random
 
 class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends PostService
     with PostsComponent with UsersComponent
@@ -78,8 +80,8 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def searchByTag(page: Int = 0, pageSize: Int = 18, name: String = "%"): Future[Seq[(Post, User)]] = {
     val offset = pageSize * page
 
-    val jian = JianFan.f2J(name)
-    val fan = JianFan.j2F(name)
+    val jian = JianFan.f2j(name)
+    val fan = JianFan.j2f(name)
 
     val query = (for {
       ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
@@ -94,6 +96,33 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         (post, user) <- posts join users on (_.userId === _.id) if post.id inSet ids
       } yield (post, user)).sortBy(_._1.likes.desc)
       db.run(q.result)
+    }
+  }
+
+  override def getPersonalCategoryPosts(userId: Long): Seq[Long] = {
+    try {
+      RedisCacheClient.lrange(KeyUtils.userCategory(userId), 0, 20).zipWithIndex.map {
+        case (num, i) =>
+          if (num.toDouble.toInt > 0) {
+            // get posts with least view
+            val ids = RedisCacheClient.zrangebyscore(KeyUtils.category(i), 0, Int.MaxValue, 0, num.toDouble.toInt)
+            // Increase view count
+            ids.foreach(id => RedisCacheClient.zIncrBy(KeyUtils.category(i), 1, id))
+            ids.map(_.toLong)
+          } else {
+            Set[Long]()
+          }
+      }.toSeq.flatMap(x => x)
+    } catch {
+      case e: Throwable =>
+        e.printStackTrace()
+        Seq()
+    }
+  }
+
+  override def getRandomUsers(): Future[Seq[User]] = {
+    db.run(users.result).map { users =>
+      Random.shuffle(users).take(20)
     }
   }
 

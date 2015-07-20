@@ -18,4 +18,7 @@ trait PostService {
 
   def searchByTag(page: Int = 0, pageSize: Int = 20, name: String): Future[Seq[(Post, User)]]
 
+  def getPersonalCategoryPosts(userId: Long): Seq[Long]
+
+  def getRandomUsers(): Future[Seq[User]]
 }

@@ -1,0 +1,33 @@
+@(users: Seq[com.likeorz.models.User], userPosts: Seq[com.likeorz.models.Post], recoPosts: Seq[com.likeorz.models.Post])
+
+@imgUrl(img: String) = {
+    @{"http://cdn.likeorz.com/" + img + "?imageView2/0/w/100/h/100/q/70"}
+}
+
+@main("Welcome to Play") {
+
+    <h1>Random Users</h1>
+    <div>
+    @users.map { u =>
+        <a href=@{"/recommend/"+u.identify}><img class="img-circle" src=@{imgUrl(u.avatar)} alt="Responsive image" /></a>
+    }
+    </div>
+
+    <h1>User's Posts</h1>
+    <div>
+    @userPosts.map { p =>
+        <img class="img-thumbnail" src=@{imgUrl(p.content)} alt="Responsive image" />
+    }
+
+    </div>
+
+    <h1>Recommended Posts</h1>
+    <div>
+    @recoPosts.map { p =>
+        <img class="img-thumbnail" src=@{"http://cdn.likeorz.com/" + p.content + "?imageView2/0/w/100/h/100/q/75"} alt="Responsive image" />
+    }
+
+    </div>
+
+
+}

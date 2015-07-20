@@ -42,9 +42,13 @@ class CommentController @Inject() (
                 if (comment.replyId.isDefined) {
                   // Notify replied user in DB
                   val notifyReplier = Notification(None, "REPLY", comment.replyId.get, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id, mark.id)
-                  notificationService.insert(notifyReplier)
-                  // Send push notification
-                  pushService.sendPushNotificationToUser(comment.replyId.get, Messages("notification.reply", nickname, tag.tagName), 0)
+                  for {
+                    notify <- notificationService.insert(notifyReplier)
+                    count <- notificationService.countForUser(comment.replyId.get)
+                  } yield {
+                    // Send push notification
+                    pushService.sendPushNotificationToUser(comment.replyId.get, Messages("notification.reply", nickname, tag.tagName), count)
+                  }
                 } else {
                   if (mark.userId != request.userId) {
                     val notifyMarkUser = Notification(None, "COMMENT", mark.userId, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id, mark.id)
@@ -53,14 +57,18 @@ class CommentController @Inject() (
                       count <- notificationService.countForUser(mark.userId)
                     } yield {
                       // Send push notification
-                      pushService.sendPushNotificationToUser(mark.userId, Messages("notification.comment", nickname, tag.tagName), 0)
+                      pushService.sendPushNotificationToUser(mark.userId, Messages("notification.comment", nickname, tag.tagName), count)
                     }
                   }
                   if (post.userId != mark.userId && post.userId != comment.userId) {
                     val notifyPostUser = Notification(None, "COMMENT", post.userId, comment.userId, System.currentTimeMillis / 1000, Some(tag.tagName), post.id, mark.id)
-                    notificationService.insert(notifyPostUser)
-                    // Send push notification
-                    pushService.sendPushNotificationToUser(post.userId, Messages("notification.comment", nickname, tag.tagName), 0)
+                    for {
+                      notify <- notificationService.insert(notifyPostUser)
+                      count <- notificationService.countForUser(post.userId)
+                    } yield {
+                      // Send push notification
+                      pushService.sendPushNotificationToUser(post.userId, Messages("notification.comment", nickname, tag.tagName), count)
+                    }
                   }
                 }
               case None =>

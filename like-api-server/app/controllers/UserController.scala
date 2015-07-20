@@ -197,7 +197,7 @@ class UserController @Inject() (
               count <- notificationService.countForUser(id)
             } yield {
               // Send push notification
-              pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), 0)
+              pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), count)
             }
             success(Messages("success.follow"), Json.obj("is_following" -> following))
           }

@@ -17,6 +17,12 @@ object RedisUtils {
     new JedisPool(new JedisPoolConfig(), host, port, 2000, auth)
   }
 
+  def keys(pattern: String): Set[String] = {
+    withJedisClient[Set[String]] { client =>
+      client.keys(pattern).toSet
+    }
+  }
+
   def zRevRangeByScore(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
     withJedisClient[Set[(String, Double)]] { client =>
       client.zrevrangeByScoreWithScores(key, max, min, offset, limit).map(x => (x.getElement, x.getScore)).toSet
@@ -166,7 +172,7 @@ object RedisUtils {
     try {
       f(jedis)
     } finally {
-      jedisPool.returnResourceObject(jedis)
+      jedis.close()
     }
   }
 

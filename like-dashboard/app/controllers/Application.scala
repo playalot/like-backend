@@ -20,7 +20,6 @@ import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Action
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -36,7 +35,7 @@ class Application @Inject() (
     clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
 
   def index = SecuredAction {
-    
+
     Ok(views.html.index("Your new application is ready."))
   }
 

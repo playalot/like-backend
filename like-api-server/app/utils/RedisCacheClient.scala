@@ -144,7 +144,7 @@ object RedisCacheClient {
     try {
       f(jedis)
     } finally {
-      jedisPool.returnResourceObject(jedis)
+      jedis.close()
     }
   }
 

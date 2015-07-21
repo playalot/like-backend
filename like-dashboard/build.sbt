@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
   "org.nlpcn"                 %  "nlp-lang"         % "1.0",
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "mysql"                     %  "mysql-connector-java" % "5.1.36",
-  "redis.clients"             %  "jedis"            % "2.7.2",
+  "redis.clients"             %  "jedis"            % "2.7.3",
   "com.typesafe.akka"         %% "akka-remote"      % "2.3.12",
   "com.mohiva"                %% "play-silhouette"  % "3.0.0",
   "com.adrianhurt"            %% "play-bootstrap3"  % "0.4.4-P24",

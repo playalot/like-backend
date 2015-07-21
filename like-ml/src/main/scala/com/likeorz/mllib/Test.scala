@@ -1,11 +1,10 @@
 package com.likeorz.mllib
 
-import com.likeorz.mllib.utils.MLUtils
+import com.likeorz.mllib.utils.{ RedisUtils, MLUtils }
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.clustering.KMeansModel
 import org.apache.spark.mllib.feature.Word2VecModel
 import org.apache.spark.mllib.linalg.{ DenseVector, Vector }
-import scala.collection.JavaConversions._
 
 object Test {
 
@@ -33,6 +32,18 @@ object Test {
     println("p2: " + cluster.predict(v2))
 
     sc.stop()
+
+  }
+
+  def cleanLegacy() = {
+    println("Clean cache")
+    RedisUtils.keys("user_cat:*").foreach { key =>
+      RedisUtils.del(key)
+    }
+
+    RedisUtils.keys("cat:*").foreach { key =>
+      RedisUtils.del(key)
+    }
 
   }
 

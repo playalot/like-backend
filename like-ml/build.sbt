@@ -7,7 +7,7 @@ version := "1.0.0"
 // Change this to another test framework if you prefer
 libraryDependencies ++= Seq(
   "org.apache.lucene"         %  "lucene-analyzers-common" % "5.2.1",
-  "redis.clients"             %  "jedis"            % "2.7.2",
+  "redis.clients"             %  "jedis"            % "2.7.3",
   "org.nlpcn"                 %  "nlp-lang"         % "0.3",
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "joda-time"                 %  "joda-time"        % "2.8.1",

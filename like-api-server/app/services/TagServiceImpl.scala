@@ -2,9 +2,10 @@ package services
 
 import javax.inject.Inject
 
-import com.likeorz.models.{ Tag => Tg }
-import com.likeorz.dao.{ MarksComponent, TagsComponent }
+import com.likeorz.models.{ User, Tag => Tg }
+import com.likeorz.dao.{ UsersComponent, MarksComponent, TagsComponent }
 import com.likeorz.utils.KeyUtils
+import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
@@ -12,9 +13,10 @@ import slick.driver.JdbcProfile
 import utils.RedisCacheClient
 
 import scala.concurrent.Future
+import scala.util.Random
 
 class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, configuration: Configuration) extends TagService
-    with TagsComponent with MarksComponent
+    with TagsComponent with MarksComponent with UsersComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -43,17 +45,33 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   }
 
   override def hotTags(num: Int): Future[Seq[String]] = {
-    val cachedTags = RedisCacheClient.srandmember(KeyUtils.hotTags, num)
-    if (cachedTags.isEmpty) {
+    val pool = RedisCacheClient.hkeys(KeyUtils.hotTagsWithUsers).toSeq
+    if (pool.nonEmpty) {
+      Future.successful(Random.shuffle(pool).take(num))
+    } else {
       val query = (for {
         tag <- tags
       } yield tag).sortBy(_.likes.desc).take(120)
       db.run(query.result).map { tags =>
-        RedisCacheClient.sadd(KeyUtils.hotTags, tags.map(_.tagName))
-        RedisCacheClient.srandmember(KeyUtils.hotTags, num)
+        Random.shuffle(tags.map(_.tagName)).take(num)
       }
-    } else {
-      Future.successful(cachedTags)
+    }
+  }
+
+  override def hotUsersForTag(tag: String, num: Int): Future[Seq[User]] = {
+    val futureIds = RedisCacheClient.hget(KeyUtils.hotTagsWithUsers, tag) match {
+      case Some(ids) => Future.successful(ids.split(",").filter(_.length > 0).map(_.toLong).toSeq)
+      case None =>
+        val ts7ago = DateTime.now().minusDays(7).getMillis / 1000
+        val query = marks.filter(_.created > ts7ago).map(_.userId)
+          .groupBy(x => x).map(x => (x._1, x._2.size))
+          .sortBy(_._2.desc)
+          .map(_._1).take(100)
+        db.run(query.result)
+    }
+    futureIds.flatMap { pool =>
+      val userIds = Random.shuffle(pool).take(num)
+      db.run(users.filter(_.id inSet userIds).result)
     }
   }
 

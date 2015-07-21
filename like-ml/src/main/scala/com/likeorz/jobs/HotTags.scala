@@ -34,7 +34,7 @@ object HotTags {
         })
         .groupByKey()
         .sortBy(x => x._2.size, ascending = false)
-        .take(120)
+        .take(150)
         .map({
           case (tag, users) =>
             val group = users.groupBy(x => x).map(x => (x._1, x._2.size)).toSeq.sortBy(-_._2).take(100).map(_._1)

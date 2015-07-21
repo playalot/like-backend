@@ -1,6 +1,6 @@
 package services
 
-import com.likeorz.models.Tag
+import com.likeorz.models.{ User, Tag }
 
 import scala.concurrent.Future
 
@@ -15,6 +15,8 @@ trait TagService {
   def autoComplete(name: String): Future[Seq[Tag]]
 
   def hotTags(num: Int): Future[Seq[String]]
+
+  def hotUsersForTag(tag: String, num: Int): Future[Seq[User]]
 
   def validTag(tag: String): Boolean
 

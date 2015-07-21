@@ -147,7 +147,6 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       } yield (post, user)).sortBy(_._1.likes.desc)
       db.run(q.result)
     }
-
   }
 
   override def getTagPostImage(name: String): Future[Option[String]] = {

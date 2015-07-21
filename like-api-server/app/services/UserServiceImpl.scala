@@ -82,7 +82,7 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getNickname(userId: Long): Future[String] = {
-    Option(RedisCacheClient.hget(KeyUtils.user(userId), "nickname")) match {
+    RedisCacheClient.hget(KeyUtils.user(userId), "nickname") match {
       case Some(name) => Future.successful(name)
       case None =>
         db.run(users.filter(_.id === userId).map(_.nickname).result.headOption).map {

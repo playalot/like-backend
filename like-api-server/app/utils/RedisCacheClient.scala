@@ -103,9 +103,15 @@ object RedisCacheClient {
     }
   }
 
-  def hget(key: String, field: String): String = {
-    withJedisClient[String] { client =>
-      client.hget(key, field)
+  def hkeys(key: String): Set[String] = {
+    withJedisClient[Set[String]] { client =>
+      client.hkeys(key).toSet
+    }
+  }
+
+  def hget(key: String, field: String): Option[String] = {
+    withJedisClient[Option[String]] { client =>
+      Option(client.hget(key, field))
     }
   }
 

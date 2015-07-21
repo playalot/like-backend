@@ -115,10 +115,10 @@ class SearchController @Inject() (
     }
   }
 
-  def explore(tag: String) = cached(_ => "explore:" + tag, duration = 1200) {
+  def explore(tag: String) = cached(_ => "explore:" + tag, duration = 600) {
     UserAwareAction.async { implicit request =>
       for {
-        hotUsers <- postService.get30DayHotUsers(15)
+        hotUsers <- tagService.hotUsersForTag(tag, 15)
         results <- postService.findHotPostForTag(tag)
       } yield {
         val hotUsersJson = Json.toJson(hotUsers.map { user =>

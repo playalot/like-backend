@@ -42,6 +42,7 @@ success.cover = Change Cover Success
 success.link = Link Account Success
 success.unLink = Unlink Account Success
 success.mark = Mark Success
+success.deleteMark = Delete Mark Success
 success.comment = Comment Success
 success.sendCode = Code Send Success
 success.report = Report Success

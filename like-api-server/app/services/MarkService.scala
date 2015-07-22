@@ -12,6 +12,8 @@ trait MarkService {
 
   def getMark(markId: Long): Future[Option[Mark]]
 
+  def getMarkWithPost(markId: Long): Future[Option[(Mark, Post)]]
+
   def getMarkWithUserAndLikes(markId: Long, fromUserId: Option[Long]): Future[Option[(Mark, User, String, Int, Boolean)]]
 
   def getMarkWithTagName(markId: Long): Future[Option[(Mark, String)]]

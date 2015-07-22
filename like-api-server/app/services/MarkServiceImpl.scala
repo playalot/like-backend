@@ -29,6 +29,13 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(marks.filter(_.id === markId).result.headOption)
   }
 
+  override def getMarkWithPost(markId: Long): Future[Option[(Mark, Post)]] = {
+    val query = for {
+      (mark, post) <- marks join posts on (_.postId === _.id) if mark.id === markId
+    } yield (mark, post)
+    db.run(query.result.headOption)
+  }
+
   override def getMarkWithUserAndLikes(markId: Long, fromUserId: Option[Long]): Future[Option[(Mark, User, String, Int, Boolean)]] = {
     val query = for {
       (mark, user) <- marks join users on (_.userId === _.id) if mark.id === markId
@@ -145,11 +152,26 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def deleteMark(markId: Long): Future[Unit] = {
-    for {
-      l <- db.run(likes.filter(_.markId === markId).delete)
-      c <- db.run(comments.filter(_.markId === markId).delete)
-      m <- db.run(marks.filter(_.id === markId).delete)
-    } yield {}
+    val query = for {
+      (mark, post) <- marks join posts on (_.postId === _.id) if mark.id === markId
+    } yield (mark, post)
+
+    db.run(query.result.headOption).flatMap {
+      case Some((mark, post)) =>
+        for {
+          l <- db.run(likes.filter(_.markId === markId).delete)
+          c <- db.run(comments.filter(_.markId === markId).delete)
+          m <- db.run(marks.filter(_.id === markId).delete)
+        } yield {
+          RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -l)
+          if (mark.userId != post.userId) {
+            RedisCacheClient.hincrBy(KeyUtils.user(post.userId), "likes", -l)
+          }
+          RedisCacheClient.zrem(KeyUtils.postMark(post.id.get), markId.toString)
+          ()
+        }
+      case None => Future.successful(())
+    }
   }
 
   override def rebuildMarkCache(): Future[Unit] = {

@@ -41,6 +41,7 @@ success.cover = 保存封面成功
 success.link = 成功绑定了账户
 success.unlink = 成功解除了绑定
 success.mark = 标记成功
+success.deleteMark = 删除标签成功
 success.comment = 评论成功
 success.sendCode = 短信验证发送成功
 success.report = 举报成功

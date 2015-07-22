@@ -100,4 +100,18 @@ class MarkController @Inject() (
     }
   }
 
+  def deleteMark(markId: Long) = SecuredAction.async { implicit request =>
+    markService.getMarkWithPost(markId).flatMap {
+      case Some((mark, post)) =>
+        if (request.userId == mark.userId || request.userId == post.userId) {
+          markService.deleteMark(markId).map { _ =>
+            success(Messages("success.deleteMark"))
+          }
+        } else {
+          Future.successful(error(4023, Messages("no.permission")))
+        }
+      case None => Future.successful(error(4022, Messages("invalid.markId")))
+    }
+  }
+
 }

@@ -109,7 +109,7 @@ object KMeansOnTags {
 
       val article_membership = tags_pairs.map(x => (clusters.predict(x._2), x._1))
       val cluster_centers = sc.parallelize(clusters.clusterCenters.zipWithIndex.map { e => (e._2, e._1) })
-      val cluster_topics = cluster_centers.mapValues(x => model.findSynonyms(x, 20).map(x => x._1))
+      val cluster_topics = cluster_centers.mapValues(x => model.findSynonyms(x, 50).map(x => x._1))
 
       val sample_topic = cluster_topics.take(numClusters)
       var sample_members = article_membership.filter(x => x._1 == 6).take(10)

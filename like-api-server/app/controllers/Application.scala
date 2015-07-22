@@ -78,6 +78,7 @@ class Application @Inject() (
     //    MemcachedCacheClient.save[String]("session_user:e5b7f1ef625fc31c62a6577e71bb9ac1d2491177d1b8bee9d4db4b72ef177014", "715", 900000)
     //    MemcachedCacheClient.save[String]("session_user:187", "187", 900000)
     //    MemcachedCacheClient.save[String]("session_user:715", "715", 900000)
+    //    MemcachedCacheClient.save[String]("session_user:3214", "3214", 900000)
 
     //    userService.getUserInfo(715).map(println)
     //    userService.getUserInfo(187).map(println)

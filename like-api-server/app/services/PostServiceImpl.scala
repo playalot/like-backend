@@ -75,7 +75,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getPostsByIds(ids: Set[Long]): Future[Seq[(Post, User, Seq[(Long, String, Int)])]] = {
+  override def getPostsByIds(ids: Seq[Long]): Future[Seq[(Post, User, Seq[(Long, String, Int)])]] = {
     if (ids.isEmpty) {
       Future.successful(Seq[(Post, User, Seq[(Long, String, Int)])]())
     } else {
@@ -173,9 +173,9 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     // Query marks with tagname and user order by created desc
     // TODO: user from cache
     val marksQuery = (for {
-      (mark, user) <- marks join users on (_.userId === _.id)
+      ((mark, tag), user) <- marks join tags on (_.tagId === _.id) join users on (_._1.userId === _.id)
       if (mark.postId === postId) && (mark.id inSet cachedMarks.keySet)
-    } yield (mark.id, mark.tagName, mark.created, user)).sortBy(_._3.desc)
+    } yield (mark.id, tag.tagName, mark.created, user)).sortBy(_._3.desc)
 
     //    val likesQuery = for {
     //      like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))

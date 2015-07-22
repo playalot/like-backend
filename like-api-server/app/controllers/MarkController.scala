@@ -81,7 +81,7 @@ class MarkController @Inject() (
   def getMark(markId: Long) = UserAwareAction.async { implicit request =>
     markService.getMarkWithUserAndLikes(markId, request.userId).map {
       case Some(row) =>
-        val (mark, user, likes, isLiked) = row
+        val (mark, user, tag, likes, isLiked) = row
         val json = Json.obj(
           "mark_id" -> mark.identify,
           "user" -> Json.obj(
@@ -90,7 +90,7 @@ class MarkController @Inject() (
             "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
             "likes" -> user.likes
           ),
-          "tag" -> mark.tagName.get,
+          "tag" -> tag,
           "likes" -> likes,
           "is_liked" -> isLiked,
           "created" -> mark.created

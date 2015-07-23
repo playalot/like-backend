@@ -23,13 +23,31 @@ object RedisUtils {
     }
   }
 
-  def zRevRangeByScore(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
+  def zrevrangebyscore(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
     withJedisClient[Set[(String, Double)]] { client =>
       client.zrevrangeByScoreWithScores(key, max, min, offset, limit).map(x => (x.getElement, x.getScore)).toSet
     }
   }
 
-  def zScore(key: String, member: String): Option[Double] = {
+  def zrangebyscore(key: String, min: Double, max: Double) = {
+    withJedisClient[Set[String]] { client =>
+      client.zrangeByScore(key: String, min, max).toSet
+    }
+  }
+
+  def zrangebyscore(key: String, min: Double, max: Double, offset: Int, count: Int) = {
+    withJedisClient[Set[String]] { client =>
+      client.zrangeByScore(key: String, min, max, offset, count).toSet
+    }
+  }
+
+  def zremrangebyscore(key: String, min: Double, max: Double) = {
+    withJedisClient[Long] { client =>
+      client.zremrangeByScore(key: String, min, max)
+    }
+  }
+
+  def zscore(key: String, member: String): Option[Double] = {
     withJedisClient[Option[Double]] { client =>
       val score = client.zscore(key, member)
       if (score == null) None
@@ -61,49 +79,27 @@ object RedisUtils {
     }
   }
 
-  def zrangebyscore(key: String, min: Double, max: Double) = {
-    withJedisClient[Set[String]] { client =>
-      client.zrangeByScore(key: String, min, max).toSet
-    }
-  }
-
-  def zremrangebyscore(key: String, min: Double, max: Double) = {
-    withJedisClient[Long] { client =>
-      client.zremrangeByScore(key: String, min, max)
-    }
-  }
-
   def zrem(key: String, member: String) = {
     withJedisClient[Long] { client =>
       client.zrem(key, member)
     }
   }
 
-  def zrem(key: String, member: Set[String]) = {
-    if (member.isEmpty) {
-      0L
-    } else {
-      withJedisClient[Long] { client =>
-        client.zrem(key, member.toSeq: _*)
-      }
-    }
-  }
-
-  def sAdd(key: String, members: String*) = {
+  def sadd(key: String, members: Seq[String]) = {
     withJedisClient[Long] { client =>
       client.sadd(key, members: _*)
     }
   }
 
-  def sMembers(key: String) = {
+  def smembers(key: String) = {
     withJedisClient[Set[String]] { client =>
       client.smembers(key).toSet
     }
   }
 
   def srandmember(key: String, count: Int = 1) = {
-    withJedisClient[List[String]] { client =>
-      client.srandmember(key, count).toList
+    withJedisClient[Seq[String]] { client =>
+      client.srandmember(key, count).toSeq
     }
   }
 
@@ -119,9 +115,15 @@ object RedisUtils {
     }
   }
 
-  def hget(key: String, field: String): String = {
-    withJedisClient[String] { client =>
-      client.hget(key, field)
+  def hkeys(key: String): Set[String] = {
+    withJedisClient[Set[String]] { client =>
+      client.hkeys(key).toSet
+    }
+  }
+
+  def hget(key: String, field: String): Option[String] = {
+    withJedisClient[Option[String]] { client =>
+      Option(client.hget(key, field))
     }
   }
 
@@ -149,21 +151,9 @@ object RedisUtils {
     }
   }
 
-  def lpush(key: String, fields: String*): Long = {
-    withJedisClient[Long] { client =>
-      client.lpush(key, fields.toSeq: _*)
-    }
-  }
-
   def lrange(key: String, start: Long, end: Long): List[String] = {
     withJedisClient[List[String]] { client =>
       client.lrange(key, start, end).toList
-    }
-  }
-
-  def ltrim(key: String, start: Long, end: Long): String = {
-    withJedisClient[String] { client =>
-      client.ltrim(key, start, end)
     }
   }
 

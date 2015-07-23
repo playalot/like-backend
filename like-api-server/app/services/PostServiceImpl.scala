@@ -96,19 +96,18 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val jian = JianFan.f2j(name)
     val fan = JianFan.j2f(name)
 
-    val query = (for {
-      ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
-      if (tag.tagName.toLowerCase like s"%${jian.toLowerCase}%") || (tag.tagName.toLowerCase like s"%${fan.toLowerCase}%")
-    } yield post)
-      .groupBy(_.id).map(_._1)
-      .sortBy(_.desc)
-      .drop(offset)
-      .take(pageSize)
-    db.run(query.result).flatMap { ids =>
-      val q = (for {
-        (post, user) <- posts join users on (_.userId === _.id) if post.id inSet ids
-      } yield (post, user)).sortBy(_._1.likes.desc)
-      db.run(q.result)
+    val tagQuery = for {
+      tag <- tags if (tag.tagName.toLowerCase like s"%${jian.toLowerCase}%") || (tag.tagName.toLowerCase like s"%${fan.toLowerCase}%")
+    } yield tag.id
+    db.run(tagQuery.result).flatMap { tagIds =>
+      val tIds = tagIds.mkString(", ")
+      val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id in (#$tIds) order by p.created desc limit 20""".as[Long]
+      db.run(query).flatMap { postIds =>
+        val q = (for {
+          (post, user) <- posts join users on (_.userId === _.id) if post.id inSet postIds
+        } yield (post, user)).sortBy(_._1.created.desc)
+        db.run(q.result)
+      }
     }
   }
 

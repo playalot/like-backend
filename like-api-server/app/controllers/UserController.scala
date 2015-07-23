@@ -34,9 +34,10 @@ class UserController @Inject() (
     userService.findById(id).flatMap {
       case Some(user) =>
         for {
-          countFollowers <- userService.countFollowers(user.id.get)
+          countFollowers <- userService.countFollowers(id)
           countFriends <- userService.countFollowings(id)
-          countPosts <- postService.countByUserId(id)
+          countPosts <- postService.countPostsForUser(id)
+          countLikes <- markService.countLikesForUser(id)
           isFollowing <- if (request.userId.isDefined) userService.isFollowing(request.userId.get, id) else Future.successful(0)
         } yield {
           success(Messages("success.found"), Json.obj(
@@ -45,7 +46,7 @@ class UserController @Inject() (
             "avatar" -> QiniuUtil.getAvatar(user.avatar, "large"),
             "origin_avatar" -> QiniuUtil.getAvatar(user.avatar, "origin"),
             "cover" -> QiniuUtil.getSizedImage(user.cover, getScreenWidth),
-            "likes" -> user.likes,
+            "likes" -> countLikes,
             "is_following" -> isFollowing,
             "count" -> Json.obj(
               "post" -> countPosts,

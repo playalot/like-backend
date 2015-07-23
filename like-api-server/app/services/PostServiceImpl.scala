@@ -37,29 +37,21 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def countByUserId(userId: Long): Future[Long] = {
-    //    Option(RedisCacheClient.hget(KeyUtils.user(userId), "posts")) match {
-    //      case Some(number) => Future.successful(number.toInt)
-    //      case None =>
-    db.run(posts.filter(_.userId === userId).length.result).map { number =>
-      //          RedisCacheClient.hset(KeyUtils.user(userId), "posts", number.toString)
-      number
+  override def countPostsForUser(userId: Long): Future[Long] = {
+    RedisCacheClient.hget(KeyUtils.user(userId), "posts") match {
+      case Some(number) => Future.successful(number.toLong)
+      case None =>
+        db.run(posts.filter(_.userId === userId).length.result).map { number =>
+          RedisCacheClient.hset(KeyUtils.user(userId), "posts", number.toString)
+          number
+        }
     }
-    //    }
   }
 
   override def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
     db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).drop(page * pageSize).take(pageSize).result).flatMap { posts =>
       val futures = posts.map { post =>
         val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
-        //        val query = for {
-        //          (mark, tag) <- marks join tags on (_.tagId === _.id)
-        //          if mark.id inSet cachedMarks.keySet
-        //        } yield (mark.id, tag.tagName)
-        //        db.run(query.result).map { list =>
-        //          val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
-        //          (post, marklist)
-        //        }
         if (cachedMarks.nonEmpty) {
           val markIds = cachedMarks.keySet.mkString(", ")
           val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
@@ -75,33 +67,22 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getPostsByIds(ids: Seq[Long]): Future[Seq[(Post, User, Seq[(Long, String, Int)])]] = {
+  override def getPostsByIds(ids: Seq[Long]): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
     if (ids.isEmpty) {
-      Future.successful(Seq[(Post, User, Seq[(Long, String, Int)])]())
+      Future.successful(Seq[(Post, Seq[(Long, String, Int)])]())
     } else {
-      val query = for {
-        (post, user) <- posts join users on (_.userId === _.id)
-        if post.id inSet ids
-      } yield (post, user)
-      db.run(query.result).flatMap { posts =>
-        val futures = posts.map { postAndUser =>
-          val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + postAndUser._1.id.get, offset = 0, limit = 50).map(v => (v._1.toLong, v._2.toInt)).toMap
-
+      db.run(posts.filter(_.id inSet ids).result).flatMap { posts =>
+        val futures = posts.map { post =>
+          val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + post.id.get, offset = 0, limit = 50).map(v => (v._1.toLong, v._2.toInt)).toMap
           if (cachedMarks.nonEmpty) {
             val markIds = cachedMarks.keySet.mkString(", ")
             val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
-            /*
-            val query = for {
-              (mark, tag) <- marks join tags on (_.tagId === _.id)
-              if mark.id inSet cachedMarks.keySet
-            } yield (mark.id, tag.tagName)
-            */
             db.run(query).map { list =>
               val marklist = list.map(row => (row._1, row._2, cachedMarks.getOrElse(row._1, 0)))
-              (postAndUser._1, postAndUser._2, marklist)
+              (post, marklist)
             }
           } else {
-            Future.successful((postAndUser._1, postAndUser._2, Seq()))
+            Future.successful((post, Seq()))
           }
         }
         Future.sequence(futures.toList)
@@ -133,9 +114,10 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def findHotPostForTag(name: String, page: Int = 0, pageSize: Int = 20): Future[Seq[(Post, User)]] = {
     val offset = pageSize * page
+    val ts = DateTime.now().minusDays(15).getMillis / 1000
     val query = (for {
       ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
-      if tag.tagName.toLowerCase === name.toLowerCase
+      if tag.tagName.toLowerCase === name.toLowerCase && post.created > ts
     } yield post.id)
       .sortBy(_.desc)
       .drop(offset)
@@ -158,11 +140,8 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(query.result.headOption)
   }
 
-  override def getPostById(postId: Long): Future[Option[(Post, User)]] = {
-    val query = for {
-      (post, user) <- posts join users on (_.userId === _.id) if post.id === postId
-    } yield (post, user)
-    db.run(query.result.headOption)
+  override def getPostById(postId: Long): Future[Option[Post]] = {
+    db.run(posts.filter(_.id === postId).result.headOption)
   }
 
   override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Map[Long, Int], Seq[(Like, User)], Seq[(Comment, User, Option[User])])] = {
@@ -203,17 +182,16 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def deletePostById(postId: Long, userId: Long): Future[Unit] = {
-    val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + postId, offset = 0, limit = 1000).map(v => (v._1.toLong, v._2.toInt)).toMap
-    Logger.debug("Cached marks: " + cachedMarks)
-
     db.run(marks.filter(_.postId === postId).result).flatMap { markResults =>
       var total: Double = 0
       markResults.foreach { mark =>
-        val likeNum = RedisCacheClient.zscore("post_mark:" + postId, mark.identify).getOrElse(mark.likes.toDouble)
+        val likeNum = RedisCacheClient.zscore("post_mark:" + postId, mark.identify).getOrElse(0.0)
+        // TODO remove
         RedisCacheClient.zincrby("tag_likes", -likeNum, mark.tagId.toString)
         RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -likeNum.toLong)
         total += likeNum
       }
+      // TODO remove
       RedisCacheClient.zincrby("user_likes", -total, userId.toString)
       RedisCacheClient.del("post_mark:" + postId)
       RedisCacheClient.del("push:" + userId)

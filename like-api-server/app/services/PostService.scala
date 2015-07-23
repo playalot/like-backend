@@ -12,13 +12,13 @@ trait PostService {
 
   def insert(post: Post): Future[Post]
 
-  def countByUserId(userId: Long): Future[Long]
+  def countPostsForUser(userId: Long): Future[Long]
 
-  def getPostById(postId: Long): Future[Option[(Post, User)]]
+  def getPostById(postId: Long): Future[Option[Post]]
 
   def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]]
 
-  def getPostsByIds(ids: Seq[Long]): Future[Seq[(Post, User, Seq[(Long, String, Int)])]]
+  def getPostsByIds(ids: Seq[Long]): Future[Seq[(Post, Seq[(Long, String, Int)])]]
 
   def searchByTag(page: Int = 0, pageSize: Int = 20, name: String): Future[Seq[(Post, User)]]
 

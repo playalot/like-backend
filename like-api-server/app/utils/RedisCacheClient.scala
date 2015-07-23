@@ -17,6 +17,12 @@ object RedisCacheClient {
     new JedisPool(new JedisPoolConfig(), host, port, 2000, auth)
   }
 
+  def keys(pattern: String): Set[String] = {
+    withJedisClient[Set[String]] { client =>
+      client.keys(pattern).toSet
+    }
+  }
+
   def zrevrangebyscore(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
     withJedisClient[Set[(String, Double)]] { client =>
       client.zrevrangeByScoreWithScores(key, max, min, offset, limit).map(x => (x.getElement, x.getScore)).toSet
@@ -32,6 +38,12 @@ object RedisCacheClient {
   def zrangebyscore(key: String, min: Double, max: Double, offset: Int, count: Int) = {
     withJedisClient[Set[String]] { client =>
       client.zrangeByScore(key: String, min, max, offset, count).toSet
+    }
+  }
+
+  def zremrangebyscore(key: String, min: Double, max: Double) = {
+    withJedisClient[Long] { client =>
+      client.zremrangeByScore(key: String, min, max)
     }
   }
 

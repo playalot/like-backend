@@ -27,13 +27,11 @@ trait UserService {
 
   def updateMobile(userId: Long, mobilePhoneNumber: String, zone: Int): Future[Unit]
 
-  def count(): Future[Int]
-
-  def countFollowers(id: Long): Future[Int]
+  def countFollowers(id: Long): Future[Long]
 
   def getFollowers(userId: Long, page: Int): Future[Seq[User]]
 
-  def countFollowings(id: Long): Future[Int]
+  def countFollowings(id: Long): Future[Long]
 
   def getFollowings(userId: Long, page: Int): Future[Seq[User]]
 

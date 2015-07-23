@@ -67,7 +67,7 @@ class Application @Inject() (
 
     //    AVOSUtils.pushNotification("")
 
-    //    userService.findById(1).map(println)
+    //    userService.getUserInfo(715).map(x => println(x))
 
     //    userService.findByMobileAndZone("66666688868", 86).map(println)
 
@@ -131,7 +131,7 @@ class Application @Inject() (
     //    markService.rebuildMarkCache()
     //    markService.exportPostWithTags()
     //    markService.exportLikes()
-    Ok(Json.obj("status" -> "1.1.0"))
+    Ok(Json.obj("status" -> "1.2.0"))
   }
 
   def test = SecuredAction { implicit request =>
@@ -149,7 +149,7 @@ class Application @Inject() (
       case _: Throwable => 0
     }
     Ok(Json.obj(
-      "version" -> "1.1.0",
+      "version" -> "1.2.0",
       "nf-event-actor" -> remotes
     ))
   }

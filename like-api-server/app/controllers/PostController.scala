@@ -69,7 +69,7 @@ class PostController @Inject() (
             .map(tag => postService.addMark(post.id.get, request.userId, tag, request.userId).map(mark => (tag, mark)))
 
           for {
-            author <- userService.findById(request.userId)
+            author <- userService.getUserInfo(request.userId)
             results <- Future.sequence(futures)
           } yield {
             val marksJson = results.map { tagAndMark =>
@@ -89,10 +89,10 @@ class PostController @Inject() (
               "place" -> post.place,
               "location" -> Json.toJson(postCommand.location),
               "user" -> Json.obj(
-                "user_id" -> author.get.identify,
-                "nickname" -> author.get.nickname,
-                "avatar" -> QiniuUtil.getAvatar(author.get.avatar, "small"),
-                "likes" -> author.get.likes
+                "user_id" -> request.userId,
+                "nickname" -> author.nickname,
+                "avatar" -> QiniuUtil.getAvatar(author.avatar, "small"),
+                "likes" -> author.likes
               ),
               "marks" -> Json.toJson(marksJson)
             ))
@@ -104,30 +104,31 @@ class PostController @Inject() (
 
   /** Get Post summary and author info */
   def getPost(id: Long) = UserAwareAction.async { implicit request =>
-    postService.getPostById(id).map {
-      case Some(postAndUser) =>
-        val (post, user) = postAndUser
-        val location = try {
-          post.location.map(_.split(" ").map(_.toDouble))
-        } catch {
-          case _: Throwable => None
+    postService.getPostById(id).flatMap {
+      case Some(post) =>
+        userService.getUserInfo(post.userId).map { user =>
+          val location = try {
+            post.location.map(_.split(" ").map(_.toDouble))
+          } catch {
+            case _: Throwable => None
+          }
+          success(Messages("success.found"), Json.obj(
+            "post_id" -> id,
+            "type" -> post.`type`,
+            "content" -> QiniuUtil.getRaw(post.content),
+            "description" -> post.description,
+            "created" -> post.created,
+            "place" -> post.place,
+            "location" -> location,
+            "user" -> Json.obj(
+              "user_id" -> post.userId,
+              "nickname" -> user.nickname,
+              "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+              "likes" -> user.likes
+            )
+          ))
         }
-        success(Messages("success.found"), Json.obj(
-          "post_id" -> id,
-          "type" -> post.`type`,
-          "content" -> QiniuUtil.getRaw(post.content),
-          "description" -> post.description,
-          "created" -> post.created,
-          "place" -> post.place,
-          "location" -> location,
-          "user" -> Json.obj(
-            "user_id" -> user.identify,
-            "nickname" -> user.nickname,
-            "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
-            "likes" -> user.likes
-          )
-        ))
-      case None => error(4020, Messages("invalid.postId"))
+      case None => Future.successful(error(4020, Messages("invalid.postId")))
     }
   }
 
@@ -135,13 +136,13 @@ class PostController @Inject() (
   def deletePost(id: Long) = SecuredAction.async { implicit request =>
     postService.getPostById(id).flatMap {
       case Some(post) =>
-        if (post._1.userId != request.userId) {
+        if (post.userId != request.userId) {
           Future.successful(error(4023, Messages("no.permission")))
         } else {
           for {
             p <- postService.deletePostById(id, request.userId)
             n <- notificationService.deleteAllNotificationForPost(id)
-            r <- postService.recordDelete(post._1.content)
+            r <- postService.recordDelete(post.content)
           } yield {
             success(Messages("success.deletePost"))
           }
@@ -153,7 +154,7 @@ class PostController @Inject() (
   /** Get Post marks and comments */
   def getPostMarks(id: Long, page: Int) = UserAwareAction.async { implicit request =>
     postService.getPostById(id).flatMap {
-      case Some(postAndUser) =>
+      case Some(post) =>
         postService.getMarksForPost(id, page, request.userId).map { result =>
           // result -> (markList, cachedMarks, likeList, commentsOnMarks)
           val scores = result._2
@@ -239,18 +240,17 @@ class PostController @Inject() (
             case Some(post) =>
               // log event
               eventProducerActor ! LikeEvent(None, "mark", "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag))
-
               for {
                 nickname <- userService.getNickname(request.userId)
-                mark <- postService.addMark(postId, post._1.userId, tag, request.userId)
+                mark <- postService.addMark(postId, post.userId, tag, request.userId)
               } yield {
-                if (request.userId != post._1.userId) {
-                  val notifyMarkUser = Notification(None, "MARK", post._1.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
+                if (request.userId != post.userId) {
+                  val notifyMarkUser = Notification(None, "MARK", post.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
                   for {
                     notify <- notificationService.insert(notifyMarkUser)
-                    count <- notificationService.countForUser(post._1.userId)
+                    count <- notificationService.countForUser(post.userId)
                   } yield {
-                    pushService.sendPushNotificationToUser(post._1.userId, Messages("notification.mark", nickname, tag), count)
+                    pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
                   }
                 }
                 success(Messages("success.mark"), Json.obj(

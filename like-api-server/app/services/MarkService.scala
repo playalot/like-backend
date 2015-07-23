@@ -20,6 +20,8 @@ trait MarkService {
 
   def getMarkWithPostAndTag(markId: Long): Future[Option[(Mark, Post, Tag)]]
 
+  def countLikesForUser(userId: Long): Future[Long]
+
   def like(mark: Mark, post: Post, userId: Long): Future[Unit]
 
   def unlike(mark: Mark, post: Post, userId: Long): Future[Unit]

@@ -71,12 +71,29 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(markQuery.result.headOption)
   }
 
+  override def countLikesForUser(userId: Long): Future[Long] = {
+    RedisCacheClient.hget(KeyUtils.user(userId), "likes") match {
+      case Some(number) => Future.successful(number.toLong)
+      case None =>
+        val query = for {
+          (like, mark) <- likes join marks on (_.markId === _.id) if mark.userId === userId
+        } yield like
+        db.run(query.length.result).map { number =>
+          RedisCacheClient.hset(KeyUtils.user(userId), "likes", number.toString)
+          val query = for { u <- users if u.id === userId } yield u.likes
+          query.update(number)
+          number
+        }
+    }
+  }
+
   override def like(mark: Mark, post: Post, userId: Long): Future[Unit] = {
     db.run(likes.filter(l => l.markId === mark.id.get && l.userId === userId).result.headOption).flatMap {
       case Some(like) => Future.successful(())
       case None =>
         db.run(likes += Like(mark.id.get, userId)).map { _ =>
           RedisCacheClient.zincrby("post_mark:" + post.identify, 1, mark.identify)
+          // TODO remove
           RedisCacheClient.zincrby("tag_likes", 1, mark.tagId.toString)
           RedisCacheClient.zincrby("user_likes", 1, post.userId.toString)
           if (post.userId != mark.userId) RedisCacheClient.zincrby("user_likes", 1, mark.userId.toString)

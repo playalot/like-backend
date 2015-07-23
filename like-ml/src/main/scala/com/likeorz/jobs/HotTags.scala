@@ -10,7 +10,7 @@ object HotTags {
 
   def run(days: Int) {
     println(s"$days Days Hot tags job start!")
-    TrainingDataExport.exportTagsAndUsers(days)
+    TrainingDataExport.exportPostTags(days)
     findHotTags(days)
   }
 
@@ -23,14 +23,15 @@ object HotTags {
       .set("spark.driver.allowMultipleContexts", "true")
 
     val sc = new SparkContext(sparkConf)
-    println("Build post category cache start...")
+    println("Hot tags job start...")
+    var preprocessStart = System.nanoTime()
     try {
-      sc.textFile(s"$PREFIX/marks_users_${days}d.csv")
-        .map({ line =>
-          val fields = line.split(",", 2)
-          val userId = fields(0)
-          val tag = fields(1)
-          (tag, userId)
+      sc.textFile(s"$PREFIX/post_tags_${days}d.csv")
+        .flatMap({ line =>
+          val fields = line.split(",")
+          val userId = fields(1)
+          val tags = fields.drop(3)
+          tags.map(t => (t, userId))
         })
         .groupByKey()
         .sortBy(x => x._2.size, ascending = false)
@@ -45,6 +46,9 @@ object HotTags {
       case e: Throwable => throw e
     } finally {
       sc.stop()
+      println("Hot tags job done...")
+      var preprocessElapsed = (System.nanoTime() - preprocessStart) / 1e9
+      println(s"Preprocessing time: $preprocessElapsed sec")
     }
   }
 

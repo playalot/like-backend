@@ -35,6 +35,9 @@ object Test {
 
   }
 
+  def test(): Unit = {
+  }
+
   def cleanLegacy() = {
     println("Clean cache")
     RedisUtils.keys("user_cat:*").foreach { key =>

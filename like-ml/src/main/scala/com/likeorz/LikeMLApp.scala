@@ -1,6 +1,6 @@
 package com.likeorz
 
-import com.likeorz.jobs.{ UserCategories, KMeansOnTags, HotTags }
+import com.likeorz.jobs.{ RebuildCacheJob, UserCategories, KMeansOnTags, HotTags }
 import com.likeorz.mllib.Test
 import scopt.OptionParser
 
@@ -20,9 +20,12 @@ object LikeMLApp {
 
     parser.parse(args, defaultParams).map { params =>
       params.action match {
-        case "TrainCluster" => KMeansOnTags.run(180)
-        case "Cluster"      => UserCategories.run(30)
-        case "HotTags"      => HotTags.run(30)
+        case "Test"               => Test.test()
+        case "TrainCluster"       => KMeansOnTags.run(180)
+        case "Cluster"            => UserCategories.run(30)
+        case "HotTags"            => HotTags.run(30)
+        case "Rebuild-UserCounts" => RebuildCacheJob.rebuildUserCountsCache()
+        case "Rebuild-PostMarks"  => RebuildCacheJob.rebuildMarkCache()
         case "All" =>
           KMeansOnTags.run(180)
           UserCategories.run(30)

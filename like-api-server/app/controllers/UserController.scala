@@ -148,7 +148,7 @@ class UserController @Inject() (
   def suggestTags() = SecuredAction.async { implicit request =>
     tagService.suggestTagsForUser(request.userId).map { tags =>
       val jsonArr = tags.map { tag =>
-        Json.obj("tag" -> tag.tagName)
+        Json.obj("tag" -> tag)
       }
       success(Messages("success.found"), Json.obj("suggests" -> Json.toJson(jsonArr)))
     }

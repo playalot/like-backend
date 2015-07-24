@@ -21,19 +21,22 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
 
   import driver.api._
 
-  override def suggestTagsForUser(userId: Long): Future[Seq[Tg]] = {
+  override def suggestTagsForUser(userId: Long): Future[Seq[String]] = {
 
     val mostUsedQuery = marks.filter(_.userId === userId).map(_.tagId).groupBy(x => x).map(x => (x._1, x._2.length)).sortBy(_._2.desc).map(_._1).take(20)
 
     val recentUsedQuery = marks.filter(_.userId === userId).sortBy(_.created.desc).map(_.tagId).take(5)
 
     for {
+      recommendTags <- db.run(sql"""SELECT tag FROM recommend_tags""".as[String])
       mostUsedIds <- db.run(mostUsedQuery.result)
       recentUsedIds <- db.run(recentUsedQuery.result)
       tags <- db.run(tags.filter(_.id inSet (mostUsedIds.toSet ++ recentUsedIds)).result)
     } yield {
       val (t1, t2) = tags.partition(t => recentUsedIds.contains(t.id.get))
-      t1 ++ t2
+      val result = t1.map(_.tagName) ++ t2.map(_.tagName)
+      if (result.size < 20) result ++ recommendTags.toSeq.take(20 - result.size)
+      else result
     }
   }
 
@@ -63,11 +66,8 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
       case Some(ids) => Future.successful(ids.split(",").filter(_.length > 0).map(_.toLong).toSeq)
       case None =>
         val ts7ago = DateTime.now().minusDays(7).getMillis / 1000
-        val query = marks.filter(_.created > ts7ago).map(_.userId)
-          .groupBy(x => x).map(x => (x._1, x._2.size))
-          .sortBy(_._2.desc)
-          .map(_._1).take(100)
-        db.run(query.result)
+        val query = sql"""SELECT DISTINCT m.user_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag='#$tag' ORDER BY m.created LIMIT 30""".as[Long]
+        db.run(query)
     }
     futureIds.flatMap { pool =>
       val userIds = Random.shuffle(pool).take(num)
@@ -80,4 +80,5 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     val regexList = configuration.getStringList("tag-blacklist").get.toList
     !regexList.exists(r => tag.matches(r))
   }
+
 }

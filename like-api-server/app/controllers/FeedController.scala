@@ -155,27 +155,26 @@ class FeedController @Inject() (
     else List[Long]()
 
     futureIds.flatMap { results =>
+      //      results.foreach(println)
       val showIds = results.flatten.distinct.sortWith(_ > _).take(pageSize)
-      val pointers = results.map(_.headOption.getOrElse(-1L)).toArray
-      val nextTimestamp = Array.fill[Boolean](results.size)(true)
-
+      //      println(showIds)
+      val pointers = results.map(_.sortWith(_ > _).headOption.getOrElse(-1L)).toArray
       if (showIds.isEmpty) {
         Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
       } else {
         results.zipWithIndex.foreach { x =>
-          if (x._1.nonEmpty) {
-            if (x._1.head < showIds.last)
+          if (x._1.nonEmpty)
+            if (x._1.head < showIds.last) {
               // All items in this list less than picked items min timestamp
-              pointers(x._2) = -1L
-            else
+              pointers(x._2) = 0L
+            } else {
               x._1.foreach { id =>
                 if (id >= showIds.last) pointers(x._2) = id
               }
-          } else {
+            }
+          else
             // no items in the next page, set timestamp to -1
             pointers(x._2) = -1L
-            nextTimestamp(x._2) = false
-          }
         }
 
         // Get posts from given ids
@@ -185,14 +184,15 @@ class FeedController @Inject() (
             Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
           } else {
             val idTsMap = list.map(x => (x._1.id.get, x._1.created)).toMap
-            val nextTs = pointers.zipWithIndex.map { x =>
-              val (pt, i) = x
-              if (pt == -1L) {
-                if (nextTimestamp(i)) ""
-                else "-1"
-              } else {
-                idTsMap.get(pt).map(_.toString).getOrElse("-1")
-              }
+            val nextTs = pointers.zipWithIndex.map {
+              case (pt, i) =>
+                if (pt == 0) {
+                  ts(i).getOrElse("")
+                } else if (pt == -1L) {
+                  "-1"
+                } else {
+                  idTsMap.get(pt).map(_.toString).getOrElse("-1")
+                }
             }.mkString(",")
 
             val promotePosts = list.filter(p => ads.contains(p._1.id.get))
@@ -369,7 +369,7 @@ class FeedController @Inject() (
       // Use phone screen width for output photo size
       val screenWidth = getScreenWidth
 
-      postService.getFollowingPosts(request.userId.get, 20, timestamp).flatMap { ids =>
+      postService.getFollowingPosts(request.userId.get, 10, timestamp).flatMap { ids =>
         if (ids.isEmpty) {
           Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
         } else {

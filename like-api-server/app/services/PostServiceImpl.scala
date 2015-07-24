@@ -93,21 +93,15 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def searchByTag(page: Int = 0, pageSize: Int = 18, name: String = "%"): Future[Seq[(Post, User)]] = {
     val offset = pageSize * page
 
-    val jian = JianFan.f2j(name)
-    val fan = JianFan.j2f(name)
+    val jian = JianFan.f2j(name).toLowerCase
+    val fan = JianFan.j2f(name).toLowerCase
 
-    val tagQuery = for {
-      tag <- tags if (tag.tagName.toLowerCase like s"%${jian.toLowerCase}%") || (tag.tagName.toLowerCase like s"%${fan.toLowerCase}%")
-    } yield tag.id
-    db.run(tagQuery.result).flatMap { tagIds =>
-      val tIds = tagIds.mkString(", ")
-      val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id in (#$tIds) order by p.created desc limit 20""".as[Long]
-      db.run(query).flatMap { postIds =>
-        val q = (for {
-          (post, user) <- posts join users on (_.userId === _.id) if post.id inSet postIds
-        } yield (post, user)).sortBy(_._1.created.desc)
-        db.run(q.result)
-      }
+    val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' order by p.created desc  limit $offset,$pageSize""".as[Long]
+    db.run(query).flatMap { postIds =>
+      val q = (for {
+        (post, user) <- posts join users on (_.userId === _.id) if post.id inSet postIds
+      } yield (post, user)).sortBy(_._1.created.desc)
+      db.run(q.result)
     }
   }
 
@@ -143,17 +137,20 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(posts.filter(_.id === postId).result.headOption)
   }
 
-  override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Map[Long, Int], Seq[(Like, User)], Seq[(Comment, User, Option[User])])] = {
+  override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])] = {
     // Get top 10 marks for the post from cache
     val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + postId, offset = page * 10, limit = 10).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
     // Query marks with tagname and user order by created desc
     // TODO: user from cache
-    val marksQuery = (for {
-      ((mark, tag), user) <- marks join tags on (_.tagId === _.id) join users on (_._1.userId === _.id)
-      if (mark.postId === postId) && (mark.id inSet cachedMarks.keySet)
-    } yield (mark.id, tag.tagName, mark.created, user)).sortBy(_._3.desc)
+    val markIds = cachedMarks.keySet.mkString(", ")
+    val marksQuery = sql"""SELECT m.id, t.tag, m.created, m.user_id, u.nickname, u.avatar, u.likes FROM mark m INNER JOIN tag t ON m.tag_id=t.id INNER JOIN user u ON m.user_id=u.id WHERE m.id in (#$markIds)""".as[(Long, String, Long, Long, String, String, Long)]
+
+    //    val mQuery = (for {
+    //      ((mark, tag), user) <- marks join tags on (_.tagId === _.id) join users on (_._1.userId === _.id)
+    //      if mark.id inSet cachedMarks.keySet
+    //    } yield (mark.id, tag.tagName, mark.created, user))
 
     //    val likesQuery = for {
     //      like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
@@ -161,22 +158,21 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
     // Query all likes on the given set of marks
     val likesQuery = for {
-      (like, user) <- likes join users on (_.userId === _.id)
-      if like.markId inSet cachedMarks.keySet
-    } yield (like, user)
+      like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
+    } yield like.markId
 
     // Query all comments on the give set of marks
     val commentsQuery = for {
       ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
       if comment.markId inSet cachedMarks.keySet
     } yield (comment, user, reply)
-
     for {
-      markList <- db.run(marksQuery.result)
+      markList <- if (cachedMarks.keySet.nonEmpty) db.run(marksQuery) else Future.successful(Seq())
       likeList <- db.run(likesQuery.result)
       commentsOnMarks <- db.run(commentsQuery.result)
     } yield {
-      (markList, cachedMarks, likeList, commentsOnMarks)
+      //      (markList, cachedMarks, likeList, commentsOnMarks)
+      (markList, likeList.toSet, cachedMarks, commentsOnMarks)
     }
   }
 
@@ -255,36 +251,42 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def getRecommendedPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
     if (timestamp.isDefined) {
-      db.run(recommends.filter(_.created < timestamp.get).sortBy(_.created.desc).take(pageSize).map(_.postId).result)
+      val query = (for {
+        (recommend, post) <- recommends join posts on (_.postId === _.id) if post.created < timestamp.get
+      } yield post.id).sortBy(x => x.desc).take(pageSize)
+      db.run(query.result)
     } else {
-      db.run(recommends.sortBy(_.created.desc).take(pageSize).map(_.postId).result)
+      val query = (for {
+        (recommend, post) <- recommends join posts on (_.postId === _.id)
+      } yield post.id).sortBy(x => x.desc).take(pageSize)
+      db.run(query.result)
     }
   }
 
   override def getFollowingPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
-    db.run(follows.filter(_.fromId === userId).take(10000).map(_.toId).result).flatMap { userIds =>
+    db.run(follows.filter(_.fromId === userId).map(_.toId).result).flatMap { userIds =>
       if (timestamp.isDefined) {
-        db.run(posts.filter(p => p.userId.inSet(userIds.+:(userId)) && p.created < timestamp.get).sortBy(_.created.desc).take(pageSize).map(_.id).result)
+        db.run(posts.filter(p => p.userId.inSet(userIds.+:(userId)) && p.created < timestamp.get).sortBy(_.created.desc).map(_.id).take(pageSize).result)
       } else {
-        db.run(posts.filter(_.userId.inSet(userIds.+:(userId))).sortBy(_.created.desc).take(pageSize).map(_.id).result)
+        db.run(posts.filter(_.userId.inSet(userIds.+:(userId))).sortBy(_.created.desc).map(_.id).take(pageSize).result)
       }
     }
   }
 
   override def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
-    db.run(marks.filter(_.userId === userId).sortBy(_.created.desc).map(_.tagId).take(10000).result).map(_.toSet).flatMap { tagIds =>
-      if (timestamp.isDefined) {
-        val query = (for {
-          (mark, post) <- marks join posts on (_.postId === _.id)
-          if mark.userId =!= userId && mark.tagId.inSet(tagIds) && mark.created < timestamp.get
-        } yield post).groupBy(_.id).map(_._1).sortBy(_.desc).take(pageSize)
-        db.run(query.result)
+    val tagIdsQuery = sql"""SELECT DISTINCT tag_id FROM mark WHERE user_id=$userId order by created desc limit 100""".as[Long]
+    db.run(tagIdsQuery).flatMap { tagIds =>
+      if (tagIds.nonEmpty) {
+        val tIds = tagIds.mkString(", ")
+        val query = if (timestamp.isDefined) {
+          val ts = timestamp.get
+          sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[Long]
+        } else {
+          sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[Long]
+        }
+        db.run(query)
       } else {
-        val query = (for {
-          (mark, post) <- marks join posts on (_.postId === _.id)
-          if mark.userId =!= userId && mark.tagId.inSet(tagIds)
-        } yield post).groupBy(_.id).map(_._1).sortBy(_.desc).take(pageSize)
-        db.run(query.result)
+        Future.successful(Seq())
       }
     }
   }

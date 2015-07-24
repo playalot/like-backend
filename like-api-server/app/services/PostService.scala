@@ -26,7 +26,7 @@ trait PostService {
 
   def getTagPostImage(name: String): Future[Option[String]]
 
-  def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, User)], Map[Long, Int], Seq[(Like, User)], Seq[(Comment, User, Option[User])])]
+  def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])]
 
   def deletePostById(postId: Long, userId: Long): Future[Unit]
 

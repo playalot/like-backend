@@ -50,8 +50,8 @@ class AdminPasswordInfoDAO @Inject() (protected val dbConfigProvider: DatabaseCo
    * @return a future with added password info
    */
   override def add(loginInfo: LoginInfo, passwordInfo: PasswordInfo): Future[PasswordInfo] =
-    db.run(admins.filter(_.email === loginInfo.providerKey).map(_.id).result.head).flatMap {
-      loginInfoId => db.run(adminPasswordInfos += AdminPasswordInfo(loginInfoId, passwordInfo.hasher, passwordInfo.password, passwordInfo.salt))
+    db.run(admins.filter(_.email === loginInfo.providerKey).map(_.id).result.head).flatMap { adminId =>
+      db.run(adminPasswordInfos += AdminPasswordInfo(adminId, passwordInfo.hasher, passwordInfo.password, passwordInfo.salt)).map(println)
     }.map(_ => passwordInfo)
 
   /**

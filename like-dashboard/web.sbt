@@ -1,4 +1,8 @@
-//JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
+import com.tuplejump.sbt.yeoman.Yeoman
+
+import scalariform.formatter.preferences._
+
+JsEngineKeys.engineType := JsEngineKeys.EngineType.Node
 
 RjsKeys.generateSourceMaps := false
 
@@ -17,6 +21,8 @@ libraryDependencies ++= Seq(
   "org.webjars"    % "react-router"    % "0.13.2",
   "org.webjars"    % "react"           % "0.13.3",
   "org.webjars"    % "react-bootstrap" % "0.23.7",
+  "org.webjars.bower" % "react-router-bootstrap" % "0.13.4",
+  "org.webjars.bower" % "reflux"       % "0.2.9",
   "org.webjars"    % "momentjs"        % "2.10.3",
   "org.webjars"    % "Pikaday"         % "1.3.0",
   "org.webjars"    % "json3"           % "3.3.2"
@@ -24,11 +30,25 @@ libraryDependencies ++= Seq(
 
 RjsKeys.webJarCdns := Map.empty
 
+// RequireJS with sbt-rjs (https://github.com/sbt/sbt-rjs#sbt-rjs)
+// ~~~
+RjsKeys.paths += ("jsRoutes" -> ("/jsroutes" -> "empty:"))
+
 RjsKeys.mainModule := "main"
 
-//RjsKeys.modules ++= Seq(
-//  WebJs.JS.Object("name" -> "main",
-//    "include" -> "main",
-//    "generateSourceMaps" -> false
-//  )
-//)
+ReactJsKeys.harmony := true
+
+ReactJsKeys.es6module := true
+
+Yeoman.yeomanSettings ++ Yeoman.withTemplates
+
+//********************************************************
+// Scalariform settings
+//********************************************************
+
+defaultScalariformSettings
+
+ScalariformKeys.preferences := ScalariformKeys.preferences.value
+  .setPreference(FormatXml, false)
+  .setPreference(DoubleIndentClassDeclaration, false)
+  .setPreference(PreserveDanglingCloseParenthesis, true)

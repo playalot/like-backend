@@ -1,0 +1,22 @@
+{
+  "name": "like-dashboard",
+  "version": "1.1.0",
+  "authors": [
+    "Guan Guan"
+  ],
+  "moduleType": [
+    "node"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "app/vendor",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "*",
+    "font-awesome": "*"
+  }
+}

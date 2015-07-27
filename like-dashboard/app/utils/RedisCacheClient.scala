@@ -17,7 +17,7 @@ object RedisCacheClient {
     new JedisPool(new JedisPoolConfig(), host, port, 2000, auth)
   }
 
-  def zRevRangeByScore(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
+  def zrevrangebyscore(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
     withJedisClient[Set[(String, Double)]] { client =>
       client.zrevrangeByScoreWithScores(key, max, min, offset, limit).map(x => (x.getElement, x.getScore)).toSet
     }
@@ -35,7 +35,7 @@ object RedisCacheClient {
     }
   }
 
-  def zScore(key: String, member: String): Option[Double] = {
+  def zscore(key: String, member: String): Option[Double] = {
     withJedisClient[Option[Double]] { client =>
       val score = client.zscore(key, member)
       if (score == null) None
@@ -55,39 +55,39 @@ object RedisCacheClient {
     }
   }
 
-  def zAdd(key: String, score: Double, member: String) = {
+  def zadd(key: String, score: Double, member: String) = {
     withJedisClient[Long] { client =>
       client.zadd(key: String, score, member)
     }
   }
 
-  def zIncrBy(key: String, score: Double, member: String) = {
+  def zincrby(key: String, score: Double, member: String) = {
     withJedisClient[Double] { client =>
       client.zincrby(key: String, score, member)
     }
   }
 
-  def zRem(key: String, member: String) = {
+  def zrem(key: String, member: String) = {
     withJedisClient[Long] { client =>
       client.zrem(key, member)
     }
   }
 
-  def sAdd(key: String, members: String*) = {
+  def sadd(key: String, members: Seq[String]) = {
     withJedisClient[Long] { client =>
       client.sadd(key, members: _*)
     }
   }
 
-  def sMembers(key: String) = {
+  def smembers(key: String) = {
     withJedisClient[Set[String]] { client =>
       client.smembers(key).toSet
     }
   }
 
   def srandmember(key: String, count: Int = 1) = {
-    withJedisClient[List[String]] { client =>
-      client.srandmember(key, count).toList
+    withJedisClient[Seq[String]] { client =>
+      client.srandmember(key, count).toSeq
     }
   }
 
@@ -103,9 +103,15 @@ object RedisCacheClient {
     }
   }
 
-  def hget(key: String, field: String): String = {
-    withJedisClient[String] { client =>
-      client.hget(key, field)
+  def hkeys(key: String): Set[String] = {
+    withJedisClient[Set[String]] { client =>
+      client.hkeys(key).toSet
+    }
+  }
+
+  def hget(key: String, field: String): Option[String] = {
+    withJedisClient[Option[String]] { client =>
+      Option(client.hget(key, field))
     }
   }
 
@@ -133,21 +139,9 @@ object RedisCacheClient {
     }
   }
 
-  def lpush(key: String, fields: String*): Long = {
-    withJedisClient[Long] { client =>
-      client.lpush(key, fields.toSeq: _*)
-    }
-  }
-
   def lrange(key: String, start: Long, end: Long): List[String] = {
     withJedisClient[List[String]] { client =>
       client.lrange(key, start, end).toList
-    }
-  }
-
-  def ltrim(key: String, start: Long, end: Long): String = {
-    withJedisClient[String] { client =>
-      client.ltrim(key, start, end)
     }
   }
 
@@ -156,7 +150,7 @@ object RedisCacheClient {
     try {
       f(jedis)
     } finally {
-      jedisPool.returnResourceObject(jedis)
+      jedis.close()
     }
   }
 

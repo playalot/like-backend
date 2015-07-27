@@ -27,6 +27,7 @@ class ServiceModule extends AbstractModule with ScalaModule {
   override def configure() {
     bind[AdminService].to[AdminServiceImpl]
     bind[PostService].to[PostServiceImpl]
+    bind[UserService].to[UserServiceImpl]
     bind[DelegableAuthInfoDAO[PasswordInfo]].to[AdminPasswordInfoDAO]
     bind[CacheLayer].to[PlayCacheLayer]
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator())

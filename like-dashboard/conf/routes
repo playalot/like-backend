@@ -3,9 +3,20 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
 GET     /signIn                     controllers.Application.signIn
+GET     /signOut                    controllers.Application.signOut
 POST    /authenticate/credentials   controllers.Application.authenticate
+
+# API
+GET     /admin/email                controllers.Application.getEmail
+GET     /api/posts/:pg              controllers.ApiController.list(pg: Int)
+GET     /api/user/:id/info          controllers.ApiController.userInfo(id: Long)
+
+
+# Yeoman
+GET      /                          controllers.YeomanController.index
+GET      /*file                     controllers.YeomanController.at(file)
+
 
 # GET     /recommend/:id              controllers.Application.recommend(id: Long)
 

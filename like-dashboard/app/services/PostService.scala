@@ -1,6 +1,7 @@
 package services
 
 import com.likeorz.models.{ User, Post }
+import models.Page
 
 import scala.concurrent.Future
 
@@ -20,5 +21,11 @@ trait PostService {
 
   def getPersonalCategoryPosts(userId: Long): Seq[Long]
 
-  def getRandomUsers(): Future[Seq[User]]
+  def getRandomUsers: Future[Seq[User]]
+
+  def list(page: Int = 0, pageSize: Int = 10): Future[Page[(Post, Seq[(Long, String, Int)])]]
+
+  def hidePost(postId: Long): Future[Boolean]
+
+  def deletePostById(postId: Long, userId: Long): Future[Unit]
 }

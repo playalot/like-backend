@@ -18,7 +18,7 @@ import net.ceedubs.ficus.Ficus._
 import play.api.Configuration
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.mvc.Action
+import play.api.mvc._
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -34,9 +34,12 @@ class Application @Inject() (
     configuration: Configuration,
     clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
 
-  def index = SecuredAction {
+  //  def index = SecuredAction { implicit request =>
+  //    Ok(views.html.app("Like - Dashboard"))
+  //  }
 
-    Ok(views.html.index("Your new application is ready."))
+  def getEmail = SecuredAction { implicit request =>
+    Ok(request.identity.email)
   }
 
   /**
@@ -46,9 +49,17 @@ class Application @Inject() (
    */
   def signIn = UserAwareAction.async { implicit request =>
     request.identity match {
-      case Some(user) => Future.successful(Redirect(routes.Application.index()))
+      case Some(user) => Future.successful(Redirect("/"))
       case None       => Future.successful(Ok(views.html.signIn(SignInForm.form)))
     }
+  }
+
+  /**
+   * Manages the sign out action.
+   */
+  def signOut = SecuredAction.async { implicit request =>
+    env.eventBus.publish(LogoutEvent(request.identity, request, request2Messages))
+    env.authenticatorService.discard(request.authenticator, Ok)
   }
 
   /**
@@ -62,7 +73,7 @@ class Application @Inject() (
       data => {
         val credentials = Credentials(data.email, data.password)
         credentialsProvider.authenticate(credentials).flatMap { loginInfo =>
-          val result = Redirect(routes.Application.index())
+          val result = Redirect("/")
           adminService.retrieve(loginInfo).flatMap {
             case Some(user) =>
               val c = configuration.underlying

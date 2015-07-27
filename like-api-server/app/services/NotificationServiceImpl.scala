@@ -46,6 +46,20 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
     }
   }
 
+  override def countUnreadLikesForUser(userId: Long): Future[Int] = {
+    RedisCacheClient.zscore("user_notifies", userId.toString) match {
+      case Some(ts) =>
+        for {
+          count <- db.run(notifications.filter(x => x.userId === userId && x.updated >= ts.toLong && x.`type` === "LIKE").length.result)
+        } yield {
+          count
+        }
+      case None =>
+        RedisCacheClient.zadd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
+        Future.successful(0)
+    }
+  }
+
   override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 30): Future[Seq[(Notification, User, Option[(Post, User)])]] = {
 
     val q = if (timestamp.isDefined) {

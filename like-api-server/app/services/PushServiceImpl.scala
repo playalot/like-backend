@@ -39,7 +39,6 @@ class PushServiceImpl @Inject() (system: ActorSystem, protected val dbConfigProv
   }
 
   override def sendPushNotificationToUser(userId: Long, alert: String, badge: Int, extra: JsObject = Json.obj()): Future[Unit] = {
-
     db.run(installations.filter(i => i.deviceType === "ios" && i.userId === userId).result.headOption).map {
       case Some(install) => sendPushNotification(PushNotification(install.objectId, alert, badge, extra))
       case None          => ()

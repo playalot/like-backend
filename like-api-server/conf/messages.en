@@ -65,3 +65,4 @@ notification.comment = {0}评论了你的标签#{1}#
 notification.reply = {0}在标签#{1}#中回复了你
 notification.mark = {0}为你添加了标签#{1}#
 notification.follow = {0}刚刚关注了你
+notification.like = 你收到了{0}个赞,快来看看

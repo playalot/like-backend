@@ -2,6 +2,7 @@ package modules
 
 import actors.{ ClassificationActor, EventProducerActor }
 import com.google.inject.{ Provides, AbstractModule }
+import com.likeorz.actors.PushLikeNotificationActor
 import com.mohiva.play.silhouette.api.EventBus
 import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
 import com.mohiva.play.silhouette.impl.providers.oauth2.state.{ CookieStateProvider, CookieStateSettings }
@@ -43,6 +44,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     bind[Clock].toInstance(Clock())
     bindActor[EventProducerActor]("event-producer-actor")
     bindActor[ClassificationActor]("classification-actor")
+    bindActor[PushLikeNotificationActor]("push-likes-actor")
   }
 
   /**

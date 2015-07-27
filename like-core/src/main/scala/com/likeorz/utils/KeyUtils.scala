@@ -27,5 +27,7 @@ object KeyUtils {
   def hotUsers: String = "hot_users"
 
   def hotTagsWithUsers: String = "hot_tags_users"
+
+  def pushLikes: String = "push_likes"
 }
 

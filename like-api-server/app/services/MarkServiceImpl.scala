@@ -92,14 +92,16 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       case Some(like) => Future.successful(())
       case None =>
         db.run(likes += Like(mark.id.get, userId)).map { _ =>
-          RedisCacheClient.zincrby("post_mark:" + post.identify, 1, mark.identify)
-          // TODO remove
-          RedisCacheClient.zincrby("tag_likes", 1, mark.tagId.toString)
-          RedisCacheClient.zincrby("user_likes", 1, post.userId.toString)
-          if (post.userId != mark.userId) RedisCacheClient.zincrby("user_likes", 1, mark.userId.toString)
+          RedisCacheClient.zincrby(KeyUtils.postMark(post.id.get), 1, mark.identify)
           // Increate user info cache
           RedisCacheClient.hincrBy(KeyUtils.user(post.userId), "likes", 1)
-          if (post.userId != mark.userId) RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", 1)
+          RedisCacheClient.zincrby(KeyUtils.pushLikes, 1, post.userId.toString)
+
+          if (post.userId != mark.userId) {
+            RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", 1)
+            // Increase like push cached which is to be pushed as notification to user
+            RedisCacheClient.zincrby(KeyUtils.pushLikes, 1, mark.userId.toString)
+          }
           ()
         }
     }
@@ -108,17 +110,18 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def unlike(mark: Mark, post: Post, userId: Long): Future[Unit] = {
     db.run(likes.filter(l => l.markId === mark.id.get && l.userId === userId).delete).map { result =>
       if (result > 0) {
-        RedisCacheClient.zincrby("post_mark:" + mark.postId, -1, mark.identify)
-        if (RedisCacheClient.zscore("post_mark:" + mark.postId, mark.identify).getOrElse(-1.0) <= 0) {
-          RedisCacheClient.zrem("post_mark:" + mark.postId, mark.identify)
+        RedisCacheClient.zincrby(KeyUtils.postMark(mark.postId), -1, mark.identify)
+        if (RedisCacheClient.zscore(KeyUtils.postMark(mark.postId), mark.identify).getOrElse(-1.0) <= 0) {
+          RedisCacheClient.zrem(KeyUtils.postMark(mark.postId), mark.identify)
           db.run(marks.filter(_.id === mark.id).delete)
         }
-        RedisCacheClient.zincrby("tag_likes", -1, mark.tagId.toString)
-        RedisCacheClient.zincrby("user_likes", -1, post.userId.toString)
-        if (post.userId != mark.userId) RedisCacheClient.zincrby("user_likes", -1, mark.userId.toString)
         // Decreate user info cache
         RedisCacheClient.hincrBy(KeyUtils.user(post.userId), "likes", -1)
-        if (post.userId != mark.userId) RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -1)
+        RedisCacheClient.zincrby(KeyUtils.pushLikes, -1, post.userId.toString)
+        if (post.userId != mark.userId) {
+          RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -1)
+          RedisCacheClient.zincrby(KeyUtils.pushLikes, -1, mark.userId.toString)
+        }
         ()
       }
     }

@@ -4,9 +4,10 @@ import javax.inject.{ Named, Inject }
 
 import akka.actor.{ ActorRef, ActorPath, ActorSystem }
 import akka.pattern.ask
-import com.likeorz.common.ApiServerRemoteCount
+import com.likeorz.common.{ PushUnreadLikes, ApiServerRemoteCount }
 import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ User, Notification }
+import org.joda.time.DateTime
 import play.api._
 import play.api.i18n.{ Lang, Messages, MessagesApi }
 import play.api.libs.json.Json
@@ -22,6 +23,7 @@ class Application @Inject() (
     system: ActorSystem,
     @Named("event-producer-actor") eventProducerActor: ActorRef,
     @Named("classification-actor") classificationActor: ActorRef,
+    @Named("push-likes-actor") pushLikesActor: ActorRef,
     val messagesApi: MessagesApi,
     userService: UserService,
     markService: MarkService,
@@ -29,6 +31,11 @@ class Application @Inject() (
     postService: PostService,
     tagService: TagService,
     notificationService: NotificationService) extends BaseController {
+
+
+  system.scheduler.schedule((60 - DateTime.now().getMinuteOfHour()).minutes, 1.hour) {
+    pushLikesActor ! PushUnreadLikes
+  }
 
   def index = Action { implicit request =>
 

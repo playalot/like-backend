@@ -11,4 +11,5 @@ case class Post(
   likes: Long,
   place: Option[String] = None,
   location: Option[String] = None,
-  description: Option[String] = None) extends Identifier
+  description: Option[String] = None,
+  score: Option[Int] = Some(0)) extends Identifier

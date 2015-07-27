@@ -19,7 +19,8 @@ trait PostsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def place = column[String]("place")
     def location = column[String]("location")
     def description = column[String]("description")
-    override def * = (id.?, content, `type`, userId, created, updated, tagId, likes, place.?, location.?, description.?) <> (Post.tupled, Post.unapply _)
+    def score = column[Int]("score")
+    override def * = (id.?, content, `type`, userId, created, updated, tagId, likes, place.?, location.?, description.?, score.?) <> (Post.tupled, Post.unapply _)
   }
 
   protected val posts = TableQuery[PostsTable]

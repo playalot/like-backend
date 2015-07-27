@@ -119,7 +119,7 @@ class SearchController @Inject() (
     UserAwareAction.async { implicit request =>
       for {
         hotUsers <- tagService.hotUsersForTag(tag, 15)
-        results <- postService.findHotPostForTag(tag)
+        results <- postService.searchByTag(0, 30, tag)
       } yield {
         val hotUsersJson = Json.toJson(hotUsers.map { user =>
           Json.obj(

@@ -131,21 +131,20 @@ class FeedController @Inject() (
   }
 
   // Get home feeds, ordered by created
-  def getHomeFeedsV2(timestamp: Option[String] = None) = UserAwareAction.async { implicit request =>
+  def getHomeFeedsV2(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
     val screenWidth = scala.math.min(1242, (getScreenWidth * 1.656).toInt)
     val pageSize = 10
-    // Parse timestamp list used for each data source
-    val ts = HelperUtils.parseTimestamp(timestamp)
+
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
-      val recommendIds = postService.getRecommendedPosts(pageSize, ts.head)
-      val followIds = postService.getFollowingPosts(request.userId.get, pageSize, ts(1))
-      val taggedIds = postService.getTaggedPosts(request.userId.get, pageSize, ts(2))
+      val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
+      val followIds = postService.getFollowingPosts(request.userId.get, pageSize, timestamp)
+      val taggedIds = postService.getTaggedPosts(request.userId.get, pageSize, timestamp)
       //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.5))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
     } else {
-      val recommendIds = postService.getRecommendedPosts(pageSize, ts.head)
+      val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
       Future.sequence(Seq(recommendIds))
     }
 
@@ -154,95 +153,100 @@ class FeedController @Inject() (
       RedisCacheClient.srandmember(KeyUtils.postPromote).map(_.toLong)
     else List[Long]()
 
-    futureIds.flatMap { results =>
-      //      results.foreach(println)
-      val showIds = results.flatten.distinct.sortWith(_ > _).take(pageSize)
-      //      println(showIds)
-      val pointers = results.map(_.sortWith(_ > _).headOption.getOrElse(-1L)).toArray
-      if (showIds.isEmpty) {
-        Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
-      } else {
-        results.zipWithIndex.foreach { x =>
-          if (x._1.nonEmpty)
-            if (x._1.head < showIds.last) {
-              // All items in this list less than picked items min timestamp
-              pointers(x._2) = 0L
-            } else {
-              x._1.foreach { id =>
-                if (id >= showIds.last) pointers(x._2) = id
-              }
-            }
-          else
-            // no items in the next page, set timestamp to -1
-            pointers(x._2) = -1L
-        }
-
-        // Get posts from given ids
-        postService.getPostsByIds(showIds ++ ads).flatMap { list =>
-          // Handle empty results
-          if (list.isEmpty) {
-            Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
-          } else {
-            val idTsMap = list.map(x => (x._1.id.get, x._1.created)).toMap
-            val nextTs = pointers.zipWithIndex.map {
-              case (pt, i) =>
-                if (pt == 0) {
-                  ts(i).getOrElse("")
-                } else if (pt == -1L) {
-                  "-1"
-                } else {
-                  idTsMap.get(pt).map(_.toString).getOrElse("-1")
+    postService.getTaggedPostsTags(request.userId.getOrElse(-1L), pageSize, timestamp).flatMap { reasonTags =>
+      futureIds.flatMap { results =>
+        //      results.foreach(println)
+        val showIds = results.flatten.distinct.sortWith(_ > _).take(pageSize)
+        //      println(showIds)
+        val pointers = results.map(_.sortWith(_ > _).headOption.getOrElse(-1L)).toArray
+        if (showIds.isEmpty) {
+          Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
+        } else {
+          results.zipWithIndex.foreach { x =>
+            if (x._1.nonEmpty)
+              if (x._1.head < showIds.last) {
+                // All items in this list less than picked items min timestamp
+                pointers(x._2) = 0L
+              } else {
+                x._1.foreach { id =>
+                  if (id >= showIds.last) pointers(x._2) = id
                 }
-            }.mkString(",")
+              }
+            else
+              // no items in the next page, set timestamp to -1
+              pointers(x._2) = -1L
+          }
 
-            val promotePosts = list.filter(p => ads.contains(p._1.id.get))
-            val postList = list.filter(p => showIds.contains(p._1.id.get) && !ads.contains(p._1.id.get)).sortBy(-_._1.created).toList
+          // Get posts from given ids
+          postService.getPostsByIds(showIds ++ ads).flatMap { list =>
+            // Handle empty results
+            if (list.isEmpty) {
+              Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
+            } else {
+              val idTsMap = list.map(x => (x._1.id.get, x._1.created)).toMap
+              val nextTs = idTsMap.getOrElse(showIds.last, -1L)
 
-            val posts = if (promotePosts.nonEmpty) HelperUtils.insertAt(promotePosts.head, HelperUtils.random(3, 3), postList) else postList
+              val promotePosts = list.filter(p => ads.contains(p._1.id.get))
+              val postList = list.filter(p => showIds.contains(p._1.id.get) && !ads.contains(p._1.id.get)).sortBy(-_._1.created).toList
 
-            // Filter user who is in blacklist
-            val userBlacklist = RedisCacheClient.smembers(KeyUtils.userBlacklist).map(_.toLong)
+              val posts = if (promotePosts.nonEmpty) HelperUtils.insertAt(promotePosts.head, HelperUtils.random(3, 3), postList) else postList
 
-            val futures = posts.filterNot(p => userBlacklist.contains(p._1.userId)).map { row =>
-              val post = row._1
-              val markIds = row._2.map(_._1)
-              for {
-                userInfo <- userService.getUserInfo(post.userId)
-                likedMarks <- markService.checkLikes(request.userId.getOrElse(-1L), markIds)
-              } yield {
-                val marksJson = row._2.sortBy(-_._3).map { fields =>
+              // Filter user who is in blacklist
+              val userBlacklist = RedisCacheClient.smembers(KeyUtils.userBlacklist).map(_.toLong)
+
+              val futures = posts.filterNot(p => userBlacklist.contains(p._1.userId)).map { row =>
+                val post = row._1
+                // Find post shown reason
+                var reason: Int = -1
+                var reasonTag: String = null
+                if (results.length == 3 && results(2).contains(post.id.get)) {
+                  reason = 1
+                  row._2.map(_._2).find(t => reasonTags.contains(t)).foreach(t => reasonTag = t)
+                } else if (results.length == 2 && results(1).contains(post.id.get)) {
+                  reason = 3
+                } else if (results.head.contains(post.id.get)) {
+                  reason = 2
+                }
+                val markIds = row._2.map(_._1)
+                for {
+                  userInfo <- userService.getUserInfo(post.userId)
+                  likedMarks <- markService.checkLikes(request.userId.getOrElse(-1L), markIds)
+                } yield {
+                  val marksJson = row._2.sortBy(-_._3).map { fields =>
+                    Json.obj(
+                      "mark_id" -> fields._1,
+                      "tag" -> fields._2,
+                      "likes" -> fields._3,
+                      "is_liked" -> likedMarks.contains(fields._1)
+                    )
+                  }
                   Json.obj(
-                    "mark_id" -> fields._1,
-                    "tag" -> fields._2,
-                    "likes" -> fields._3,
-                    "is_liked" -> likedMarks.contains(fields._1)
+                    "post_id" -> post.id.get,
+                    "type" -> post.`type`,
+                    "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                    "created" -> post.created,
+                    "reason" -> reason,
+                    "reason_tag" -> reasonTag,
+                    "user" -> Json.obj(
+                      "user_id" -> post.userId,
+                      "nickname" -> userInfo.nickname,
+                      "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
+                      "likes" -> userInfo.likes
+                    ),
+                    "marks" -> Json.toJson(marksJson)
                   )
                 }
-                Json.obj(
-                  "post_id" -> post.id.get,
-                  "type" -> post.`type`,
-                  "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
-                  "created" -> post.created,
-                  "user" -> Json.obj(
-                    "user_id" -> post.userId,
-                    "nickname" -> userInfo.nickname,
-                    "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
-                    "likes" -> userInfo.likes
-                  ),
-                  "marks" -> Json.toJson(marksJson)
-                )
+              }
+              Future.sequence(futures).map { posts =>
+                success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts), "next" -> nextTs.toString))
               }
             }
-            Future.sequence(futures).map { posts =>
-              success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts), "next" -> nextTs))
-            }
           }
+
         }
 
       }
-
     }
-
   }
 
   //Temporary api for severing 1.0.7 users
@@ -410,7 +414,7 @@ class FeedController @Inject() (
                 }
               }
               Future.sequence(futures).map { posts =>
-                success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts), "next" -> list.last._1.created))
+                success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts), "next" -> sortedList.last._1.created))
               }
             }
           }

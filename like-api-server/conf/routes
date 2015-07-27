@@ -17,7 +17,7 @@ POST    /v1/account/link/:provider                  controllers.AuthController.l
 DELETE  /v1/account/link/:provider                  controllers.AuthController.unlinkSocialAccount(provider: String)
 
 # Feed
-GET     /v1/homefeeds                               controllers.FeedController.getHomeFeedsV2(ts: Option[String] ?= None)
+GET     /v1/homefeeds                               controllers.FeedController.getHomeFeedsV2(ts: Option[Long] ?= None)
 GET     /v1/friendfeeds                             controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
 
 # User

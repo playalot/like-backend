@@ -40,6 +40,8 @@ trait PostService {
 
   def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
+  def getTaggedPostsTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]]
+
   def getRecentPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
   def recordDelete(photo: String): Future[Unit]

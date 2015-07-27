@@ -12,7 +12,7 @@ import play.api.i18n.{ Lang, Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ PushService, MarkService, NotificationService, UserService }
+import services._
 import utils.{ AVOSUtils, RedisCacheClient, MemcachedCacheClient }
 
 import scala.concurrent.{ Future, Await }
@@ -26,6 +26,8 @@ class Application @Inject() (
     userService: UserService,
     markService: MarkService,
     pushService: PushService,
+    postService: PostService,
+    tagService: TagService,
     notificationService: NotificationService) extends BaseController {
 
   def index = Action { implicit request =>

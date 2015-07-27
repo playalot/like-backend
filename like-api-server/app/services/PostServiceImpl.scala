@@ -107,7 +107,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def findHotPostForTag(name: String, page: Int = 0, pageSize: Int = 20): Future[Seq[(Post, User)]] = {
     val offset = pageSize * page
-    val ts = DateTime.now().minusDays(15).getMillis / 1000
+    val ts = DateTime.now().minusDays(30).getMillis / 1000
     val query = (for {
       ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
       if tag.tagName.toLowerCase === name.toLowerCase && post.created > ts
@@ -139,7 +139,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])] = {
     // Get top 10 marks for the post from cache
-    val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + postId, offset = page * 10, limit = 10).map(v => (v._1.toLong, v._2.toInt)).toMap
+    val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + postId, offset = page * 50, limit = 50).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
     // Query marks with tagname and user order by created desc
@@ -181,8 +181,6 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       var total: Double = 0
       markResults.foreach { mark =>
         val likeNum = RedisCacheClient.zscore("post_mark:" + postId, mark.identify).getOrElse(0.0)
-        // TODO remove
-        RedisCacheClient.zincrby("tag_likes", -likeNum, mark.tagId.toString)
         RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -likeNum.toLong)
         total += likeNum
       }
@@ -289,6 +287,11 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         Future.successful(Seq())
       }
     }
+  }
+
+  override def getTaggedPostsTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]] = {
+    val tagsQuery = sql"""SELECT DISTINCT tag FROM mark WHERE user_id=$userId order by created desc limit 100""".as[String]
+    db.run(tagsQuery).map(_.toSet)
   }
 
   override def getRecentPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {

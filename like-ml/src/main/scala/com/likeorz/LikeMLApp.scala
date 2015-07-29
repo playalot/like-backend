@@ -26,10 +26,12 @@ object LikeMLApp {
         case "HotTags"            => HotTags.run(30)
         case "Rebuild-UserCounts" => RebuildCacheJob.rebuildUserCountsCache()
         case "Rebuild-PostMarks"  => RebuildCacheJob.rebuildMarkCache()
+        case "Update-UserDBLikes" => RebuildCacheJob.updateDBUserLikes()
         case "All" =>
           KMeansOnTags.run(180)
           UserCategories.run(30)
           HotTags.run(30)
+          RebuildCacheJob.updateDBUserLikes()
         case "CleanCache" => Test.cleanLegacy()
       }
 

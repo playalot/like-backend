@@ -35,10 +35,10 @@ object HotTags {
         })
         .groupByKey()
         .sortBy(x => x._2.size, ascending = false)
-        .take(150)
+        .take(100)
         .map({
           case (tag, users) =>
-            val group = users.groupBy(x => x).map(x => (x._1, x._2.size)).toSeq.sortBy(-_._2).take(100).map(_._1)
+            val group = users.groupBy(x => x).map(x => (x._1, x._2.size)).toSeq.sortBy(-_._2).take(50).map(_._1)
             (tag, group)
         })
         .foreach(x => RedisUtils.hset("hot_tags_users", x._1, x._2.mkString(",")))

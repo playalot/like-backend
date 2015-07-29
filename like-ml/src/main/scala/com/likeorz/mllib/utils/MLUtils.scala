@@ -7,6 +7,23 @@ object MLUtils {
 
   val VECTOR_SIZE = 200
 
+  val dict: Map[String, String] = {
+    val stream = getClass().getClassLoader().getResourceAsStream("dict.txt")
+    val lines = scala.io.Source.fromInputStream(stream).getLines.flatMap { line =>
+      println(line)
+      val parts = line.split(":")
+      parts(0).split(",").toSeq.map(t => (t, parts(1)))
+    }
+    lines.toMap
+  }
+
+  def tagDict(tag: String): Seq[String] = {
+    dict.keySet.find(tag.contains(_)) match {
+      case Some(t) => Seq(tag, dict.get(t).get)
+      case None    => Seq(tag)
+    }
+  }
+
   def cleanTag(tag: String): Seq[String] = {
     (if (tag.endsWith("吗") || tag.endsWith("么")) tag.substring(0, tag.length - 1)
     else tag).replace("...", "")

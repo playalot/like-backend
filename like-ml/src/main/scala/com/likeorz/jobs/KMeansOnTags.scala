@@ -37,7 +37,7 @@ object KMeansOnTags {
       val PREFIX = conf.getString("train.prefix")
 
       val posts_tags = sc.textFile(s"$PREFIX/post_tags_${days}d.csv").map { line =>
-        line.split(",").toSeq.drop(3).flatMap(tag => MLUtils.cleanTag(tag))
+        line.split(",").toSeq.drop(3).flatMap(tag => MLUtils.cleanTag(tag)).flatMap(tag => MLUtils.tagDict(tag))
       }.filter(_.nonEmpty)
 
       val word2vec = new Word2Vec()
@@ -104,8 +104,6 @@ object KMeansOnTags {
       } catch {
         case ex: Throwable => ex.printStackTrace()
       }
-      //      FileUtils.deleteFile("tag-cluster.model.json")
-      //      FileUtils.writeString("tag-cluster.model.json", jsonMapper.writeValueAsString(clusters))
 
       val article_membership = tags_pairs.map(x => (clusters.predict(x._2), x._1))
       val cluster_centers = sc.parallelize(clusters.clusterCenters.zipWithIndex.map { e => (e._2, e._1) })

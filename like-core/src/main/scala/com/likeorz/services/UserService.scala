@@ -1,7 +1,7 @@
-package services
+package com.likeorz.services
 
-import com.mohiva.play.silhouette.api.LoginInfo
 import com.likeorz.models._
+import com.mohiva.play.silhouette.api.LoginInfo
 
 import scala.concurrent.Future
 

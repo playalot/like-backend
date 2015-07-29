@@ -1,8 +1,7 @@
 package controllers
 
 import javax.inject.Inject
-
-import services.AdminService
+import _root_.services.AdminService
 import models.Admin
 
 import com.mohiva.play.silhouette.api.Authenticator.Implicits._

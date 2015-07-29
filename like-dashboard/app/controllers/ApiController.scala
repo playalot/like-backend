@@ -11,9 +11,10 @@ import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import models.Admin
 import play.api.Configuration
 import play.api.i18n.MessagesApi
-import services.{ AdminService, UserService, PostService }
+import com.likeorz.services._
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
+import services.{ AdminService, DashboardService }
 import utils.QiniuUtil
 
 import scala.concurrent.Future
@@ -22,8 +23,11 @@ class ApiController @Inject() (
     val messagesApi: MessagesApi,
     val env: Environment[Admin, CookieAuthenticator],
     adminService: AdminService,
-    postService: PostService,
+    dashboardService: DashboardService,
     userService: UserService,
+    postService: PostService,
+    markService: MarkService,
+    notificationService: NotificationService,
     authInfoRepository: AuthInfoRepository,
     credentialsProvider: CredentialsProvider,
     configuration: Configuration,
@@ -41,7 +45,7 @@ class ApiController @Inject() (
    * @param page Current page number (starts from 0)
    */
   def list(page: Int) = SecuredAction.async { implicit request =>
-    val posts = postService.list(page = page)
+    val posts = dashboardService.list(page = page)
     implicit val postFormat = Json.format[Post]
     posts.map { page =>
       val items = page.items.map { item =>
@@ -82,23 +86,39 @@ class ApiController @Inject() (
   }
 
   def deleteMark(markId: Long) = SecuredAction.async {
-          postService.deleteMark(markId).map { _ =>
-            Ok("success.deleteMark")
-          }
+    markService.deleteMark(markId).map { _ =>
+      Ok("success.deleteMark")
+    }
   }
 
   def deletePost(postId: Long) = SecuredAction.async {
     postService.getPostById(postId).flatMap {
       case Some(post) =>
         for {
-          p <- postService.deletePostById(id, request.userId)
-          n <- notificationService.deleteAllNotificationForPost(id)
+          p <- postService.deletePostById(postId, post.userId)
+          n <- notificationService.deleteAllNotificationForPost(postId)
           r <- postService.recordDelete(post.content)
         } yield {
           Ok("success.deletePost")
         }
       case None => Future.successful(NotFound)
     }
+  }
+
+  def recommendPost(postId: Long, status: Boolean) = SecuredAction.async {
+    dashboardService.recommendPost(postId, status).map(_ => Ok)
+  }
+
+  def invisiblePost(postId: Long, status: Boolean) = SecuredAction.async {
+    dashboardService.invisiblePost(postId, status).map(_ => Ok)
+  }
+
+  def isPostRecommended(postId: Long) = SecuredAction.async {
+    dashboardService.isPostRecommended(postId).map(x => Ok(Json.obj("status" -> x)))
+  }
+
+  def isPostInvisible(postId: Long) = SecuredAction.async {
+    dashboardService.isPostInvisible(postId).map(x => Ok(Json.obj("status" -> x)))
   }
 
 }

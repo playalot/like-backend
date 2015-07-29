@@ -5,7 +5,7 @@ import javax.inject.Inject
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
-import services.NotificationService
+import com.likeorz.services.NotificationService
 import utils.QiniuUtil
 
 /**

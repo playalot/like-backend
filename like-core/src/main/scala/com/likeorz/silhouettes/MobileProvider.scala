@@ -1,10 +1,10 @@
-package extensions
+package com.likeorz.silhouettes
 
-import MobileProvider._
+import com.likeorz.silhouettes.MobileProvider._
+import com.likeorz.utils.AVOSUtils
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.impl.exceptions.AccessDeniedException
 import play.api.libs.concurrent.Execution.Implicits._
-import utils.AVOSUtils
 
 import scala.concurrent.Future
 

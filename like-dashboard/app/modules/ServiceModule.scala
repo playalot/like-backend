@@ -2,7 +2,7 @@ package modules
 
 import com.google.inject.{ AbstractModule, Provides }
 import models.{ AdminPasswordInfoDAO, Admin }
-import services._
+import com.likeorz.services._
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.services._
 import com.mohiva.play.silhouette.api.util._
@@ -17,6 +17,7 @@ import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Configuration
 import play.api.libs.concurrent.Execution.Implicits._
+import services.{ DashboardServiceImpl, DashboardService, AdminServiceImpl, AdminService }
 
 /**
  * Created by Guan Guan
@@ -26,8 +27,14 @@ class ServiceModule extends AbstractModule with ScalaModule {
 
   override def configure() {
     bind[AdminService].to[AdminServiceImpl]
+    bind[DashboardService].to[DashboardServiceImpl]
+    bind[TagService].to[TagServiceImpl]
     bind[PostService].to[PostServiceImpl]
     bind[UserService].to[UserServiceImpl]
+    bind[MarkService].to[MarkServiceImpl]
+    bind[InfoService].to[InfoServiceImpl]
+    bind[PromoteService].to[PromoteServiceImpl]
+    bind[NotificationService].to[NotificationServiceImpl]
     bind[DelegableAuthInfoDAO[PasswordInfo]].to[AdminPasswordInfoDAO]
     bind[CacheLayer].to[PlayCacheLayer]
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator())

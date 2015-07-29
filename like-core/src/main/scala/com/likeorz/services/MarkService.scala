@@ -1,4 +1,4 @@
-package services
+package com.likeorz.services
 
 import com.likeorz.models._
 
@@ -40,13 +40,4 @@ trait MarkService {
 
   def deleteMark(markId: Long): Future[Unit]
 
-  def rebuildMarkCache(): Future[Unit]
-
-  def rebuildUserLikesCache(): Future[Unit]
-
-  def rebuildUserCountsCache(): Future[Unit]
-
-  def exportPostWithTags(): Unit
-
-  def exportLikes(): Future[Unit]
 }

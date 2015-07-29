@@ -2,7 +2,7 @@ package com.likeorz.actors
 
 import akka.actor.{ Actor, ActorLogging, Props }
 import com.likeorz.push.PushNotification
-import utils.AVOSUtils
+import com.likeorz.utils.AVOSUtils
 
 class PushNotificationActor extends Actor with ActorLogging {
 

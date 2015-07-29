@@ -6,6 +6,8 @@ import play.api._
 import play.api.mvc._
 import play.api.Play.current
 import java.io.File
+import services.AdminService
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.collection.JavaConverters._
 import com.mohiva.play.silhouette.api.{ Silhouette, Environment }
@@ -17,7 +19,6 @@ import models.Admin
 import play.api.Configuration
 import play.api.i18n.MessagesApi
 import play.api.mvc.{ AnyContent, Action }
-import services.AdminService
 
 import scala.concurrent.Future
 

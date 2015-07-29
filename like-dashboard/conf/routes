@@ -12,7 +12,14 @@ GET     /admin/email                controllers.Application.getEmail
 GET     /api/stats                  controllers.ApiController.stats
 GET     /api/posts/:pg              controllers.ApiController.list(pg: Int)
 GET     /api/user/:id/info          controllers.ApiController.userInfo(id: Long)
-
+DELETE  /api/post/:id               controllers.ApiController.deletePost(id: Long)
+DELETE  /api/mark/:id               controllers.ApiController.deleteMark(id: Long)
+POST    /api/post/:id/recommend     controllers.ApiController.recommendPost(id: Long, status: Boolean ?= false)
+DELETE  /api/post/:id/recommend     controllers.ApiController.recommendPost(id: Long, status: Boolean ?= true)
+GET     /api/post/:id/recommend     controllers.ApiController.isPostRecommended(id: Long)
+POST    /api/post/:id/invisible     controllers.ApiController.invisiblePost(id: Long, status: Boolean ?= false)
+DELETE  /api/post/:id/invisible     controllers.ApiController.invisiblePost(id: Long, status: Boolean ?= true)
+GET     /api/post/:id/invisible     controllers.ApiController.isPostInvisible(id: Long)
 
 # Yeoman
 GET      /                          controllers.YeomanController.index

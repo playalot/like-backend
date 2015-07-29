@@ -1,16 +1,16 @@
 package services
 
-import javax.inject.{ Singleton, Inject }
+import javax.inject.{ Inject, Singleton }
 
-import akka.actor.{ Props, ActorRef, ActorSystem }
+import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.routing.RoundRobinPool
 import com.likeorz.actors.PushNotificationActor
 import com.likeorz.dao.InstallationComponent
 import com.likeorz.push.PushNotification
-import play.api.{ Logger, Play }
-import play.api.libs.json.{ Json, JsObject }
-import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
+import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json.{ JsObject, Json }
+import play.api.{ Logger, Play }
 import slick.driver.JdbcProfile
 
 import scala.concurrent.Future

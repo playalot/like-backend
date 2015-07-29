@@ -9,7 +9,7 @@ import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ PromoteService, PostService, TagService }
+import com.likeorz.services.{ PromoteService, PostService, TagService }
 import utils.QiniuUtil
 
 import scala.util.Random

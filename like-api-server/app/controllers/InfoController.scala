@@ -3,10 +3,10 @@ package controllers
 import javax.inject.Inject
 
 import com.likeorz.models._
-import services.{ UserService, InfoService }
+import com.likeorz.services.{ UserService, InfoService }
+import com.likeorz.utils.AVOSUtils
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
-import utils.AVOSUtils
 
 import scala.concurrent.Future
 

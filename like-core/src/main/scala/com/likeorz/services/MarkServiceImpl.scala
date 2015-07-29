@@ -1,14 +1,13 @@
-package services
+package com.likeorz.services
 
 import com.google.inject.Inject
 import com.likeorz.dao._
 import com.likeorz.models.{ Tag => Tg, _ }
-import com.likeorz.utils.KeyUtils
+import com.likeorz.utils.{ KeyUtils, RedisCacheClient }
 import play.api.Logger
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
-import utils.RedisCacheClient
 
 import scala.concurrent.Future
 
@@ -190,97 +189,6 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           ()
         }
       case None => Future.successful(())
-    }
-  }
-
-  override def rebuildMarkCache(): Future[Unit] = {
-    import utils.HelperUtils._
-    Logger.info("Rebuild post marks start!")
-    val t1 = System.currentTimeMillis()
-    db.stream(posts.result).foreach({ post =>
-      val query = (for {
-        (like, mark) <- likes join marks on (_.markId === _.id) if mark.postId === post.id.get
-      } yield (like, mark)).groupBy(_._2.id).map(x => (x._1, x._2.length))
-      //      query.length.result.statements.foreach(println)
-      db.run(query.result).map { rs =>
-        rs.map(x => RedisCacheClient.zadd(KeyUtils.postMark(post.id.get), x._2, x._1))
-      }
-    }).map { _ =>
-      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
-      Logger.info("Rebuild post marks done!")
-    }
-  }
-
-  override def rebuildUserLikesCache(): Future[Unit] = {
-    import utils.HelperUtils._
-    Logger.info("Rebuild user likes start!")
-    val t1 = System.currentTimeMillis()
-    db.stream(users.result).foreach({ user =>
-      val query = for {
-        (like, mark) <- likes join marks on (_.markId === _.id) if mark.userId === user.id.get
-      } yield like
-      //      query.length.result.statements.foreach(println)
-      db.run(query.length.result).map { likes =>
-        RedisCacheClient.hset(KeyUtils.user(user.id.get), "likes", likes)
-      }
-    }).map { _ =>
-      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
-      Logger.info("Rebuild user likes done!")
-    }
-  }
-
-  override def rebuildUserCountsCache(): Future[Unit] = {
-    import utils.HelperUtils._
-    Logger.info("Rebuild user counts start!")
-    val t1 = System.currentTimeMillis()
-    db.stream(users.result).foreach({ user =>
-      for {
-        posts <- db.run(posts.filter(_.userId === user.id.get).length.result)
-        followings <- db.run(follows.filter(_.fromId === user.id.get).length.result)
-        followers <- db.run(follows.filter(_.toId === user.id.get).length.result)
-      } yield {
-        RedisCacheClient.hset(KeyUtils.user(user.id.get), "posts", posts)
-        RedisCacheClient.hset(KeyUtils.user(user.id.get), "followings", followings)
-        RedisCacheClient.hset(KeyUtils.user(user.id.get), "followers", followers)
-      }
-    }).map { _ =>
-      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
-      Logger.info("Rebuild user counts done!")
-    }
-  }
-
-  override def exportPostWithTags(): Unit = {
-    Logger.info("Export post csv start!")
-    val t1 = System.currentTimeMillis()
-    val p = new java.io.PrintWriter(new java.io.File("post_tags.csv"))
-    db.stream(posts.result).foreach({ post =>
-      val post_id = post.identify
-      val query = sql"""select t.tag from mark m inner join tag t on m.tag_id = t.id  where m.post_id=(#$post_id)""".as[String]
-      //      query.statements.foreach(println)
-      db.run(query).map { rs =>
-        p.println(post.id.get + "," + post.userId + "," + rs.mkString(","))
-      }
-    }).onComplete { _ =>
-      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
-      Logger.info("Export post csv done!")
-      p.close()
-    }
-  }
-
-  override def exportLikes(): Future[Unit] = {
-    Logger.info("Export post csv start!")
-    val t1 = System.currentTimeMillis()
-    val p = new java.io.PrintWriter(new java.io.File("likes.csv"))
-    val query = for {
-      ((like, mark), tag) <- likes join marks on (_.markId === _.id) joinLeft tags on (_._2.tagId === _.id)
-    } yield (like.userId, mark.postId, tag.map(_.tagName), like.created)
-    db.stream(query.result).foreach {
-      case (uid, pid, tag, ts) =>
-      //        p.println(s"$uid,$pid,${tag.getOrElse("")},$ts")
-    }.map { _ =>
-      Logger.info("Total: " + (System.currentTimeMillis() - t1) / 1000 + "ms")
-      Logger.info("Export likes csv done!")
-      p.close()
     }
   }
 

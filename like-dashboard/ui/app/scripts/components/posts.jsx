@@ -14,7 +14,6 @@ var Posts = React.createClass({
     this.onChangePage(0);
   },
   onChangePage: function(v) {
-    console.log('change page ' + v);
     $.get('/api/posts/'+ v, function(data){
       if (this.isMounted()) {
         this.setState({ page: data.page, posts: data.posts });

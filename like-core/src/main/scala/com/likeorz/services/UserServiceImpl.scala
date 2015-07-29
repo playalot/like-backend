@@ -1,17 +1,17 @@
-package services
+package com.likeorz.services
 
 import javax.inject.Inject
 
-import com.likeorz.utils.KeyUtils
-import com.mohiva.play.silhouette.api.LoginInfo
 import com.likeorz.dao._
 import com.likeorz.models._
-import extensions.MobileProvider
+import com.likeorz.silhouettes.MobileProvider
+import com.likeorz.utils.{ GenerateUtils, KeyUtils, RedisCacheClient }
+import com.mohiva.play.silhouette.api.LoginInfo
 import play.api.Play
-import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
+import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
-import utils.{ RedisCacheClient, GenerateUtils }
+
 import scala.concurrent.Future
 
 /**
@@ -265,7 +265,6 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getUserInfo(userId: Long): Future[CachedUserInfo] = {
-    import utils.HelperUtils.long2String
 
     val fields = RedisCacheClient.hmget(KeyUtils.user(userId), "nickname", "avatar", "cover", "likes")
     if (fields.contains(null)) {
@@ -275,8 +274,8 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
             "nickname" -> user.nickname,
             "avatar" -> user.avatar,
             "cover" -> user.cover,
-            "likes" -> user.likes))
-          CachedUserInfo(user.nickname, user.avatar, user.cover, user.likes)
+            "likes" -> user.likes.toString))
+          CachedUserInfo(user.nickname, user.avatar, user.cover, user.likes.toString)
         case None =>
           CachedUserInfo("New Liker", DEFAULT_AVATAR, DEFAULT_COVER, "0")
       }

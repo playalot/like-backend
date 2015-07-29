@@ -2,6 +2,8 @@ package controllers
 
 import javax.inject.Inject
 
+import com.likeorz.services.UserService
+import com.likeorz.silhouettes.{ SmsCode, MobileProvider }
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.util.IDGenerator
 import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
@@ -9,7 +11,7 @@ import com.mohiva.play.silhouette.impl.providers.{ CommonSocialProfileBuilder, O
 import com.mohiva.play.silhouette.impl.util.SecureRandomIDGenerator
 import extensions._
 import com.likeorz.models._
-import com.likeorz.utils.KeyUtils
+import com.likeorz.utils.{ AVOSUtils, GenerateUtils, KeyUtils }
 import play.api.{ Logger, Play }
 import play.api.Play.current
 import play.api.i18n.{ MessagesApi, Messages }
@@ -17,7 +19,6 @@ import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import services.UserService
 import utils._
 
 import scala.concurrent.Future

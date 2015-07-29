@@ -9,7 +9,8 @@ import play.api.libs.functional.syntax._
 import play.api.libs.concurrent.Execution.Implicits._
 import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ Notification, Post, Report }
-import services._
+import com.likeorz.services._
+import services.PushService
 import utils.QiniuUtil
 
 import scala.concurrent.Future

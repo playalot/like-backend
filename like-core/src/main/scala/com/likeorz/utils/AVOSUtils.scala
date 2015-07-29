@@ -1,10 +1,11 @@
-package utils
+package com.likeorz.utils
 
-import play.api.libs.json.{ JsNull, JsObject, Json }
-import play.api.{ Logger, Play }
 import play.api.Play.current
-import play.api.libs.ws._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.ws._
+import play.api.{ Logger, Play }
+
 import scala.concurrent.Future
 
 object AVOSUtils {

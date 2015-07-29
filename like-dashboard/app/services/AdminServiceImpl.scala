@@ -2,20 +2,24 @@ package services
 
 import javax.inject.Inject
 
+import com.likeorz.dao.RecommendsComponent
+import com.likeorz.models.Recommend
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
-import com.mohiva.play.silhouette.api.util.{ PasswordHasher, PasswordInfo }
+import com.mohiva.play.silhouette.api.util.PasswordHasher
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import models.{ Admin, AdminsComponent }
 import play.api.db.slick._
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
+
 import scala.concurrent.Future
 
 class AdminServiceImpl @Inject() (passwordHasher: PasswordHasher,
   authInfoRepository: AuthInfoRepository,
   protected val dbConfigProvider: DatabaseConfigProvider)
-    extends AdminService with AdminsComponent with HasDatabaseConfigProvider[JdbcProfile] {
+    extends AdminService with AdminsComponent with RecommendsComponent
+    with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 

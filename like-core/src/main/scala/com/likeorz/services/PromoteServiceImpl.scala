@@ -1,4 +1,4 @@
-package services
+package com.likeorz.services
 
 import javax.inject.Inject
 

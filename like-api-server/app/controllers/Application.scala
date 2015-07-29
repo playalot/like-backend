@@ -13,8 +13,9 @@ import play.api.i18n.{ Lang, Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.libs.concurrent.Execution.Implicits._
-import services._
-import utils.{ AVOSUtils, RedisCacheClient, MemcachedCacheClient }
+import com.likeorz.services._
+import services.PushService
+import utils.MemcachedCacheClient
 
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration._

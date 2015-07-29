@@ -1,4 +1,4 @@
-package utils
+package com.likeorz.utils
 
 object GenerateUtils {
 

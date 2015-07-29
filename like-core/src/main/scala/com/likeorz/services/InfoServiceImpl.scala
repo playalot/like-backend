@@ -1,4 +1,4 @@
-package services
+package com.likeorz.services
 
 import com.google.inject.Inject
 import com.likeorz.dao._

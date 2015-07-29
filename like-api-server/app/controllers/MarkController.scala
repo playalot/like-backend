@@ -9,7 +9,7 @@ import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Action
-import services.{ NotificationService, MarkService }
+import com.likeorz.services.{ NotificationService, MarkService }
 import utils.QiniuUtil
 
 import scala.concurrent.Future

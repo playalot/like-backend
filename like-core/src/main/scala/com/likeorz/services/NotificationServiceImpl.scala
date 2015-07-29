@@ -1,12 +1,12 @@
-package services
+package com.likeorz.services
 
 import com.google.inject.Inject
 import com.likeorz.models._
 import com.likeorz.dao._
+import com.likeorz.utils.RedisCacheClient
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
-import utils.RedisCacheClient
 
 import scala.concurrent.Future
 

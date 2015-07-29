@@ -4,9 +4,9 @@ import javax.inject.{ Inject, Singleton }
 
 import akka.actor.{ Actor, ActorLogging, Props }
 import com.likeorz.common.PushUnreadLikes
-import com.likeorz.utils.KeyUtils
-import services.{ PushService, NotificationService }
-import utils.RedisCacheClient
+import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
+import com.likeorz.services.NotificationService
+import services.PushService
 
 import scala.concurrent.Future
 

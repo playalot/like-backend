@@ -1,7 +1,7 @@
-package utils
+package com.likeorz.utils
 
-import redis.clients.jedis.{ JedisPoolConfig, JedisPool, Jedis }
 import play.api.Play
+import redis.clients.jedis.{ JedisPoolConfig, JedisPool, Jedis }
 import scala.collection.JavaConversions._
 
 object RedisCacheClient {

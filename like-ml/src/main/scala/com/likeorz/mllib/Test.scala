@@ -48,6 +48,10 @@ object Test {
       RedisUtils.del(key)
     }
 
+    RedisUtils.keys("post_seen:*").foreach { key =>
+      RedisUtils.del(key)
+    }
+
   }
 
 }

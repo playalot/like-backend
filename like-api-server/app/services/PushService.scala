@@ -1,7 +1,7 @@
 package services
 
 import com.likeorz.push.PushNotification
-import play.api.libs.json.{ Json, JsObject }
+import play.api.libs.json.{ JsObject, Json }
 
 import scala.concurrent.Future
 

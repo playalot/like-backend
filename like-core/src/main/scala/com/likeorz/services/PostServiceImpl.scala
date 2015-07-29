@@ -1,17 +1,16 @@
-package services
+package com.likeorz.services
 
 import javax.inject.Inject
 
 import com.likeorz.models._
 import com.likeorz.dao._
-import com.likeorz.utils.KeyUtils
+import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
 import org.joda.time.DateTime
 import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import slick.driver.JdbcProfile
-import utils.RedisCacheClient
 
 import scala.concurrent.Future
 import scala.util.Random
@@ -176,7 +175,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def deletePostById(postId: Long, userId: Long): Future[Unit] = {
+  override def deletePostById(postId: Long, authorId: Long): Future[Unit] = {
     db.run(marks.filter(_.postId === postId).result).flatMap { markResults =>
       var total: Double = 0
       markResults.foreach { mark =>
@@ -184,11 +183,8 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -likeNum.toLong)
         total += likeNum
       }
-      // TODO remove
-      RedisCacheClient.zincrby("user_likes", -total, userId.toString)
       RedisCacheClient.del("post_mark:" + postId)
-      RedisCacheClient.del("push:" + userId)
-      RedisCacheClient.hincrBy(KeyUtils.user(userId), "posts", -1)
+      RedisCacheClient.hincrBy(KeyUtils.user(authorId), "posts", -1)
 
       val markIds = markResults.map(_.id.getOrElse(-1L))
       for {

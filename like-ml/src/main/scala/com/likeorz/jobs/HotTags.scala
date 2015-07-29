@@ -24,7 +24,7 @@ object HotTags {
 
     val sc = new SparkContext(sparkConf)
     println("Hot tags job start...")
-    var preprocessStart = System.nanoTime()
+    val preprocessStart = System.nanoTime()
     try {
       sc.textFile(s"$PREFIX/post_tags_${days}d.csv")
         .flatMap({ line =>
@@ -47,7 +47,7 @@ object HotTags {
     } finally {
       sc.stop()
       println("Hot tags job done...")
-      var preprocessElapsed = (System.nanoTime() - preprocessStart) / 1e9
+      val preprocessElapsed = (System.nanoTime() - preprocessStart) / 1e9
       println(s"Preprocessing time: $preprocessElapsed sec")
     }
   }

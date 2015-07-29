@@ -3,18 +3,19 @@ package modules
 import actors.{ ClassificationActor, EventProducerActor }
 import com.google.inject.{ Provides, AbstractModule }
 import com.likeorz.actors.PushLikeNotificationActor
+import com.likeorz.silhouettes.MobileProvider
 import com.mohiva.play.silhouette.api.EventBus
 import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
 import com.mohiva.play.silhouette.impl.providers.oauth2.state.{ CookieStateProvider, CookieStateSettings }
 import com.mohiva.play.silhouette.impl.providers.{ OAuth2StateProvider, OAuth2Settings }
-import extensions.{ WechatProvider, WeiboProvider, ProviderEnv, MobileProvider }
+import extensions.{ WechatProvider, WeiboProvider, ProviderEnv }
 import net.codingwell.scalaguice.ScalaModule
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 
 import com.mohiva.play.silhouette.impl.util._
 import com.mohiva.play.silhouette.api.util._
-import services._
+import com.likeorz.services._
 
 import play.api.Play
 import play.api.Play.current
@@ -22,6 +23,7 @@ import play.api.Configuration
 import play.api.libs.ws.WSClient
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.concurrent.AkkaGuiceSupport
+import services.{ PushServiceImpl, PushService }
 
 /**
  * The Guice module which wires all Silhouette dependencies.

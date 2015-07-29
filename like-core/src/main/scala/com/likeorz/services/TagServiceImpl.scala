@@ -1,16 +1,15 @@
-package services
+package com.likeorz.services
 
 import javax.inject.Inject
 
 import com.likeorz.models.{ User, Tag => Tg }
 import com.likeorz.dao.{ UsersComponent, MarksComponent, TagsComponent }
-import com.likeorz.utils.KeyUtils
+import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
-import utils.RedisCacheClient
 
 import scala.concurrent.Future
 import scala.util.Random

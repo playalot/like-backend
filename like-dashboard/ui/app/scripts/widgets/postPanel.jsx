@@ -29,7 +29,7 @@ var PostPanel = React.createClass({
       );
     });
     return (
-      <div className="col-sm-6 col-md-4">
+      <div className="col-sm-4 col-md-3">
         <div className="panel panel-default">
           <div className="panel-heading post-heading">
             <a href={ '/user/' + this.props.userId } className="media">
@@ -53,7 +53,7 @@ var PostPanel = React.createClass({
                     <a href="/post/delete?id=20312" title="Delete" data-confirm="Delete this post?" data-method="post" data-pjax="w0" className="btn btn-danger btn-sm" role="button"><span className="glyphicon glyphicon-trash"></span></a>
                 </p>
                 <p className="pull-left">
-                    <a href="/comment/post?id=20312" title="Comment" className="btn btn-default btn-sm" role="button"><span className="glyphicon glyphicon-comment"></span></a> 
+                    <a href="/comment/post?id=20312" title="Comment" className="btn btn-default btn-sm" role="button"><span className="glyphicon glyphicon-comment"></span></a>
                     <a href="/mark/post?id=20312" title="Mark" className="btn btn-default btn-sm" role="button"><span className="glyphicon glyphicon-tags"></span></a>
                 </p>
                 <div className="clearfix"></div>

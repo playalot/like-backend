@@ -16,12 +16,12 @@ import scala.concurrent.Future
 import scala.util.Random
 
 class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends PostService
-  with PostsComponent with UsersComponent
-  with TagsComponent with MarksComponent
-  with LikesComponent with CommentsComponent
-  with RecommendsComponent with FollowsComponent
-  with ReportsComponent with DeletedPhotosComponent
-  with HasDatabaseConfigProvider[JdbcProfile] {
+    with PostsComponent with UsersComponent
+    with TagsComponent with MarksComponent
+    with LikesComponent with CommentsComponent
+    with RecommendsComponent with FollowsComponent
+    with ReportsComponent with DeletedPhotosComponent
+    with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 
@@ -128,7 +128,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def list(page: Int = 0, pageSize: Int = 30): Future[Page[(Post, Seq[(Long, String, Int)])]] = {
+  override def list(page: Int = 0, pageSize: Int = 36): Future[Page[(Post, Seq[(Long, String, Int)])]] = {
     val offset = pageSize * page
     val query =
       (for {

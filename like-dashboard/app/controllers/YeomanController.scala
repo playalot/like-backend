@@ -22,20 +22,16 @@ import services.AdminService
 import scala.concurrent.Future
 
 class YeomanController @Inject() (
-  val messagesApi: MessagesApi,
-  val env: Environment[Admin, CookieAuthenticator],
-  adminService: AdminService,
-  authInfoRepository: AuthInfoRepository,
-  credentialsProvider: CredentialsProvider,
-  configuration: Configuration,
-  clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
+    val messagesApi: MessagesApi,
+    val env: Environment[Admin, CookieAuthenticator],
+    adminService: AdminService,
+    authInfoRepository: AuthInfoRepository,
+    credentialsProvider: CredentialsProvider,
+    configuration: Configuration,
+    clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
 
   def index = SecuredAction.async { implicit request =>
-    if (request.path.endsWith("/")) {
-      at("index.html").apply(request)
-    } else {
-      Future(Redirect(request.path + "/"))
-    }
+    at("index.html").apply(request)
   }
 
   def redirectRoot(base: String = "/ui/") = SecuredAction {

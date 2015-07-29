@@ -9,5 +9,5 @@ trait AdminService extends IdentityService[Admin] {
 
   def insert(email: String, password: String): Future[Admin]
 
-  //  def stats
+  def stats: Future[Map[String, Long]]
 }

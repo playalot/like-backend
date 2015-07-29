@@ -21,7 +21,7 @@ var routes = (
 
 exports.start = function() {
 
-  Router.run(routes, function (Handler) {
+  Router.run(routes, Router.HistoryLocation, function (Handler) {
 		/*jslint browser:true */
 		React.render(<Handler />, document.getElementById('app'));
 	});

@@ -11,20 +11,29 @@ import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import models.Admin
 import play.api.Configuration
 import play.api.i18n.MessagesApi
-import services.{ UserService, PostService }
+import services.{ AdminService, UserService, PostService }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
 import utils.QiniuUtil
 
+import scala.concurrent.Future
+
 class ApiController @Inject() (
-  val messagesApi: MessagesApi,
-  val env: Environment[Admin, CookieAuthenticator],
-  postService: PostService,
-  userService: UserService,
-  authInfoRepository: AuthInfoRepository,
-  credentialsProvider: CredentialsProvider,
-  configuration: Configuration,
-  clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
+    val messagesApi: MessagesApi,
+    val env: Environment[Admin, CookieAuthenticator],
+    adminService: AdminService,
+    postService: PostService,
+    userService: UserService,
+    authInfoRepository: AuthInfoRepository,
+    credentialsProvider: CredentialsProvider,
+    configuration: Configuration,
+    clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
+
+  def stats = SecuredAction.async { implicit request =>
+    adminService.stats.map { stats =>
+      Ok(Json.toJson(stats))
+    }
+  }
 
   /**
    * Display the paginated list of computers.
@@ -38,25 +47,26 @@ class ApiController @Inject() (
       val items = page.items.map { item =>
         val marks = item._2.map { mark =>
           Json.obj(
-            "mark_id" -> mark._1,
+            "markId" -> mark._1,
             "tag" -> mark._2,
             "likes" -> mark._3
           )
         }
         Json.obj(
-          "user_id" -> item._1.userId,
-          "post_id" -> item._1.id,
-          "post_url" -> QiniuUtil.resizeImage(item._1.content, 300),
+          "userId" -> item._1.userId,
+          "postId" -> item._1.id,
+          "postUrl" -> QiniuUtil.resizeImage(item._1.content, 300),
           "marks" -> Json.toJson(marks)
         )
       }
       Ok(Json.obj(
         "posts" -> Json.toJson(items),
         "page" -> Json.obj(
-          "page" -> page.page,
+          "currentPage" -> page.page,
           "total" -> page.total,
           "prev" -> page.prev,
-          "next" -> page.next
+          "next" -> page.next,
+          "pageSize" -> 36
         )))
     }
   }
@@ -68,6 +78,26 @@ class ApiController @Inject() (
         "avatar" -> QiniuUtil.resizeImage(u.avatar, 40),
         "likes" -> u.likes
       ))
+    }
+  }
+
+  def deleteMark(markId: Long) = SecuredAction.async {
+          postService.deleteMark(markId).map { _ =>
+            Ok("success.deleteMark")
+          }
+  }
+
+  def deletePost(postId: Long) = SecuredAction.async {
+    postService.getPostById(postId).flatMap {
+      case Some(post) =>
+        for {
+          p <- postService.deletePostById(id, request.userId)
+          n <- notificationService.deleteAllNotificationForPost(id)
+          r <- postService.recordDelete(post.content)
+        } yield {
+          Ok("success.deletePost")
+        }
+      case None => Future.successful(NotFound)
     }
   }
 

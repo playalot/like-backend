@@ -1,38 +1,50 @@
 var $ = require('jquery');
 var React = require('react');
-var Router = require('react-router');
-
-var PostPanel = require('../widgets/postPanel.jsx');
-
-var Link = Router.Link;
+var PostPanel = require('../widgets/postPanel');
+var Paginator = require('../widgets/pagination');
 
 var Posts = React.createClass({
   getInitialState: function() {
     return {
-      data: {
-        page: { page: 0, total: 0, prev: null, next: 1},
-        posts: []
-      }
+      page: { page: 0, total: 1000, prev: null, next: 1, pageSize: 30 },
+      posts: []
     };
   },
   componentDidMount:function() {
-    $.get('/api/posts/'+ this.state.data.page.page, function(data){
+    this.onChangePage(0);
+  },
+  onChangePage: function(v) {
+    console.log('change page ' + v);
+    $.get('/api/posts/'+ v, function(data){
       if (this.isMounted()) {
-        this.setState({ data: data });
+        this.setState({ page: data.page, posts: data.posts });
       }
     }.bind(this));
   },
   render: function() {
-    var postDivs = this.state.data.posts.map(function (post) {
+    var postDivs = this.state.posts.map(function(post) {
       return (
-        <PostPanel marks={post.marks} userId={post.user_id} postId={post.post_id} postUrl={post.post_url} key={'p_'+post.post_id}/>
-      )
+        <PostPanel marks={post.marks} userId={post.userId} postId={post.postId} postUrl={post.postUrl} key={'p_'+post.postId} />
+      );
     });
+    var end = 1;
+    if (this.state.page.next !== null) {
+      end = this.state.page.currentPage * this.state.page.pageSize + this.state.page.pageSize;
+    } else {
+      end = this.state.page.total;
+    }
+    var pageItems = Math.ceil(this.state.page.total * 1.0 / this.state.page.pageSize);
     return (
       <div>
-        <h1>Posts </h1>
+        <h1>Posts</h1>
         <hr/>
-        {postDivs}
+        <div>
+          <div className="list-view row">
+            <div className="post-summary">Showing <b>{this.state.page.currentPage * this.state.page.pageSize + 1}-{ end }</b> of <b>{this.state.page.total}</b> items.</div>
+            { postDivs }
+          </div>
+          <Paginator currentPage={this.state.page.currentPage} max={pageItems} maxVisible={7} onChange={this.onChangePage}/>
+        </div>
       </div>
     );
   }

@@ -1,8 +1,10 @@
 import scalariform.formatter.preferences._
 
+import com.tuplejump.sbt.yeoman.Yeoman
+
 name := """like-dashboard"""
 
-version := "1.0.0"
+version := "1.1.0"
 
 resolvers := ("Atlassian Releases" at "https://maven.atlassian.com/public/") +: resolvers.value
 
@@ -24,8 +26,8 @@ libraryDependencies ++= Seq(
   "com.adrianhurt"            %% "play-bootstrap3"  % "0.4.4-P24",
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
   "net.ceedubs"               %% "ficus"            % "1.1.2",
-  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0" % "test",
-  "org.scalatest"             %% "scalatest"                 % "2.2.5"     % "test",
+  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0"    % "test",
+  "org.scalatest"             %% "scalatest"                 % "2.2.5"    % "test",
   specs2                      %  Test
 )
 
@@ -34,6 +36,8 @@ resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.
 routesGenerator := InjectedRoutesGenerator
+
+Yeoman.yeomanSettings ++ Yeoman.withTemplates
 
 //********************************************************
 // Scalariform settings
@@ -45,3 +49,4 @@ ScalariformKeys.preferences := ScalariformKeys.preferences.value
   .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
   .setPreference(DoubleIndentClassDeclaration, true)
   .setPreference(PreserveDanglingCloseParenthesis, true)
+

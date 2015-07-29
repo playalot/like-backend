@@ -9,12 +9,16 @@ POST    /authenticate/credentials   controllers.Application.authenticate
 
 # API
 GET     /admin/email                controllers.Application.getEmail
+GET     /api/stats                  controllers.ApiController.stats
 GET     /api/posts/:pg              controllers.ApiController.list(pg: Int)
 GET     /api/user/:id/info          controllers.ApiController.userInfo(id: Long)
 
 
 # Yeoman
 GET      /                          controllers.YeomanController.index
+GET      /home                      controllers.YeomanController.index
+GET      /posts                     controllers.YeomanController.index
+GET      /users                     controllers.YeomanController.index
 GET      /*file                     controllers.YeomanController.at(file)
 
 

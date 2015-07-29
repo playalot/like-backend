@@ -37,4 +37,9 @@ class AdminServiceImpl @Inject() (passwordHasher: PasswordHasher,
     }
   }
 
+  override def stats: Future[Map[String, Long]] = {
+    val query = sql"""SELECT table_name, table_rows FROM information_schema.tables WHERE table_schema = DATABASE()""".as[(String, Long)]
+    db.run(query).map(_.toMap)
+  }
+
 }

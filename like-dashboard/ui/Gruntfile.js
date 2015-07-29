@@ -188,7 +188,7 @@ module.exports = function (grunt) {
     'less:dev',
     'copy:dev',
     'browserify:dev',
-    'connect:livereload',
+    // 'connect:livereload',
     'watch'
   ]);
 

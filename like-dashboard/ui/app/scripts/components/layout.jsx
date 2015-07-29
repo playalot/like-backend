@@ -7,12 +7,12 @@ var RouteHandler = Router.RouteHandler;
 var NavItemLink = ReactRouterBootstrap.NavItemLink;
 var Layout = React.createClass({
   getInitialState: function() {
-    return { email:'Liker' };
+    return { email: 'Liker' };
   },
   componentDidMount:function() {
     $.get('/admin/email', function(data){
       if (this.isMounted()) {
-        this.setState({email: data});
+        this.setState({ email: data });
       }
     }.bind(this));
   },
@@ -37,7 +37,7 @@ var Layout = React.createClass({
                   <li><NavItemLink to="posts" >Posts</NavItemLink></li>
                   <li className="dropdown">
                     <a className="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false" role="button"> {this.state.email} <span className="caret"></span></a>
-                    <ul id="w2" className="dropdown-menu"><li><a href="/signOut" data-method="post" tabindex="-1">Logout</a></li></ul>
+                    <ul id="w2" className="dropdown-menu"><li><a href="/signOut" data-method="post" tabIndex="-1">Logout</a></li></ul>
                   </li>
                 </ul>
               </div>
@@ -47,6 +47,12 @@ var Layout = React.createClass({
         <div className="container">
           <RouteHandler/>
         </div>
+        <footer className="footer">
+          <div className="container">
+          <p className="pull-left">© LikeOrz.com 2015</p>
+          <p className="pull-right">@Like</p>
+          </div>
+      </footer>
       </div>
     );
   }

@@ -52,7 +52,6 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         }
       case _ => Future.successful(None)
     }
-
   }
 
   @deprecated("legacy", "1.1.0")

@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
   "org.spark-project.akka" %% "akka-remote" % "2.3.4-1-spark",
   "org.apache.spark"  %% "spark-core"     % "1.4.1",
   "org.apache.spark"  %% "spark-mllib"    % "1.4.1",
-  "org.mongodb"       %% "casbah"         % "2.8.1",
+  "org.mongodb"       %% "casbah"         % "2.8.2",
   "com.typesafe.play" %% "play-ws"        % "2.4.2",
   "com.typesafe.akka" %% "akka-actor"     % "2.3.12",
   "com.typesafe.akka" %% "akka-remote"    % "2.3.12",

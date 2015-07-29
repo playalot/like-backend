@@ -32,8 +32,7 @@ class Application @Inject() (
     tagService: TagService,
     notificationService: NotificationService) extends BaseController {
 
-
-  system.scheduler.schedule((60 - DateTime.now().getMinuteOfHour()).minutes, 1.hour) {
+  system.scheduler.schedule(scala.math.abs(30 - DateTime.now.getMinuteOfHour).minutes, 30.minutes) {
     pushLikesActor ! PushUnreadLikes
   }
 

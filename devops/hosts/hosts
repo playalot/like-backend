@@ -27,3 +27,11 @@ ansible_ssh_user=root
 root_path=/root/
 ansible_connection=ssh
 ansible_ssh_user=root
+
+[like_dashboard]
+121.40.225.162
+
+[like_dashboard:vars]
+root_path=/root/
+ansible_connection=ssh
+ansible_ssh_user=root

@@ -50,7 +50,7 @@ module.exports = function (grunt) {
         images: {
           files: [
             '<%= yeoman.app %>/*.html',
-            '<%= yeoman.app %>/images/{,*/}*.{icon,png,jpg,jpeg,gif,webp,svg}'
+            '<%= yeoman.app %>/images/{,*/}*.{ico,icon,png,jpg,jpeg,gif,webp,svg}'
           ]
         }
       },
@@ -155,11 +155,6 @@ module.exports = function (grunt) {
         }
       },
       copy: {
-        fonts: {
-          expand: true,
-          src: 'vendor/bootstrap/dist/fonts/*',
-          dest: 'dist/'
-        },
         dist: {
           files: [{
             expand: true,
@@ -169,8 +164,14 @@ module.exports = function (grunt) {
             src: [
               '*.html',
               '*.{ico,txt}',
-              'images/{,*/}*.{webp,gif}'
+              'images/{,*/}*.{ico,webp,gif}'
             ]
+          }, {
+            expand: true,
+            flatten: true,
+            cwd: '<%= yeoman.app %>', 
+            src: ['vendor/bootstrap/dist/fonts/*.*'],
+            dest: '<%= yeoman.dist %>/fonts'
           }]
         }
       },
@@ -186,7 +187,6 @@ module.exports = function (grunt) {
   grunt.registerTask('serve', [
     'clean:serve',
     'less:dev',
-    'copy:dev',
     'browserify:dev',
     // 'connect:livereload',
     'watch'
@@ -201,8 +201,7 @@ module.exports = function (grunt) {
     'imagemin',
     'cssmin',
     'uglify',
-    'copy:fonts',
-    'copy:dist',
+    'copy',
     'filerev',
     'usemin',
     'htmlmin'

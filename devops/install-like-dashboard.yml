@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: True
+  tasks:
+    - name: Build Playframework Dist package
+      command: chdir=../ sbt "project likeDashboard" dist
+
+- hosts: [like_dashboard]
+  sudo: True
+  serial: 1
+  vars:
+    app_name: 'like-dashboard'
+    app_version: '1.1.0'
+    app_port: 80
+    extra_configs: "-Dhttp.port={{ app_port }} -Dconfig.resource=application.prod.conf -J-Xmx512M -J-Xms256M -J-server"
+  tasks:
+    - debug: msg="port={{ app_port }}"
+  roles:
+    - { role: 'ansible-sbt-native-package', tags: ['play'] }
+
+

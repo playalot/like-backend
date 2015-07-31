@@ -14,23 +14,21 @@ trait MarkService {
 
   def getMarkWithPost(markId: Long): Future[Option[(Mark, Post)]]
 
-  def getMarkWithUserAndLikes(markId: Long, fromUserId: Option[Long]): Future[Option[(Mark, User, String, Int, Boolean)]]
+  def getMarkWithLikes(markId: Long): Future[Option[(Mark, Int)]]
 
-  def getMarkWithTagName(markId: Long): Future[Option[(Mark, String)]]
-
-  def getMarkWithPostAndTag(markId: Long): Future[Option[(Mark, Post, Tag)]]
+  def getMarkWithPostAuthor(markId: Long): Future[Option[(Mark, Long)]]
 
   def countLikesForUser(userId: Long): Future[Long]
 
-  def like(mark: Mark, post: Post, userId: Long): Future[Unit]
+  def like(mark: Mark, postAuthorId: Long, userId: Long): Future[Unit]
 
-  def unlike(mark: Mark, post: Post, userId: Long): Future[Unit]
+  def unlike(mark: Mark, postAuthor: Long, userId: Long): Future[Unit]
 
   def getLikes(markId: Long): Future[Seq[(Like, User)]]
 
   def checkLikes(userId: Long, markIds: Seq[Long]): Future[Seq[Long]]
 
-  def getMarkPostTag(markId: Long): Future[Option[(Mark, Post, Tag)]]
+  def isLikedByUser(markId: Long, userId: Long): Future[Boolean]
 
   def commentMark(markId: Long, comment: Comment): Future[Comment]
 

@@ -284,4 +284,13 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  override def getUserInfoFromCache(userId: Long): CachedUserInfo = {
+    val fields = RedisCacheClient.hmget(KeyUtils.user(userId), "nickname", "avatar", "cover", "likes")
+    if (fields.contains(null)) {
+      CachedUserInfo("New Liker", DEFAULT_AVATAR, DEFAULT_COVER, "0")
+    } else {
+      CachedUserInfo(fields.head, fields(1), fields(2), fields(3))
+    }
+  }
+
 }

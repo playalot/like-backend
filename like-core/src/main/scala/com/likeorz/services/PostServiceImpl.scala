@@ -89,7 +89,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def searchByTag(page: Int = 0, pageSize: Int = 18, name: String = "%"): Future[Seq[(Post, User)]] = {
+  override def searchByTag(page: Int = 0, pageSize: Int = 18, name: String = "%"): Future[Seq[Post]] = {
     val offset = pageSize * page
 
     val jian = JianFan.f2j(name).toLowerCase
@@ -98,12 +98,13 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' order by p.created desc  limit $offset,$pageSize""".as[Long]
     db.run(query).flatMap { postIds =>
       val q = (for {
-        (post, user) <- posts join users on (_.userId === _.id) if post.id inSet postIds
-      } yield (post, user)).sortBy(_._1.created.desc)
+        post <- posts if post.id inSet postIds
+      } yield post).sortBy(_.created.desc)
       db.run(q.result)
     }
   }
 
+  @deprecated("legacy", "1.1.0")
   override def findHotPostForTag(name: String, page: Int = 0, pageSize: Int = 20): Future[Seq[(Post, User)]] = {
     val offset = pageSize * page
     val ts = DateTime.now().minusDays(30).getMillis / 1000
@@ -116,19 +117,19 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       .take(100)
     db.run(query.result).flatMap { pool =>
       val ids = Random.shuffle(pool).take(pageSize)
-      val q = (for {
+      val q = for {
         (post, user) <- posts join users on (_.userId === _.id) if post.id inSet ids
-      } yield (post, user)).sortBy(_._1.likes.desc)
+      } yield (post, user)
       db.run(q.result)
     }
   }
 
+  @deprecated("legacy", "1.1.0") @deprecated("legacy", "1.1.0")
   override def getTagPostImage(name: String): Future[Option[String]] = {
-    val query = (for {
-      ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
-      if tag.tagName.toLowerCase === name
-    } yield post)
-      .sortBy(_.likes.desc).map(_.content)
+    val query = for {
+      (post, mark) <- posts join marks on (_.id === _.postId)
+      if mark.tagName.toLowerCase === name
+    } yield post.content
     db.run(query.result.headOption)
   }
 
@@ -197,7 +198,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def addMark(postId: Long, authorId: Long, tagName: String, userId: Long): Future[Mark] = {
-    db.run(tags.filter(_.tagName === tagName).result.headOption).flatMap {
+    db.run(tags.filter(_.tagName === tagName).take(1).result.headOption).flatMap {
       case Some(tag) => Future.successful(tag.id.get)
       case None      => db.run(tags returning tags.map(_.id) += Tag(None, tagName, userId))
     }.flatMap { tagId =>

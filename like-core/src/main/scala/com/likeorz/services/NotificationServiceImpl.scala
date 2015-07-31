@@ -15,7 +15,7 @@ import scala.concurrent.Future
  * Date: 6/1/15
  */
 class NotificationServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends NotificationService
-    with NotificationsComponent with PostsComponent with UsersComponent
+    with NotificationsComponent with PostsComponent with UsersComponent with UserInfoComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -60,31 +60,39 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
     }
   }
 
-  override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 30): Future[Seq[(Notification, User, Option[(Post, User)])]] = {
+  override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 15): Future[Seq[(Notification, UserInfo, Option[(Post, UserInfo)])]] = {
 
     val q = if (timestamp.isDefined) {
       (for {
-        (notification, user) <- notifications join users on (_.fromUserId === _.id)
-        if notification.userId === userId && notification.updated < timestamp.get
+        notification <- notifications
+        user <- userinfo
+        if notification.fromUserId === user.id && notification.userId === userId && notification.updated < timestamp.get
       } yield (notification, user)).sortBy(_._1.updated.desc).take(pageSize)
     } else {
       (for {
-        (notification, user) <- notifications join users on (_.fromUserId === _.id)
-        if notification.userId === userId
+        notification <- notifications
+        user <- userinfo
+        if notification.fromUserId === user.id && notification.userId === userId
       } yield (notification, user)).sortBy(_._1.updated.desc).take(pageSize)
     }
 
     RedisCacheClient.zadd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
-
+    //    var s = System.nanoTime()
+    //    println(s)
     db.run(q.result).flatMap { notificationAndUser =>
+      //      var e = (System.nanoTime() - s) / 1e9
+      //      println("time:" + e)
       val postIds = notificationAndUser.flatMap(_._1.postId).toSet
 
       if (postIds.nonEmpty) {
         val queryPost = for {
-          (post, user) <- posts join users on (_.userId === _.id) if post.id inSet (postIds)
+          (post, user) <- posts join userinfo on (_.userId === _.id) if post.id inSet postIds
         } yield (post, user)
+        //        s = System.nanoTime()
         db.run(queryPost.result).map { postAndUser =>
-          val postMap = postAndUser.map(x => (x._1.id -> x)).toMap
+          //          e = (System.nanoTime() - s) / 1e9
+          //          println("time:" + e)
+          val postMap = postAndUser.map(x => x._1.id -> x).toMap
           notificationAndUser.map {
             case (notification, user) =>
               (notification, user, postMap.get(notification.postId))

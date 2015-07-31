@@ -20,6 +20,6 @@ trait NotificationService {
 
   def countUnreadLikesForUser(userId: Long): Future[Int]
 
-  def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 20): Future[Seq[(Notification, User, Option[(Post, User)])]]
+  def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 15): Future[Seq[(Notification, UserInfo, Option[(Post, UserInfo)])]]
 
 }

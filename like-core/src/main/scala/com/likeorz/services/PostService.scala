@@ -20,7 +20,7 @@ trait PostService {
 
   def getPostsByIds(ids: Seq[Long]): Future[Seq[(Post, Seq[(Long, String, Int)])]]
 
-  def searchByTag(page: Int = 0, pageSize: Int = 20, name: String): Future[Seq[(Post, User)]]
+  def searchByTag(page: Int = 0, pageSize: Int = 20, name: String): Future[Seq[Post]]
 
   def findHotPostForTag(name: String, page: Int = 0, pageSize: Int = 20): Future[Seq[(Post, User)]]
 

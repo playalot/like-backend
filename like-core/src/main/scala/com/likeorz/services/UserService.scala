@@ -65,4 +65,6 @@ trait UserService {
 
   def getUserInfo(userId: Long): Future[CachedUserInfo]
 
+  def getUserInfoFromCache(userId: Long): CachedUserInfo
+
 }

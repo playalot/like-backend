@@ -27,7 +27,7 @@ class PushLikeNotificationActor @Inject() (notificationService: NotificationServ
         for {
           countLikes <- notificationService.countUnreadLikesForUser(userId.toLong)
           countTotal <- notificationService.countForUser(userId.toLong)
-          push <- if (countTotal > 0 && RedisCacheClient.zscore(KeyUtils.pushLikes, userId).isDefined) pushService.sendPushNotificationToUser(userId.toLong, s"你收到了${countLikes}个赞,快来看看", countTotal) else Future.successful(())
+          push <- if (countTotal > 0 && countLikes > 0 && RedisCacheClient.zscore(KeyUtils.pushLikes, userId).isDefined) pushService.sendPushNotificationToUser(userId.toLong, s"你收到了${countLikes}个赞,快来看看", countTotal) else Future.successful(())
         } yield {
           RedisCacheClient.zrem(KeyUtils.pushLikes, userId)
         }

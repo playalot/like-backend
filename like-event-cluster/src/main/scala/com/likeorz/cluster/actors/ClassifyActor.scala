@@ -1,14 +1,18 @@
 package com.likeorz.cluster.actors
 
 import akka.actor.{ Actor, ActorLogging, Props }
-import com.likeorz.cluster.utils.MLUtils
-import com.likeorz.common.{ Tag, Tags }
+import com.likeorz.cluster.utils.{ RedisCacheClient, MLUtils }
+import com.likeorz.common.{ ClassifyPost, Tag, Tags }
 import org.apache.spark.mllib.clustering.KMeansModel
 import org.apache.spark.mllib.feature.Word2VecModel
 
 class ClassifyActor(w2v: Word2VecModel, cluster: KMeansModel) extends Actor with ActorLogging {
 
   override def receive = {
+    case ClassifyPost(id, tags, timestamp) =>
+      val num = cluster.predict(MLUtils.wordsToVector(tags.flatMap(tag => MLUtils.cleanTag(tag)), w2v))
+      RedisCacheClient.zadd("category:" + num, timestamp, id.toString)
+      log.info(s"Post[$id](${tags.mkString(",")}}) -> category[$num]")
     case Tags(tags) =>
       val num = cluster.predict(MLUtils.wordsToVector(tags.flatMap(tag => MLUtils.cleanTag(tag)), w2v))
       sender() ! num

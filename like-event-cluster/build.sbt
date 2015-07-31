@@ -9,9 +9,11 @@ resolvers += Resolver.mavenLocal
 
 libraryDependencies ++= Seq(
   "com.typesafe"      %  "config"         % "1.3.0",
+  "redis.clients"     %  "jedis"          % "2.7.3",
   "joda-time"         %  "joda-time"      % "2.8.1",
   "org.joda"          %  "joda-convert"   % "1.7",
   "ch.qos.logback"    %  "logback-classic"% "1.1.3",
+  "mysql"             %  "mysql-connector-java" % "5.1.36",
   "org.spark-project.akka" %% "akka-actor"  % "2.3.4-1-spark",
   "org.spark-project.akka" %% "akka-remote" % "2.3.4-1-spark",
   "org.apache.spark"  %% "spark-core"     % "1.4.1",

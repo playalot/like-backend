@@ -7,8 +7,6 @@ case class Post(
   userId: Long,
   created: Long,
   updated: Long,
-  tagId: Long,
-  likes: Long,
   place: Option[String] = None,
   location: Option[String] = None,
   description: Option[String] = None,

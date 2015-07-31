@@ -14,13 +14,11 @@ trait PostsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def userId = column[Long]("user_id")
     def created = column[Long]("created")
     def updated = column[Long]("updated")
-    def tagId = column[Long]("tag_id")
-    def likes = column[Long]("likes")
     def place = column[String]("place")
     def location = column[String]("location")
     def description = column[String]("description")
     def score = column[Int]("score")
-    override def * = (id.?, content, `type`, userId, created, updated, tagId, likes, place.?, location.?, description.?, score.?) <> (Post.tupled, Post.unapply _)
+    override def * = (id.?, content, `type`, userId, created, updated, place.?, location.?, description.?, score.?) <> (Post.tupled, Post.unapply _)
   }
 
   protected val posts = TableQuery[PostsTable]

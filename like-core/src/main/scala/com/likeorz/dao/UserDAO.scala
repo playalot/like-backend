@@ -40,6 +40,21 @@ trait UsersComponent { self: HasDatabaseConfig[JdbcProfile] =>
   protected val users = TableQuery[UsersTable]
 }
 
+trait UserInfoComponent { self: HasDatabaseConfig[JdbcProfile] =>
+  import driver.api._
+
+  class UserInfoTable(tag: Tag) extends Table[UserInfo](tag, "user") {
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+    def nickname = column[String]("nickname")
+    def avatar = column[String]("avatar")
+    def cover = column[String]("cover")
+    def likes = column[Long]("likes")
+    override def * = (id, nickname, avatar, cover, likes) <> (UserInfo.tupled, UserInfo.unapply _)
+  }
+
+  protected val userinfo = TableQuery[UserInfoTable]
+}
+
 trait NotificationsComponent { self: HasDatabaseConfig[JdbcProfile] =>
   import driver.api._
 

@@ -18,9 +18,9 @@ object KeyUtils {
 
   def userBlacklist: String = "user_blacklist"
 
-  def userCategory(uid: Long): String = "user_cat:" + uid
+  def userCategory: String = "user_category"
 
-  def category(cid: Long): String = "cat:" + cid
+  def category(cid: Long): String = "category:" + cid
 
   def hotTags: String = "hot_tags"
 

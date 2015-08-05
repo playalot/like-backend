@@ -50,7 +50,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
     db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).drop(page * pageSize).take(pageSize).result).flatMap { posts =>
       val futures = posts.map { post =>
-        val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
+        val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
         if (cachedMarks.nonEmpty) {
           val markIds = cachedMarks.keySet.mkString(", ")
           val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
@@ -72,7 +72,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     } else {
       db.run(posts.filter(_.id inSet ids).result).flatMap { posts =>
         val futures = posts.map { post =>
-          val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + post.id.get, offset = 0, limit = 50).map(v => (v._1.toLong, v._2.toInt)).toMap
+          val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + post.id.get, offset = 0, limit = 100).map(v => (v._1.toLong, v._2.toInt)).toMap
           if (cachedMarks.nonEmpty) {
             val markIds = cachedMarks.keySet.mkString(", ")
             val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
@@ -139,7 +139,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])] = {
     // Get top 10 marks for the post from cache
-    val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + postId, offset = page * 50, limit = 50).map(v => (v._1.toLong, v._2.toInt)).toMap
+    val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + postId, offset = page * 100, limit = 100).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
     // Query marks with tagname and user order by created desc
@@ -269,17 +269,17 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
-    val tagIdsQuery = sql"""SELECT DISTINCT tag_id FROM mark WHERE user_id=$userId order by created desc limit 100""".as[Long]
+    val tagIdsQuery = sql"""SELECT DISTINCT m.tag_id FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId""".as[Long]
     db.run(tagIdsQuery).flatMap { tagIds =>
       if (tagIds.nonEmpty) {
         val tIds = tagIds.mkString(", ")
         val query = if (timestamp.isDefined) {
           val ts = timestamp.get
-          sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[Long]
+          sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[(Long, Long)]
         } else {
-          sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[Long]
+          sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[(Long, Long)]
         }
-        db.run(query)
+        db.run(query).map(x => x.groupBy(_._2).map(_._2.head._1).toSeq)
       } else {
         Future.successful(Seq())
       }
@@ -287,7 +287,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPostsTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]] = {
-    val tagsQuery = sql"""SELECT DISTINCT tag FROM mark WHERE user_id=$userId order by created desc limit 100""".as[String]
+    val tagsQuery = sql"""SELECT DISTINCT m.tag FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId""".as[String]
     db.run(tagsQuery).map(_.toSet)
   }
 
@@ -303,21 +303,23 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(deletes += DeletedPhoto(None, photo)).map(_ => ())
   }
 
-  override def getPersonalizedPostsForUser(userId: Long, ratio: Double): Seq[Long] = {
+  override def getPersonalizedPostsForUser(userId: Long, ratio: Double, pageSize: Int, timestamp: Option[Long]): Seq[Long] = {
     try {
-      RedisCacheClient.lrange(KeyUtils.userCategory(userId), 0, 20).zipWithIndex.map {
+      RedisCacheClient.hget(KeyUtils.userCategory, userId.toString).map(_.split(",").toSeq.map(_.toDouble)).getOrElse(Seq()).zipWithIndex.map {
         case (num, i) =>
-          val n = (num.toDouble * ratio).toInt
+          val n = scala.math.ceil(num * ratio).toInt
           if (n > 0) {
             // get posts with least view
-            val ids = RedisCacheClient.zrangebyscore(KeyUtils.category(i), 0, Int.MaxValue, 0, n)
-            // Increase view count
-            ids.foreach(id => RedisCacheClient.zincrby(KeyUtils.category(i), 1, id))
+            val ids = if (timestamp.isDefined) {
+              RedisCacheClient.zrevrangebyscore(KeyUtils.category(i), 0, timestamp.get - 1, 0, n)
+            } else {
+              RedisCacheClient.zrevrangebyscore(KeyUtils.category(i), 0, Long.MaxValue, 0, n)
+            }
             ids.map(_.toLong)
           } else {
             Set[Long]()
           }
-      }.toSeq.flatMap(x => x)
+      }.flatMap(x => x).sortWith(_ > _)
     } catch {
       case e: Throwable =>
         e.printStackTrace()

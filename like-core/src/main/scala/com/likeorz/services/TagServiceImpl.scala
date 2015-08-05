@@ -42,7 +42,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   override def autoComplete(name: String): Future[Seq[Tg]] = {
     val query = (for {
       tag <- tags if tag.tagName startsWith name.toLowerCase
-    } yield tag).take(10)
+    } yield tag).take(5)
     db.run(query.result)
   }
 

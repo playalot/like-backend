@@ -23,9 +23,15 @@ object RedisCacheClient {
     }
   }
 
-  def zrevrangebyscore(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
+  def zrevrangeByScoreWithScores(key: String, max: Double = Double.MaxValue, min: Double = 0, offset: Int = 0, limit: Int = 15): Set[(String, Double)] = {
     withJedisClient[Set[(String, Double)]] { client =>
       client.zrevrangeByScoreWithScores(key, max, min, offset, limit).map(x => (x.getElement, x.getScore)).toSet
+    }
+  }
+
+  def zrevrangebyscore(key: String, min: Double, max: Double, offset: Int, count: Int) = {
+    withJedisClient[Set[String]] { client =>
+      client.zrevrangeByScore(key: String, max, min, offset, count).toSet
     }
   }
 
@@ -154,6 +160,12 @@ object RedisCacheClient {
   def lrange(key: String, start: Long, end: Long): List[String] = {
     withJedisClient[List[String]] { client =>
       client.lrange(key, start, end).toList
+    }
+  }
+
+  def zrevrange(key: String, start: Long, end: Long): List[String] = {
+    withJedisClient[List[String]] { client =>
+      client.zrevrange(key, start, end).toList
     }
   }
 

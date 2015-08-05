@@ -3,6 +3,7 @@ package controllers
 import javax.inject.{ Named, Inject }
 
 import akka.actor.ActorRef
+import com.likeorz.common.ClassifyPost
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -21,6 +22,7 @@ import scala.concurrent.Future
  */
 class PostController @Inject() (
     @Named("event-producer-actor") eventProducerActor: ActorRef,
+    @Named("classification-actor") classificationActor: ActorRef,
     val messagesApi: MessagesApi,
     tagService: TagService,
     markService: MarkService,
@@ -59,7 +61,7 @@ class PostController @Inject() (
       postCommand => {
         postService.insert(Post(None, postCommand.content, postCommand.`type`.getOrElse("PHOTO"),
           request.userId, System.currentTimeMillis / 1000, System.currentTimeMillis / 1000,
-          0, 0, postCommand.place, postCommand.location.map(_.take(2).mkString(" ")))).flatMap { post =>
+          postCommand.place, postCommand.location.map(_.take(2).mkString(" ")))).flatMap { post =>
 
           // log event
           eventProducerActor ! LikeEvent(None, "publish", "user", request.userId.toString, Some("post"), Some(post.identify),
@@ -73,6 +75,10 @@ class PostController @Inject() (
             author <- userService.getUserInfo(request.userId)
             results <- Future.sequence(futures)
           } yield {
+            if (author.likes.toLong > 200) {
+              // classify post
+              classificationActor ! ClassifyPost(post.id.get, postCommand.tags, post.created)
+            }
             val marksJson = results.map { tagAndMark =>
               Json.obj(
                 "mark_id" -> tagAndMark._2.id.get,

@@ -240,4 +240,18 @@ class UserController @Inject() (
     }
   }
 
+  def searchUser(name: String) = SecuredAction.async { implicit request =>
+    userService.searchByName(name).map { users =>
+      val jsonArr = Json.toJson(users.map { user =>
+        Json.obj(
+          "id" -> user.identify,
+          "nickname" -> user.nickname,
+          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+          "likes" -> user.likes
+        )
+      })
+      success(Messages("success.found"), Json.obj("users" -> jsonArr))
+    }
+  }
+
 }

@@ -11,6 +11,7 @@ import com.likeorz.services.{ UserService, PostService, MarkService }
 import utils.{ HelperUtils, QiniuUtil }
 
 import scala.concurrent.Future
+import scala.util.Random
 
 /**
  * Created by Guan Guan
@@ -134,14 +135,16 @@ class FeedController @Inject() (
   def getHomeFeedsV2(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
     val screenWidth = scala.math.min(1242, (getScreenWidth * 1.656).toInt)
-    val pageSize = 10
+    val pageSize = 15
+    val followPageSize = 15
+    val taggedPageSize = 5
 
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
       val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
-      val followIds = postService.getFollowingPosts(request.userId.get, pageSize, timestamp)
-      val taggedIds = postService.getTaggedPosts(request.userId.get, pageSize, timestamp)
-      //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.5))
+      val followIds = postService.getFollowingPosts(request.userId.get, followPageSize, timestamp)
+      val taggedIds = postService.getTaggedPosts(request.userId.get, taggedPageSize, timestamp)
+      //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.4, pageSize, timestamp))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
     } else {
       val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
@@ -153,11 +156,11 @@ class FeedController @Inject() (
       RedisCacheClient.srandmember(KeyUtils.postPromote).map(_.toLong)
     else List[Long]()
 
-    postService.getTaggedPostsTags(request.userId.getOrElse(-1L), pageSize, timestamp).flatMap { reasonTags =>
+    postService.getTaggedPostsTags(request.userId.getOrElse(-1L), taggedPageSize, timestamp).flatMap { reasonTags =>
       futureIds.flatMap { results =>
-        //      results.foreach(println)
+        //        results.foreach(println)
         val showIds = results.flatten.distinct.sortWith(_ > _).take(pageSize)
-        //      println(showIds)
+        //        println(showIds)
         val pointers = results.map(_.sortWith(_ > _).headOption.getOrElse(-1L)).toArray
         if (showIds.isEmpty) {
           Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
@@ -199,14 +202,24 @@ class FeedController @Inject() (
                 // Find post shown reason
                 var reason: Int = -1
                 var reasonTag: String = null
-                if (results.length == 3 && results(2).contains(post.id.get)) {
+                if (post.userId == request.userId.getOrElse(-1L)) {
+                  // User own post
+                  reason = -1
+                } else if (ads.contains(post.id.get) || results.head.contains(post.id.get)) {
+                  // Editor pick (Ads belong to editor pick)
+                  reason = 2
+                } else if (results.length >= 4 && results(3).contains(post.id.get)) {
+                  // You maybe like
+                  reason = 3
+                } else if (results.length >= 3 && results(2).contains(post.id.get)) {
+                  // Based on tags
                   reason = 1
                   row._2.map(_._2).find(t => reasonTags.contains(t)).foreach(t => reasonTag = t)
-                } else if (results.length == 2 && results(1).contains(post.id.get)) {
-                  reason = 3
-                } else if (results.head.contains(post.id.get)) {
-                  reason = 2
+                } else if (results.length >= 2 && results(1).contains(post.id.get)) {
+                  // Following
+                  reason = 4
                 }
+                // println(s"post[${post.id.get}][${post.content}}] $reason $reasonTag")
                 val markIds = row._2.map(_._1)
                 for {
                   userInfo <- userService.getUserInfo(post.userId)
@@ -252,7 +265,7 @@ class FeedController @Inject() (
   def getFriendsFeeds(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     if (request.userId.isDefined) {
       // Use phone screen width for output photo size
-      val screenWidth = getScreenWidth
+      val screenWidth = scala.math.min(1242, (getScreenWidth * 1.656).toInt)
 
       postService.getFollowingPosts(request.userId.get, 10, timestamp).flatMap { ids =>
         if (ids.isEmpty) {

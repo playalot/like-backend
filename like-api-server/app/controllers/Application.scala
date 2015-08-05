@@ -4,7 +4,8 @@ import javax.inject.{ Named, Inject }
 
 import akka.actor.{ ActorRef, ActorPath, ActorSystem }
 import akka.pattern.ask
-import com.likeorz.common.{ PushUnreadLikes, ApiServerRemoteCount }
+import akka.util.Timeout
+import com.likeorz.common.{ ClassifyPost, PushUnreadLikes, ApiServerRemoteCount }
 import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ User, Notification }
 import org.joda.time.DateTime
@@ -144,7 +145,6 @@ class Application @Inject() (
   }
 
   def test = SecuredAction { implicit request =>
-    Logger.error(s"User[$request.userId] run test!!!")
     //    markService.rebuildMarkCache()
     //    markService.rebuildUserLikesCache()
     //    markService.rebuildUserCountsCache()

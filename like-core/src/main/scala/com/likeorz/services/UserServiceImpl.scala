@@ -95,6 +95,13 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  override def searchByName(name: String): Future[Seq[User]] = {
+    val query = (for {
+      user <- users if user.nickname startsWith name.toLowerCase
+    } yield user).take(5)
+    db.run(query.result)
+  }
+
   override def nicknameExists(nickname: String): Future[Boolean] = db.run(users.filter(_.nickname === nickname).result.headOption).map(_.isDefined)
 
   override def countFollowers(id: Long): Future[Long] = {

@@ -53,6 +53,8 @@ trait UserService {
 
   def getNickname(userId: Long): Future[String]
 
+  def searchByName(name: String): Future[Seq[User]]
+
   def nicknameExists(nickname: String): Future[Boolean]
 
   def follow(fromId: Long, toId: Long): Future[Int]

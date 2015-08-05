@@ -9,7 +9,7 @@ import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.libs.concurrent.Execution.Implicits._
-import com.likeorz.services.{ PromoteService, PostService, TagService }
+import com.likeorz.services.{ UserService, PromoteService, PostService, TagService }
 import utils.QiniuUtil
 
 import scala.util.Random
@@ -19,6 +19,7 @@ class SearchController @Inject() (
     val messagesApi: MessagesApi,
     tagService: TagService,
     postService: PostService,
+    userService: UserService,
     cached: Cached,
     promoteService: PromoteService) extends BaseController {
 
@@ -33,19 +34,40 @@ class SearchController @Inject() (
     }
   }
 
+  def searchUsersAndTags(name: String) = Action.async {
+    for {
+      users <- userService.searchByName(name)
+      tags <- tagService.autoComplete(name)
+    } yield {
+      val userJson = Json.toJson(users.map { user =>
+        Json.obj(
+          "id" -> user.identify,
+          "nickname" -> user.nickname,
+          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+          "likes" -> user.likes
+        )
+      })
+      val tagJson = Json.toJson(tags.map(tag => Json.obj(
+        "id" -> tag.identify,
+        "tag" -> tag.tagName,
+        "likes" -> tag.likes
+      )))
+      success(Messages("success.found"), Json.obj(
+        "tags" -> tagJson,
+        "users" -> userJson
+      ))
+    }
+  }
+
   def hotTags = Action.async {
     for {
       entities <- promoteService.getPromoteEntities(2)
       tags <- tagService.hotTags(15)
     } yield {
       val entityArr = entities.map { entity =>
-        val image = entity.images.map { images =>
-          val list = images.split(",").filter(_.trim.length > 0)
-          list(Random.nextInt(list.length))
-        }.getOrElse(entity.avatar)
         Json.obj(
           "tag" -> entity.name,
-          "image" -> QiniuUtil.getScale(image, 360)
+          "image" -> QiniuUtil.getScale(entity.avatar, 360)
         )
       }
       val tagArr = tags.filterNot(t => entities.exists(_.name == t)).map { tag => Json.obj("tag" -> tag) }
@@ -58,14 +80,15 @@ class SearchController @Inject() (
     if (request.userId.isDefined && page == 0)
       eventProducerActor ! LikeEvent(None, "search", "user", request.userId.get.toString, properties = Json.obj("query" -> name))
     postService.searchByTag(page = page, name = name).map { results =>
-      val posts = results.map {
-        case (post, user) => Json.obj(
+      val posts = results.map { post =>
+        val user = userService.getUserInfoFromCache(post.userId)
+        Json.obj(
           "post_id" -> post.id,
           "type" -> post.`type`.toString,
           "content" -> QiniuUtil.getPhoto(post.content, "medium"),
           "created" -> post.created,
           "user" -> Json.obj(
-            "user_id" -> user.id,
+            "user_id" -> post.userId,
             "nickname" -> user.nickname,
             "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
             "likes" -> user.likes
@@ -83,14 +106,15 @@ class SearchController @Inject() (
       entityOpt <- promoteService.getEntitybyName(name)
       results <- postService.searchByTag(page = page, name = name)
     } yield {
-      val posts = results.map {
-        case (post, user) => Json.obj(
+      val posts = results.map { post =>
+        val user = userService.getUserInfoFromCache(post.userId)
+        Json.obj(
           "post_id" -> post.id,
           "type" -> post.`type`.toString,
           "content" -> QiniuUtil.getPhoto(post.content, "medium"),
           "created" -> post.created,
           "user" -> Json.obj(
-            "user_id" -> user.id,
+            "user_id" -> post.userId,
             "nickname" -> user.nickname,
             "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
             "likes" -> user.likes
@@ -129,14 +153,15 @@ class SearchController @Inject() (
             "likes" -> user.likes
           )
         })
-        val posts = results.map {
-          case (post, user) => Json.obj(
+        val posts = results.map { post =>
+          val user = userService.getUserInfoFromCache(post.userId)
+          Json.obj(
             "post_id" -> post.id,
             "type" -> post.`type`.toString,
             "content" -> QiniuUtil.getPhoto(post.content, "medium"),
             "created" -> post.created,
             "user" -> Json.obj(
-              "user_id" -> user.id,
+              "user_id" -> post.userId,
               "nickname" -> user.nickname,
               "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
               "likes" -> user.likes

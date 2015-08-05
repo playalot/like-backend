@@ -5,8 +5,7 @@ package com.likeorz.models
  * Date: 6/26/15
  */
 case class Entity(
-  id: Option[Long],
+  id: Option[Long] = None,
   name: String,
   description: String,
-  avatar: String,
-  images: Option[String])
+  avatar: String)

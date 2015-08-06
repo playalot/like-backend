@@ -13,12 +13,15 @@ import slick.driver.JdbcProfile
 
 import scala.concurrent.Future
 import scala.util.Random
+import scala.collection.JavaConversions._
 
 class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, configuration: Configuration) extends TagService
     with TagsComponent with MarksComponent with UsersComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
+
+  val illegalWords = configuration.getStringList("tag.illegal-words").get.toList
 
   override def suggestTagsForUser(userId: Long): Future[(Seq[String], Seq[String])] = {
 
@@ -75,9 +78,8 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   }
 
   override def validTag(tag: String): Boolean = {
-    import scala.collection.JavaConversions._
-    val regexList = configuration.getStringList("tag-blacklist").get.toList
-    !regexList.exists(r => tag.matches(r))
+    val illegalWords = configuration.getStringList("tag.illegal-words").get.toList
+    !illegalWords.exists(w => tag.contains(w))
   }
 
 }

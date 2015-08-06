@@ -23,6 +23,7 @@ class SearchController @Inject() (
     cached: Cached,
     promoteService: PromoteService) extends BaseController {
 
+  @deprecated("replaced by searchUsersAndTags")
   def autoComplete(name: String) = Action.async {
     tagService.autoComplete(name).map { tags =>
       success(Messages("success.found"), Json.toJson(tags.map(tag => Json.obj(
@@ -41,14 +42,14 @@ class SearchController @Inject() (
     } yield {
       val userJson = Json.toJson(users.map { user =>
         Json.obj(
-          "id" -> user.identify,
+          "user_id" -> user.identify,
           "nickname" -> user.nickname,
           "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
           "likes" -> user.likes
         )
       })
       val tagJson = Json.toJson(tags.map(tag => Json.obj(
-        "id" -> tag.identify,
+        "mark_id" -> tag.identify,
         "tag" -> tag.tagName,
         "likes" -> tag.likes
       )))

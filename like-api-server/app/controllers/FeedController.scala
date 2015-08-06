@@ -25,7 +25,7 @@ class FeedController @Inject() (
 
   def getHomeFeeds(timestamp: Option[String] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
-    val screenWidth = scala.math.min(1242, (getScreenWidth * 1.656).toInt)
+    val screenWidth = scala.math.min(1080, (getScreenWidth * 1.5).toInt)
 
     // Parse timestamp list used for each data source
     val ts = HelperUtils.parseTimestamp(timestamp)
@@ -134,7 +134,7 @@ class FeedController @Inject() (
   // Get home feeds, ordered by created
   def getHomeFeedsV2(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
-    val screenWidth = scala.math.min(1242, (getScreenWidth * 1.656).toInt)
+    val screenWidth = scala.math.min(1080, (getScreenWidth * 1.5).toInt)
     val pageSize = 15
     val followPageSize = 15
     val taggedPageSize = 5
@@ -243,7 +243,7 @@ class FeedController @Inject() (
                     "user" -> Json.obj(
                       "user_id" -> post.userId,
                       "nickname" -> userInfo.nickname,
-                      "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
+                      "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "medium"),
                       "likes" -> userInfo.likes
                     ),
                     "marks" -> Json.toJson(marksJson)

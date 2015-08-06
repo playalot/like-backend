@@ -38,12 +38,15 @@ class ClassificationActor @Inject() (configuration: Configuration) extends Actor
   }
 
   override def receive = {
+    case post: ClassifyPost if remotes.isEmpty =>
+      log.info("No remote actors registered")
+    case post: ClassifyPost =>
+      counter = (counter + 1) % remotes.size
+      remotes(counter) forward post
     case tags: Tags if remotes.isEmpty =>
       log.info("No remote actors registered")
     case tags: Tags =>
       counter = (counter + 1) % remotes.size
-      println(remotes(counter))
-      println(sender())
       remotes(counter) forward tags
     case tag: Tag if remotes.isEmpty =>
       log.info("No remote actors registered")

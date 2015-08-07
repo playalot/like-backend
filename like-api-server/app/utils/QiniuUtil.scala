@@ -55,12 +55,9 @@ object QiniuUtil {
     s"$CDN/$filename?imageView2/0/q/85"
   }
 
-  def getScale(filename: String, targetSize: Int): String = {
-    s"$CDN/$filename?imageView2/0/w/$targetSize/h/$targetSize/q/85"
-  }
-
   def getAvatar(filename: String, size: String): String = {
-    s"$CDN/${resizeImage(filename, AvatarSize.getOrElse(size, AvatarSize("medium")))}"
+    val targetSize = AvatarSize.getOrElse(size, AvatarSize("medium"))
+    s"$CDN/$filename?imageView2/5/w/$targetSize"
   }
 
   def getPhoto(filename: String, size: String): String = {
@@ -68,7 +65,7 @@ object QiniuUtil {
   }
 
   def getSizedImage(filename: String, screenSize: Int): String = {
-    s"$CDN/${resizeImage(filename, screenSize, true)}"
+    s"$CDN/${resizeImage(filename, screenSize, isParsedFilename = true)}"
   }
 
 }

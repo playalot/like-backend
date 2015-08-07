@@ -1,5 +1,9 @@
 package utils
 
+import play.api.Play
+
+import scala.collection.JavaConversions._
+
 import scala.language.implicitConversions
 
 /**
@@ -13,6 +17,10 @@ object HelperUtils {
   implicit def long2String(value: Long): String = value.toString
 
   implicit def int2String(value: Int): String = value.toString
+
+  val sensitiveWord = SensitiveWord.getInstance()
+
+  val illegalWords = Play.current.configuration.getStringList("tag.illegal-words").get.toList
 
   def parseTimestamp(timestamp: Option[String]): Seq[Option[Long]] = {
     if (timestamp.isDefined) {
@@ -32,6 +40,14 @@ object HelperUtils {
 
   def random(i: Int, n: Int = 0): Int = {
     rand.nextInt(i) + n
+  }
+
+  def isContainSensitiveWord(word: String): Boolean = {
+    if (illegalWords.exists(w => word.contains(w))) {
+      true
+    } else {
+      sensitiveWord.isContainSensitiveWord(word)
+    }
   }
 
 }

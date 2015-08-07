@@ -109,6 +109,12 @@ object RedisCacheClient {
     }
   }
 
+  def sismember(key: String, member: String) = {
+    withJedisClient[Boolean] { client =>
+      client.sismember(key, member)
+    }
+  }
+
   def hmset(key: String, fields: Map[String, String]) = {
     withJedisClient[String] { client =>
       client.hmset(key, fields)

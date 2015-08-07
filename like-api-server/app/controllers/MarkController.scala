@@ -25,7 +25,7 @@ class MarkController @Inject() (
     userService: UserService,
     notificationService: NotificationService) extends BaseController {
 
-  def like(markId: Long) = SecuredAction.async { implicit request =>
+  def like(markId: Long) = (SecuredAction andThen BannedUserCheckAction).async { implicit request =>
     markService.getMarkWithPostAuthor(markId).flatMap {
       case Some((mark, postAuthor)) =>
         // log event

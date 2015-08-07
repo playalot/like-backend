@@ -25,7 +25,7 @@ class CommentController @Inject() (
     notificationService: NotificationService,
     pushService: PushService) extends BaseController {
 
-  def commentMark(id: Long) = SecuredAction.async(parse.json) { implicit request =>
+  def commentMark(id: Long) = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
     markService.getMark(id).flatMap {
       case Some(mark) =>
         val replyId = (request.body \ "reply_id").asOpt[Long]

@@ -60,7 +60,7 @@ class UserController @Inject() (
     }
   }
 
-  def updateNickname() = SecuredAction.async(parse.json) { implicit request =>
+  def updateNickname() = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
     (request.body \ "nickname").asOpt[String] match {
       case Some(nickname) =>
         userService.nicknameExists(nickname.trim).flatMap {
@@ -78,7 +78,7 @@ class UserController @Inject() (
     }
   }
 
-  def updateAvatar() = SecuredAction.async(parse.json) { implicit request =>
+  def updateAvatar() = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
     (request.body \ "avatar").asOpt[String] match {
       case Some(avatar) =>
         for {
@@ -95,7 +95,7 @@ class UserController @Inject() (
     }
   }
 
-  def updateCover() = SecuredAction.async(parse.json) { implicit request =>
+  def updateCover() = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
     (request.body \ "cover").asOpt[String] match {
       case Some(avatar) =>
         for {
@@ -187,7 +187,7 @@ class UserController @Inject() (
     }
   }
 
-  def follow(id: Long) = SecuredAction.async { implicit request =>
+  def follow(id: Long) = (SecuredAction andThen BannedUserCheckAction).async { implicit request =>
     if (id == request.userId) {
       Future.successful(error(4017, Messages("failed.followYourself")))
     } else {

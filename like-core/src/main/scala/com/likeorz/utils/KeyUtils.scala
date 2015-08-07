@@ -29,5 +29,7 @@ object KeyUtils {
   def hotTagsWithUsers: String = "hot_tags_users"
 
   def pushLikes: String = "push_likes"
+
+  def bannedUsers: String = "banned_users"
 }
 

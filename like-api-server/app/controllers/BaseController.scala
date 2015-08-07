@@ -1,6 +1,6 @@
 package controllers
 
-import com.likeorz.utils.KeyUtils
+import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
 import play.api.i18n.{ Messages, I18nSupport }
 import play.api.libs.json.{ JsValue, Json }
 import play.api.mvc._
@@ -25,6 +25,16 @@ trait BaseController extends Controller with I18nSupport {
         .flatMap(token => MemcachedCacheClient.findUserId(KeyUtils.session(token)))
         .map(userId => block(new SecuredRequest(userId, request)))
         .getOrElse(Future.successful(error(4016, Messages("invalid.sessionToken"))))
+    }
+  }
+
+  object BannedUserCheckAction extends ActionFilter[SecuredRequest] {
+
+    override def filter[A](request: SecuredRequest[A]) = Future.successful {
+      if (RedisCacheClient.sismember(KeyUtils.bannedUsers, request.userId.toString))
+        Some(error(4057, Messages("invalid.banned")))
+      else
+        None
     }
   }
 

@@ -12,7 +12,7 @@ import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ Notification, Post, Report }
 import com.likeorz.services._
 import services.PushService
-import utils.QiniuUtil
+import utils.{ HelperUtils, SensitiveWord, QiniuUtil }
 
 import scala.concurrent.Future
 
@@ -52,7 +52,7 @@ class PostController @Inject() (
   /**
    * Publish a post
    */
-  def publishPost = SecuredAction.async(parse.json) { implicit request =>
+  def publishPost = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
     val screenWidth = request.headers.get("LIKE_SCREEN_WIDTH").getOrElse("1280").toInt
     request.body.validate[PostCommand].fold(
       errors => {
@@ -224,46 +224,52 @@ class PostController @Inject() (
   }
 
   /** Add a mark to the post */
-  def addMark(postId: Long) = SecuredAction.async(parse.json) { implicit request =>
-    (request.body \ "tag").asOpt[String] match {
-      case Some(tag) =>
-        if (tag.length > 13)
-          Future.successful(error(4025, Messages("invalid.tagMaxLength")))
-        else if (tag.length < 1)
-          Future.successful(error(4025, Messages("invalid.tagMinLength")))
-        else
-          postService.getPostById(postId).flatMap {
-            case Some(post) =>
-              // log event
-              eventProducerActor ! LikeEvent(None, "mark", "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag))
-              for {
-                nickname <- userService.getNickname(request.userId)
-                mark <- postService.addMark(postId, post.userId, tag, request.userId)
-              } yield {
-                if (request.userId != post.userId) {
-                  val notifyMarkUser = Notification(None, "MARK", post.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
-                  for {
-                    notify <- notificationService.insert(notifyMarkUser)
-                    count <- notificationService.countForUser(post.userId)
-                  } yield {
-                    pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
+  def addMark(postId: Long) = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
+    if (request.userId == 8257L) {
+      Future.successful(error(4025, Messages("invalid.tagField")))
+    } else {
+      (request.body \ "tag").asOpt[String] match {
+        case Some(tag) =>
+          if (tag.length > 13)
+            Future.successful(error(4025, Messages("invalid.tagMaxLength")))
+          else if (tag.length < 1)
+            Future.successful(error(4025, Messages("invalid.tagMinLength")))
+          else if (HelperUtils.isContainSensitiveWord(tag)) {
+            Future.successful(error(4025, Messages("invalid.tagIllegal")))
+          } else
+            postService.getPostById(postId).flatMap {
+              case Some(post) =>
+                // log event
+                eventProducerActor ! LikeEvent(None, "mark", "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag))
+                for {
+                  nickname <- userService.getNickname(request.userId)
+                  mark <- postService.addMark(postId, post.userId, tag, request.userId)
+                } yield {
+                  if (request.userId != post.userId) {
+                    val notifyMarkUser = Notification(None, "MARK", post.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
+                    for {
+                      notify <- notificationService.insert(notifyMarkUser)
+                      count <- notificationService.countForUser(post.userId)
+                    } yield {
+                      pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
+                    }
                   }
+                  success(Messages("success.mark"), Json.obj(
+                    "mark_id" -> mark.id.get,
+                    "tag" -> tag,
+                    "likes" -> 1,
+                    "is_liked" -> 1
+                  ))
                 }
-                success(Messages("success.mark"), Json.obj(
-                  "mark_id" -> mark.id.get,
-                  "tag" -> tag,
-                  "likes" -> 1,
-                  "is_liked" -> 1
-                ))
-              }
-            case None => Future.successful(error(4024, Messages("invalid.postId")))
-          }
-      case None => Future.successful(error(4025, Messages("invalid.tagField")))
+              case None => Future.successful(error(4024, Messages("invalid.postId")))
+            }
+        case None => Future.successful(error(4025, Messages("invalid.tagField")))
+      }
     }
   }
 
   /** Report abuse of a post */
-  def report(postId: Long) = SecuredAction.async { implicit request =>
+  def report(postId: Long) = (SecuredAction andThen BannedUserCheckAction).async { implicit request =>
     postService.report(Report(None, request.userId, postId)).map { _ =>
       success("success.report")
     }

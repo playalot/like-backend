@@ -110,7 +110,7 @@ class ApiController @Inject() (
   }
 
   def invisiblePost(postId: Long, status: Boolean) = SecuredAction.async {
-    dashboardService.invisiblePost(postId, status).map(_ => Ok)
+    dashboardService.blockPost(postId, status).map(_ => Ok)
   }
 
   def isPostRecommended(postId: Long) = SecuredAction.async {
@@ -118,7 +118,7 @@ class ApiController @Inject() (
   }
 
   def isPostInvisible(postId: Long) = SecuredAction.async {
-    dashboardService.isPostInvisible(postId).map(x => Ok(Json.obj("status" -> x)))
+    dashboardService.isPostBlocked(postId).map(x => Ok(Json.obj("status" -> x)))
   }
 
 }

@@ -59,7 +59,7 @@ class DashboardServiceImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     }
   }
 
-  override def invisiblePost(postId: Long, status: Boolean): Future[Boolean] = {
+  override def blockPost(postId: Long, status: Boolean): Future[Boolean] = {
     if (status) {
       db.run(posts.filter(_.id === postId).map(x => x.score).update(0)).map(rs => rs == 1)
     } else {
@@ -80,7 +80,7 @@ class DashboardServiceImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     db.run(recommends.filter(_.postId === postId).result.headOption).map(_.isDefined)
   }
 
-  override def isPostInvisible(postId: Long): Future[Boolean] = {
+  override def isPostBlocked(postId: Long): Future[Boolean] = {
     db.run(posts.filter(_.id === postId).result.headOption).map {
       case Some(post) => post.score.getOrElse(0) < 0
       case None       => false

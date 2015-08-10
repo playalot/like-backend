@@ -26,6 +26,11 @@ html, body {
     padding: 70px 15px 20px;
 }
 
+.col {
+  padding-right:5px;
+  padding-left:5px;
+}
+
 .footer {
     height: 60px;
     background-color: #f5f5f5;
@@ -106,6 +111,30 @@ a.desc:after {
     vertical-align: middle;
 }
 
+.post-panel {
+
+  .post-heading {
+      padding:0;
+      background-color: #fdfdfd;
+  }
+
+  .post-heading>a {
+      display: block;
+      padding: 0 10px;
+      clear: both;
+      font-weight: 400;
+      line-height: 1.42857143;
+      color: #333;
+      white-space: nowrap
+  }
+
+  .post-heading>a:focus,.post-heading>a:hover {
+      color: #262626;
+      text-decoration: none;
+      background-color: #f5f5f5;
+  }
+}
+
 .post-caption {
     padding: 10px 15px 0 15px;
     .post-caption-btn {
@@ -128,53 +157,35 @@ a.desc:after {
 }
 
 .media .media-object {
-    margin: 10px 10px 10px 0px;
+    margin: 5px 5px 5px 0;
 }
 
-.media .media-body {
-    padding: 10px 15px 10px 0;
+.media .post-user-info {
+    padding: 10px 5px 10px 10px;
+    width: 70%;
+    .block {
+      display: block;
+      font-size: 1.5vw;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .text-muted {
+      font-size: 1vw;
+    }
 }
 
 .thumb.thumb-sm {
-    width: 40px;
+    width: 25%;
 }
 
 .thumb {
-    width: 60px;
+    width: 25%;
     display: inline-block;
-}
-
-.block {
-    display: block;
-}
-
-.post-heading {
-    padding:0;
-}
-
-
-.post-heading>a {
-    display: block;
-    padding: 0 10px;
-    clear: both;
-    font-weight: 400;
-    line-height: 1.42857143;
-    color: #333;
-    white-space: nowrap
-}
-
-.post-heading>a:focus,.post-heading>a:hover {
-    color: #262626;
-    text-decoration: none;
-    background-color: #f5f5f5;
 }
 
 .post-summary {
     padding: 0 0 15px 15px;
-}
-
-.panel-default > .panel-heading {
-    background-color: #fdfdfd;
 }
 
 .user-profile {
@@ -215,8 +226,17 @@ img.img-corona {
     position: absolute;
     bottom: 50px;
     width: 100%;
-    opacity: 0.8;
+    opacity: 0.6;
     background-color: #000;
+
+    .post-mark-li {
+      font-size: 1.3vw;
+      cursor: pointer;
+    }
+}
+
+.post-panel:hover .thumb-pane {
+  opacity: 0.8;
 }
 
 .thumb-pane ul {
@@ -247,6 +267,14 @@ img.img-corona {
     font-size: 18px;
 }
 
+.load-more-post-btn {
+  text-align: center;
+  margin: auto;
+  width: 300px;
+  border: 1px solid #ededed;
+  padding: 20px 40px;
+  cursor: pointer;
+}
 
 .browsehappy {
     margin: 0.2em 0;

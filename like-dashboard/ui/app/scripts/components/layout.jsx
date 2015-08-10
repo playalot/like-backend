@@ -33,8 +33,8 @@ var Layout = React.createClass({
               <div id="w0-collapse" className="collapse navbar-collapse">
                 <ul id="w1" className="navbar-nav navbar-right nav">
                   <li><NavItemLink to="home" >Home</NavItemLink></li>
-                  <li><NavItemLink to="users" >Users</NavItemLink></li>
-                  <li><NavItemLink to="posts" >Posts</NavItemLink></li>
+                  <li><NavItemLink to="postlist" >Posts</NavItemLink></li>
+                  <li><NavItemLink to="brandlist" >Brands</NavItemLink></li>
                   <li className="dropdown">
                     <a className="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false" role="button"> {this.state.email} <span className="caret"></span></a>
                     <ul id="w2" className="dropdown-menu"><li><a href="/signOut" data-method="post" tabIndex="-1">Logout</a></li></ul>

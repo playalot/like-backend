@@ -240,6 +240,10 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  override def updatePostTimestamp(postId: Long): Future[Unit] = {
+    db.run(posts.filter(_.id === postId).map(_.updated).update(System.currentTimeMillis() / 1000)).map(_ => ())
+  }
+
   override def report(report: Report): Future[Report] = {
     db.run(reports returning reports.map(_.id) += report).map(id => report.copy(id = Some(id)))
   }

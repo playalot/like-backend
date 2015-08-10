@@ -12,14 +12,10 @@ import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ Notification, Post, Report }
 import com.likeorz.services._
 import services.PushService
-import utils.{ HelperUtils, SensitiveWord, QiniuUtil }
+import utils.{ HelperUtils, QiniuUtil }
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 5/28/15
- */
 class PostController @Inject() (
     @Named("event-producer-actor") eventProducerActor: ActorRef,
     @Named("classification-actor") classificationActor: ActorRef,
@@ -41,7 +37,7 @@ class PostController @Inject() (
     (__ \ 'location).readNullable[Seq[Double]]
   )(PostCommand.apply _)
 
-  val categories = Set("手办", "模型", "绘画", "美食", "外设")
+  val categories = Seq("手办", "模型", "手绘", "美食", "外设", "设计")
 
   /**
    * Get Qiniu upload token
@@ -69,7 +65,9 @@ class PostController @Inject() (
           eventProducerActor ! LikeEvent(None, "publish", "user", request.userId.toString, Some("post"), Some(post.identify),
             properties = Json.obj("tags" -> Json.toJson(postCommand.tags), "img" -> postCommand.content))
 
-          val futures = postCommand.tags
+          val uniqueCategory = postCommand.tags.find(tag => categories.contains(tag))
+
+          val futures = (postCommand.tags.diff(categories) ++ uniqueCategory)
             .filter(t => t.length <= 13 && t.length >= 1)
             .map(tag => postService.addMark(post.id.get, request.userId, tag, request.userId).map(mark => (tag, mark)))
 
@@ -246,6 +244,7 @@ class PostController @Inject() (
                 for {
                   nickname <- userService.getNickname(request.userId)
                   mark <- postService.addMark(postId, post.userId, tag, request.userId)
+                  update <- postService.updatePostTimestamp(postId)
                 } yield {
                   if (request.userId != post.userId) {
                     val notifyMarkUser = Notification(None, "MARK", post.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))

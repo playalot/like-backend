@@ -8,10 +8,6 @@ import utils.MemcachedCacheClient
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 5/24/15
- */
 trait BaseController extends Controller with I18nSupport {
 
   case class SecuredRequest[B](userId: Long, request: Request[B]) extends WrappedRequest(request)

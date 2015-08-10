@@ -24,7 +24,7 @@ class FeedController @Inject() (
 
   def getHomeFeeds(timestamp: Option[String] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
-    val screenWidth = scala.math.min(1080, (getScreenWidth * 1.5).toInt)
+    val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
 
     // Parse timestamp list used for each data source
     val ts = HelperUtils.parseTimestamp(timestamp)
@@ -133,7 +133,7 @@ class FeedController @Inject() (
   // Get home feeds, ordered by created
   def getHomeFeedsV2(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
-    val screenWidth = scala.math.min(1080, (getScreenWidth * 1.5).toInt)
+    val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
     val pageSize = 10
     val followPageSize = 10
     val taggedPageSize = 5
@@ -264,7 +264,7 @@ class FeedController @Inject() (
   def getFriendsFeeds(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     if (request.userId.isDefined) {
       // Use phone screen width for output photo size
-      val screenWidth = scala.math.min(1080, (getScreenWidth * 1.5).toInt)
+      val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
 
       postService.getFollowingPosts(request.userId.get, 10, timestamp).flatMap { ids =>
         if (ids.isEmpty) {

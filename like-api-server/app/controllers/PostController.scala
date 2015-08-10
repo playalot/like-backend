@@ -41,6 +41,8 @@ class PostController @Inject() (
     (__ \ 'location).readNullable[Seq[Double]]
   )(PostCommand.apply _)
 
+  val categories = Set("手办", "模型", "绘画", "美食", "外设")
+
   /**
    * Get Qiniu upload token
    */
@@ -122,7 +124,7 @@ class PostController @Inject() (
           success(Messages("success.found"), Json.obj(
             "post_id" -> id,
             "type" -> post.`type`,
-            "content" -> QiniuUtil.getRaw(post.content),
+            "content" -> QiniuUtil.getSizedImage(post.content, 960),
             "description" -> post.description,
             "created" -> post.created,
             "place" -> post.place,

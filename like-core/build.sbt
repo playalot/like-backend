@@ -10,7 +10,7 @@ libraryDependencies ++= Seq(
   "org.nlpcn"                 %  "nlp-lang"         % "1.0",
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "redis.clients"             %  "jedis"            % "2.7.3",
-  "com.typesafe.play"         %% "play-slick"       % "1.0.0",
+  "com.typesafe.play"         %% "play-slick"       % "1.0.1",
   "com.mohiva"                %% "play-silhouette"  % "3.0.0",
   "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.0"    % "test"
 )

@@ -14,7 +14,6 @@ object UserCategories {
   def run(days: Int) {
     println(s"Classify $days Days user category job start!")
     TrainingDataExport.exportPostTags(days)
-    buildCategoryCache(days)
     buildUserCache(days)
   }
   // Populate posts to corresponding categories in cache
@@ -37,14 +36,14 @@ object UserCategories {
       }.foreach { x =>
         val (id, ts, tags) = x
         val cat = cluster.predict(MLUtils.wordsToVector(tags, model))
-        RedisUtils.zadd(s"cat_ts:$cat", ts, id)
+        RedisUtils.zadd(s"category:$cat", ts, id)
         ()
       }
       // Clean expired category posts
       println("Remove expired items from cache...")
       val tsExpire = DateTime.now().minusDays(days).getMillis / 1000
       for (cat <- 0 to CLUSTER_NUM) {
-        val deleteNum = RedisUtils.zremrangebyscore(s"cat_ts:$cat", 0, tsExpire)
+        val deleteNum = RedisUtils.zremrangebyscore(s"category:$cat", 0, tsExpire)
         println(s"$deleteNum posts removed from category[$cat] cache")
       }
 

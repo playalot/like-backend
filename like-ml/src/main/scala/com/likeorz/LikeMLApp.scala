@@ -20,16 +20,17 @@ object LikeMLApp {
 
     parser.parse(args, defaultParams).map { params =>
       params.action match {
-        case "Test"               => Test.test()
+        case "Test"               => Test.run()
         case "TrainCluster"       => KMeansOnTags.run(180)
-        case "Cluster"            => UserCategories.run(30)
+        case "Cluster"            => UserCategories.run(180)
         case "HotTags"            => HotTags.run(30)
+        case "CategoryCache"      => UserCategories.buildCategoryCache(30)
         case "Rebuild-UserCounts" => RebuildCacheJob.rebuildUserCountsCache()
         case "Rebuild-PostMarks"  => RebuildCacheJob.rebuildMarkCache()
         case "Update-UserDBLikes" => RebuildCacheJob.updateDBUserLikes()
         case "All" =>
           KMeansOnTags.run(180)
-          UserCategories.run(30)
+          UserCategories.run(180)
           HotTags.run(30)
           RebuildCacheJob.updateDBUserLikes()
         case "CleanCache" => Test.cleanLegacy()

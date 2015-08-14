@@ -5,7 +5,7 @@ import org.apache.spark.mllib.linalg.{ DenseVector, Vectors, Vector }
 
 object MLUtils {
 
-  val VECTOR_SIZE = 200
+  val VECTOR_SIZE = 500
 
   val dict: Map[String, String] = {
     val stream = getClass().getClassLoader().getResourceAsStream("dict.txt")

@@ -18,7 +18,7 @@ object KMeansOnTags {
 
   def run(days: Int) {
     println(s"$days Days cluster training job start!")
-    TrainingDataExport.exportPostTags(days)
+    //    TrainingDataExport.exportPostTags(days)
     runTrainModel(days)
   }
 
@@ -42,7 +42,7 @@ object KMeansOnTags {
 
       val word2vec = new Word2Vec()
       word2vec.setMinCount(MIN_WORD_COUNT)
-      word2vec.setNumIterations(30)
+      word2vec.setNumIterations(50)
       word2vec.setVectorSize(MLUtils.VECTOR_SIZE)
       word2vec.setSeed(System.nanoTime())
 
@@ -83,7 +83,7 @@ object KMeansOnTags {
 
       // KMeans cluster training
       val numClusters = CLUSTER_NUM
-      val numIterations = 40
+      val numIterations = 50
 
       preprocessStart = System.nanoTime()
       val clusters = KMeans.train(tags_vectors, numClusters, numIterations, 3)
@@ -124,7 +124,7 @@ object KMeansOnTags {
       FileUtils.deleteDir(s"$PREFIX/tags_categorization")
       article_membership.map { x => x._1.toString + "," + x._2.mkString(" ") }.coalesce(1).saveAsTextFile(s"$PREFIX/tags_categorization")
       FileUtils.deleteDir(s"$PREFIX/tags_categories")
-      cluster_topics.map { x => x._1 + "," + x._2.mkString(" ") }.coalesce(1).saveAsTextFile(s"$PREFIX/tags_categories")
+      cluster_topics.map { x => "category[" + x._1 + "]:\t" + x._2.mkString(" ") }.coalesce(1).saveAsTextFile(s"$PREFIX/tags_categories")
     } catch {
       case e: Throwable => throw e
     } finally {

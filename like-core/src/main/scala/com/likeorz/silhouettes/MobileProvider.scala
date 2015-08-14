@@ -25,8 +25,8 @@ class MobileProvider() extends Provider {
 
   def authenticate(smsCode: SmsCode): Future[LoginInfo] = {
     val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
-    if (smsCode.mobilePhoneNumber.startsWith("666") || smsCode.code == "666666") {
-      // TODO This is a developer backdoor
+    if ((smsCode.mobilePhoneNumber == "66600000166" || smsCode.mobilePhoneNumber == "66666666610") && smsCode.code == "666666") {
+      // This is a demo account
       Future.successful(loginInfo)
     } else {
       AVOSUtils.verifySmsCode(smsCode.mobilePhoneNumber, smsCode.zone, smsCode.code).map {

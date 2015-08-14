@@ -15,10 +15,6 @@ import slick.driver.JdbcProfile
 import scala.concurrent.Future
 import scala.util.Random
 
-/**
- * Created by Guan Guan
- * Date: 5/25/15
- */
 class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends PostService
     with PostsComponent with UsersComponent
     with TagsComponent with MarksComponent
@@ -295,11 +291,26 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(tagsQuery).map(_.toSet)
   }
 
-  override def getRecentPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
-    if (timestamp.isDefined) {
-      db.run(posts.filter(_.created < timestamp.get).sortBy(_.created.desc).take(pageSize).map(_.id).result)
+  override def getRecentPosts(pageSize: Int, timestamp: Option[Long], filter: Option[String]): Future[Seq[Long]] = {
+    if (filter.isDefined && filter.get.length > 0) {
+      val name = filter.get
+
+      val jian = JianFan.f2j(name).toLowerCase
+      val fan = JianFan.j2f(name).toLowerCase
+
+      if (timestamp.isDefined) {
+        val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' AND p.created < ${timestamp.get} order by p.created desc limit $pageSize""".as[Long]
+        db.run(query)
+      } else {
+        val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' order by p.created desc limit $pageSize""".as[Long]
+        db.run(query)
+      }
     } else {
-      db.run(posts.sortBy(_.created.desc).take(pageSize).map(_.id).result)
+      if (timestamp.isDefined) {
+        db.run(posts.filter(_.created < timestamp.get).sortBy(_.created.desc).take(pageSize).map(_.id).result)
+      } else {
+        db.run(posts.sortBy(_.created.desc).take(pageSize).map(_.id).result)
+      }
     }
   }
 

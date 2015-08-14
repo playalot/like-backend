@@ -88,10 +88,7 @@ class FeedController @Inject() (
 
           val posts = if (promotePosts.nonEmpty) HelperUtils.insertAt(promotePosts.head, HelperUtils.random(3, 3), postList) else postList
 
-          // Filter user who is in blacklist
-          val userBlacklist = RedisCacheClient.smembers(KeyUtils.userBlacklist).map(_.toLong)
-
-          val futures = posts.filterNot(p => userBlacklist.contains(p._1.userId)).map { row =>
+          val futures = posts.map { row =>
             val post = row._1
             val markIds = row._2.map(_._1)
             for {
@@ -136,7 +133,7 @@ class FeedController @Inject() (
     val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
     val pageSize = 10
     val followPageSize = 10
-    val taggedPageSize = 5
+    val taggedPageSize = 10
 
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
@@ -194,7 +191,7 @@ class FeedController @Inject() (
               val posts = if (promotePosts.nonEmpty) HelperUtils.insertAt(promotePosts.head, HelperUtils.random(3, 3), postList) else postList
 
               // Filter user who is in blacklist
-              val userBlacklist = RedisCacheClient.smembers(KeyUtils.userBlacklist).map(_.toLong)
+              val userBlacklist = RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong)
 
               val futures = posts.filterNot(p => userBlacklist.contains(p._1.userId)).map { row =>
                 val post = row._1

@@ -18,6 +18,7 @@
   "dependencies": {
     "bootstrap": "*",
     "font-awesome": "*",
-    "odometer": "0.4.7"
+    "odometer": "0.4.7",
+    "redmaterials": "0.0.1"
   }
 }

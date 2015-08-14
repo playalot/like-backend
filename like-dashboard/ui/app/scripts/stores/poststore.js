@@ -6,7 +6,8 @@ var PostActions = require('../actions/postactions');
 var PostStore = Reflux.createStore({
     listenables: [PostActions],
     postlist: [],
-    timestamp: null,
+    filter: '',
+    timestamp: '',
 
     init: function() {
       this.onFetchPostList();
@@ -14,20 +15,35 @@ var PostStore = Reflux.createStore({
     getInitialState: function() {
       return this.postlist;
     },
+    updateParams: function(v) {
+      if (this.filter !== v) {
+          this.timestamp = '';
+          this.postlist = [];
+      }
+      this.filter = v;
+    },
     onFetchPostList: function() {
       var sourceUrl = '/api/posts';
-      if (this.timestamp !== null) {
+      if (this.timestamp !== '' && this.filter !== '') {
+        sourceUrl = sourceUrl + '?ts=' + this.timestamp + '&filter=' + this.filter;
+      } else if (this.timestamp !== '') {
         sourceUrl = sourceUrl + '?ts=' + this.timestamp;
+      } else if (this.filter !== '') {
+        sourceUrl = sourceUrl + '?filter=' + this.filter;
       }
       $.ajax({
           url: sourceUrl,
           dataType: 'json',
           context: this,
           success: function(data) {
-              console.log('fetch complete');
-              this.postlist = this.postlist.concat(data.posts);
-              this.timestamp = data.nextTimestamp;
-              this.trigger(this.postlist);
+              console.log('fetch posts complete');
+              if (data.posts.length === 0) {
+                alert('no more');
+              } else {
+                this.postlist = this.postlist.concat(data.posts);
+                this.timestamp = data.nextTimestamp;
+                this.trigger(this.postlist);
+              }
           }
       });
     },

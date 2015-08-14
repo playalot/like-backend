@@ -20,4 +20,6 @@ trait DashboardService {
   def isPostRecommended(postId: Long): Future[Boolean]
 
   def isPostBlocked(postId: Long): Future[Boolean]
+
+  def countPostTotalLikes(filter: String): Future[Seq[(Long, Int)]]
 }

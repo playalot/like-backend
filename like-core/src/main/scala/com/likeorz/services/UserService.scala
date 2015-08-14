@@ -69,4 +69,5 @@ trait UserService {
 
   def getUserInfoFromCache(userId: Long): CachedUserInfo
 
+  def listUsers(pageSize: Int, page: Int, filter: String): Future[Seq[User]]
 }

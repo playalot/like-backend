@@ -14,14 +14,6 @@ html, body {
     margin: 0 auto -60px;
 }
 
-.wrap .navbar-header {
-    float: none;
-}
-
-.wrap .navbar-header {
-    float: none;
-}
-
 .wrap > .container {
     padding: 70px 15px 20px;
 }
@@ -133,6 +125,7 @@ a.desc:after {
       text-decoration: none;
       background-color: #f5f5f5;
   }
+
 }
 
 .post-caption {
@@ -151,36 +144,34 @@ a.desc:after {
     }
 }
 
+.image-modal {
+  max-width: 100%;
+}
+
 .media, .media-body {
     overflow: hidden;
     zoom: 1;
 }
 
 .media .media-object {
-    margin: 5px 5px 5px 0;
+    margin: 5px 0 5px 0;
 }
 
 .media .post-user-info {
     padding: 10px 5px 10px 10px;
-    width: 70%;
     .block {
       display: block;
-      font-size: 1.5vw;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      max-width: 120px;
+      margin: 0;
     }
     .text-muted {
-      font-size: 1vw;
     }
-}
-
-.thumb.thumb-sm {
-    width: 25%;
 }
 
 .thumb {
-    width: 25%;
     display: inline-block;
 }
 
@@ -216,6 +207,13 @@ img.img-corona {
 
 .empty {
     padding:15px;
+}
+
+.form-input-filter {
+    text-align: right;
+    button {
+      margin-left: 5px;
+    }
 }
 
 .post-pagination {
@@ -267,10 +265,10 @@ img.img-corona {
     font-size: 18px;
 }
 
-.load-more-post-btn {
+.load-more-btn {
   text-align: center;
   margin: auto;
-  width: 300px;
+  width: 350px;
   border: 1px solid #ededed;
   padding: 20px 40px;
   cursor: pointer;

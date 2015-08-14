@@ -17,6 +17,7 @@ import net.ceedubs.ficus.Ficus._
 import play.api.Configuration
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.json.Json
 import play.api.mvc._
 
 import scala.concurrent.duration._
@@ -33,9 +34,11 @@ class Application @Inject() (
     configuration: Configuration,
     clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
 
-  //  def index = SecuredAction { implicit request =>
-  //    Ok(views.html.app("Like - Dashboard"))
-  //  }
+  def stats = SecuredAction.async { implicit request =>
+    adminService.stats.map { stats =>
+      Ok(Json.toJson(stats))
+    }
+  }
 
   def getEmail = SecuredAction { implicit request =>
     Ok(request.identity.email)

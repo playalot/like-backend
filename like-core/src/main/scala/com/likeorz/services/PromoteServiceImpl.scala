@@ -11,10 +11,6 @@ import slick.driver.JdbcProfile
 import scala.concurrent.Future
 import scala.util.Random
 
-/**
- * Created by Guan Guan
- * Date: 6/26/15
- */
 class PromoteServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends PromoteService
     with PromoteEntityComponent with EntityComponent
     with HasDatabaseConfigProvider[JdbcProfile] {

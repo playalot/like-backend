@@ -299,7 +299,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       val fan = JianFan.j2f(name).toLowerCase
 
       if (timestamp.isDefined) {
-        val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' AND p.created < ${timestamp.get} order by p.created desc limit $pageSize""".as[Long]
+        val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE (t.tag like '%#${jian}%' OR t.tag like '%#${fan}%') AND p.created < ${timestamp.get} order by p.created desc limit $pageSize""".as[Long]
         db.run(query)
       } else {
         val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' order by p.created desc limit $pageSize""".as[Long]

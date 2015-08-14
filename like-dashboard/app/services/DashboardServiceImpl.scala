@@ -87,4 +87,16 @@ class DashboardServiceImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     }
   }
 
+  override def countPostTotalLikes(filter: String): Future[Seq[(Long, Int)]] = {
+    val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag='#$filter'""".as[Long]
+    db.run(query).map { ids =>
+      val scores = ids.map { pid =>
+        val marks = RedisCacheClient.zrevrangeByScoreWithScores(KeyUtils.postMark(pid), Double.MaxValue, 0, limit = 100).map(v => (v._1.toLong, v._2.toInt)).toMap
+        println(marks)
+        (pid, marks.values.sum)
+      }
+      scores.sortWith(_._2 > _._2)
+    }
+  }
+
 }

@@ -28,9 +28,9 @@ var Brands = React.createClass({
           <a href="/brandform"><Button bsStyle='success'>Create new brand</Button></a>
         </p>
           {this.state.brandlist.map(function (brand) {
-              var promoteBtn = <Button onClick={this.togglePromoteBrand.bind(this, brand.id)}>Promote</Button>;
+              var promoteBtn = <a className="btn btn-sm" onClick={this.togglePromoteBrand.bind(this, brand.id)}>Promote</a>;
               if (brand.isPromoted) {
-                promoteBtn = <Button bsStyle='success' onClick={this.togglePromoteBrand.bind(this, brand.id)}>Promoted</Button>;
+                promoteBtn = <a className="btn btn-sm btn-yellow" onClick={this.togglePromoteBrand.bind(this, brand.id)}>Promoted</a>;
               }
               return (
                 <Row key={'b_'+brand.id}>
@@ -39,16 +39,16 @@ var Brands = React.createClass({
                   <Col className="col" xs={4} sm={4} lg={4}><span>{brand.description}</span></Col>
                   <col xs={4} sm={4} lg={4}>
                     <ButtonToolbar>
-                      <a href={'/brandform?id='+brand.id}><Button>Edit</Button></a>
+                      <a href={'/brandform?id='+brand.id} className="btn btn-cyan btn-sm">Edit</a>
                       {promoteBtn}
-                      <Button bsStyle='danger' onClick={this.deleteBrand.bind(this, brand.id)}>Delete</Button>
+                      <a className="btn btn-red btn-sm" onClick={this.deleteBrand.bind(this, brand.id)}>Delete</a>
                     </ButtonToolbar>
                   </col>
                 </Row>
               );
           }.bind(this))}
           <Row>
-            <div className="load-more-post-btn" onClick={this.fetchMoreBrands}>Load More</div>
+            <div className="load-more-btn" onClick={this.fetchMoreBrands}>Load More</div>
           </Row>
       </div>
     );

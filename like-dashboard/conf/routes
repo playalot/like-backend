@@ -9,18 +9,18 @@ POST    /authenticate/credentials   controllers.Application.authenticate
 
 # API
 GET     /admin/email                controllers.Application.getEmail
-GET     /api/stats                  controllers.ApiController.stats
-GET     /api/posts/:pg              controllers.ApiController.list(pg: Int)
-GET     /api/posts                  controllers.PostApiController.fetchPostList(ts: Option[Long] ?= None)
+GET     /api/stats                  controllers.Application.stats
+GET     /api/posts                  controllers.PostApiController.fetchPostList(ts: Option[Long] ?= None, filter: Option[String] ?= None)
 GET     /api/user/:id/info          controllers.ApiController.userInfo(id: Long)
-DELETE  /api/post/:id               controllers.ApiController.deletePost(id: Long)
-DELETE  /api/mark/:id               controllers.ApiController.deleteMark(id: Long)
-POST    /api/post/:id/recommend     controllers.ApiController.recommendPost(id: Long, status: Boolean ?= false)
-DELETE  /api/post/:id/recommend     controllers.ApiController.recommendPost(id: Long, status: Boolean ?= true)
-GET     /api/post/:id/recommend     controllers.ApiController.isPostRecommended(id: Long)
-POST    /api/post/:id/block         controllers.ApiController.invisiblePost(id: Long, status: Boolean ?= false)
-DELETE  /api/post/:id/block         controllers.ApiController.invisiblePost(id: Long, status: Boolean ?= true)
-GET     /api/post/:id/block         controllers.ApiController.isPostInvisible(id: Long)
+DELETE  /api/post/:id               controllers.PostApiController.deletePost(id: Long)
+DELETE  /api/mark/:id               controllers.PostApiController.deleteMark(id: Long)
+POST    /api/post/:id/recommend     controllers.PostApiController.recommendPost(id: Long, status: Boolean ?= false)
+DELETE  /api/post/:id/recommend     controllers.PostApiController.recommendPost(id: Long, status: Boolean ?= true)
+GET     /api/post/:id/recommend     controllers.PostApiController.isPostRecommended(id: Long)
+POST    /api/post/:id/block         controllers.PostApiController.invisiblePost(id: Long, status: Boolean ?= false)
+DELETE  /api/post/:id/block         controllers.PostApiController.invisiblePost(id: Long, status: Boolean ?= true)
+GET     /api/post/:id/block         controllers.PostApiController.isPostInvisible(id: Long)
+GET     /api/post/:tag/count        controllers.PostApiController.countPostLikes(tag: String)
 
 GET     /api/brands/:pg             controllers.BrandApiController.fetchBrandList(pg: Int, pageSize: Int ?= 50, filter: String ?= "")
 POST    /api/brand/:id/upload       controllers.BrandApiController.uploadBrandImageToQiniu(id: Long)
@@ -30,6 +30,8 @@ POST    /api/brand/:id              controllers.BrandApiController.updateBrand(i
 DELETE  /api/brand/:id              controllers.BrandApiController.deleteBrand(id: Long)
 DELETE  /api/brand/:id/promote      controllers.BrandApiController.deletePromoteBrand(id: Long)
 POST    /api/brand/:id/promote      controllers.BrandApiController.promoteBrand(id: Long)
+
+GET     /api/users/:pg              controllers.UserApiController.fetchUserList(pg: Int, pageSize: Int ?= 50, filter: String ?= "")
 
 
 # Yeoman

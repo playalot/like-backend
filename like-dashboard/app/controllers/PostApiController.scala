@@ -2,16 +2,13 @@ package controllers
 
 import javax.inject.Inject
 
-import com.likeorz.models.Post
-import com.likeorz.utils.{ KeyUtils, RedisCacheClient }
 import com.mohiva.play.silhouette.api.{ Silhouette, Environment }
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
-import com.mohiva.play.silhouette.api.util.Clock
 import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import models.Admin
 import play.api.Configuration
-import play.api.i18n.{ Messages, MessagesApi }
+import play.api.i18n.MessagesApi
 import com.likeorz.services._
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
@@ -31,15 +28,14 @@ class PostApiController @Inject() (
     notificationService: NotificationService,
     authInfoRepository: AuthInfoRepository,
     credentialsProvider: CredentialsProvider,
-    configuration: Configuration,
-    clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
+    configuration: Configuration) extends Silhouette[Admin, CookieAuthenticator] {
 
-  def fetchPostList(timestamp: Option[Long]) = SecuredAction.async { implicit request =>
+  def fetchPostList(timestamp: Option[Long], filter: Option[String]) = SecuredAction.async { implicit request =>
     // Use phone screen width for output photo size
     val screenWidth = 300
     val pageSize = 48
 
-    postService.getRecentPosts(pageSize, timestamp).flatMap { ids =>
+    postService.getRecentPosts(pageSize, timestamp, filter).flatMap { ids =>
       if (ids.isEmpty) {
         Future.successful(Ok(Json.obj("posts" -> Json.arr())))
       } else {
@@ -87,6 +83,49 @@ class PostApiController @Inject() (
           }
         }
       }
+    }
+  }
+
+  def recommendPost(postId: Long, status: Boolean) = SecuredAction.async {
+    dashboardService.recommendPost(postId, status).map(_ => Ok)
+  }
+
+  def invisiblePost(postId: Long, status: Boolean) = SecuredAction.async {
+    dashboardService.blockPost(postId, status).map(_ => Ok)
+  }
+
+  def isPostRecommended(postId: Long) = SecuredAction.async {
+    dashboardService.isPostRecommended(postId).map(x => Ok(Json.obj("status" -> x)))
+  }
+
+  def isPostInvisible(postId: Long) = SecuredAction.async {
+    dashboardService.isPostBlocked(postId).map(x => Ok(Json.obj("status" -> x)))
+  }
+
+  def deleteMark(markId: Long) = SecuredAction.async {
+    markService.deleteMark(markId).map { _ =>
+      Ok("success.deleteMark")
+    }
+  }
+
+  def deletePost(postId: Long) = SecuredAction.async {
+    postService.getPostById(postId).flatMap {
+      case Some(post) =>
+        for {
+          p <- postService.deletePostById(postId, post.userId)
+          n <- notificationService.deleteAllNotificationForPost(postId)
+          r <- postService.recordDelete(post.content)
+        } yield {
+          Ok("success.deletePost")
+        }
+      case None => Future.successful(NotFound)
+    }
+  }
+
+  def countPostLikes(tag: String) = SecuredAction.async {
+    dashboardService.countPostTotalLikes(tag).map { scores =>
+      val jsonArr = scores.map(s => Json.obj("post_id" -> s._1, "total_likes" -> s._2))
+      Ok(Json.toJson(jsonArr))
     }
   }
 

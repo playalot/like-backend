@@ -7,12 +7,14 @@ var Redirect = Router.Redirect;
 var Layout = require('./components/layout');
 var Home = require('./components/home');
 var PostList = require('./components/postlist');
+var UserList = require('./components/userlist');
 var BrandList = require('./components/brandlist');
 var BrandForm = require('./components/brandform');
 
 var routes = (
 	<Route name="layout" path="/" handler={Layout}>
 		<Route name="postlist" path="/posts" handler={PostList} />
+		<Route name="userlist" path="/users" handler={UserList} />
 		<Route name="brandlist" path="/brands" handler={BrandList} />
 		<Route name="brandform" path="/brandform" handler={BrandForm} />
 		<Route name="home" path="/home" handler={Home} />

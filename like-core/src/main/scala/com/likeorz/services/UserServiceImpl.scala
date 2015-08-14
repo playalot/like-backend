@@ -300,4 +300,17 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  override def listUsers(pageSize: Int, page: Int, filter: String): Future[Seq[User]] = {
+    val query = if (filter.length > 0) {
+      (for {
+        user <- users if user.nickname like s"%$filter%"
+      } yield user).sortBy(_.id.desc).drop(pageSize * page).take(pageSize)
+    } else {
+      (for {
+        user <- users
+      } yield user).sortBy(_.id.desc).drop(pageSize * page).take(pageSize)
+    }
+    db.run(query.result)
+  }
+
 }

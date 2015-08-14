@@ -8,6 +8,10 @@ var PostActions = require('../actions/postactions');
 var Link = Router.Link;
 
 var PostPanel = React.createClass({
+  propTypes: {
+    post: React.PropTypes.object,
+    open: React.PropTypes.func
+  },
   deletePost: function() {
     if (confirm('Delete this post?')) {
       PostActions.deletePost(this.props.post.id);
@@ -47,9 +51,9 @@ var PostPanel = React.createClass({
     }
     var tooltip = <Tooltip>{'id:'+this.props.post.id}</Tooltip>;
     return (
-      <Col className="col" xs={12} sm={3} lg={3}>
+      <Col className="col" xs={12} sm={4} lg={3}>
         <div className="panel post-panel panel-default">
-          <div className="post-heading">
+          <div className="panel-heading post-heading">
             <a href={ '/user/' + this.props.post.user.userId } className="media">
               <span className="pull-left media-object thumb thumb-sm">
                 <img img-src={'http://cdn.likeorz.com'} src={ this.props.post.user.avatar } alt="" className="img-circle" />
@@ -62,7 +66,7 @@ var PostPanel = React.createClass({
           </div>
           <OverlayTrigger overlay={tooltip} placement='top' delayShow={100} delayHide={100}>
             <div className="post-image">
-              <img src={ this.props.post.content } />
+              <img src={ this.props.post.content } onClick={this.props.open}/>
                 <div className="thumb-pane">
                   <ul className="marks">{ marks }</ul>
                 </div>

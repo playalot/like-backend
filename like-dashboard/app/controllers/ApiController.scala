@@ -33,12 +33,6 @@ class ApiController @Inject() (
     configuration: Configuration,
     clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
 
-  def stats = SecuredAction.async { implicit request =>
-    adminService.stats.map { stats =>
-      Ok(Json.toJson(stats))
-    }
-  }
-
   /**
    * Display the paginated list of computers.
    *
@@ -83,42 +77,6 @@ class ApiController @Inject() (
         "likes" -> u.likes
       ))
     }
-  }
-
-  def deleteMark(markId: Long) = SecuredAction.async {
-    markService.deleteMark(markId).map { _ =>
-      Ok("success.deleteMark")
-    }
-  }
-
-  def deletePost(postId: Long) = SecuredAction.async {
-    postService.getPostById(postId).flatMap {
-      case Some(post) =>
-        for {
-          p <- postService.deletePostById(postId, post.userId)
-          n <- notificationService.deleteAllNotificationForPost(postId)
-          r <- postService.recordDelete(post.content)
-        } yield {
-          Ok("success.deletePost")
-        }
-      case None => Future.successful(NotFound)
-    }
-  }
-
-  def recommendPost(postId: Long, status: Boolean) = SecuredAction.async {
-    dashboardService.recommendPost(postId, status).map(_ => Ok)
-  }
-
-  def invisiblePost(postId: Long, status: Boolean) = SecuredAction.async {
-    dashboardService.blockPost(postId, status).map(_ => Ok)
-  }
-
-  def isPostRecommended(postId: Long) = SecuredAction.async {
-    dashboardService.isPostRecommended(postId).map(x => Ok(Json.obj("status" -> x)))
-  }
-
-  def isPostInvisible(postId: Long) = SecuredAction.async {
-    dashboardService.isPostBlocked(postId).map(x => Ok(Json.obj("status" -> x)))
   }
 
 }

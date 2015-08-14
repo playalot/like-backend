@@ -5,18 +5,15 @@ import javax.inject.Inject
 import com.likeorz.models.Entity
 import com.likeorz.services._
 import com.mohiva.play.silhouette.api.{ Silhouette, Environment }
-import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
-import com.mohiva.play.silhouette.api.util.Clock
 import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
-import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import com.qiniu.storage.UploadManager
 import com.qiniu.util.Auth
 import models.Admin
-import play.api.{ Play, Configuration }
+import play.api.Play
 import play.api.i18n.MessagesApi
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ DashboardService, AdminService }
+import services.DashboardService
 import utils.QiniuUtil
 
 import scala.concurrent.Future
@@ -24,16 +21,11 @@ import scala.concurrent.Future
 class BrandApiController @Inject() (
     val messagesApi: MessagesApi,
     val env: Environment[Admin, CookieAuthenticator],
-    adminService: AdminService,
     dashboardService: DashboardService,
     userService: UserService,
     postService: PostService,
     markService: MarkService,
-    promoteService: PromoteService,
-    authInfoRepository: AuthInfoRepository,
-    credentialsProvider: CredentialsProvider,
-    configuration: Configuration,
-    clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
+    promoteService: PromoteService) extends Silhouette[Admin, CookieAuthenticator] {
 
   implicit val brandFormats = Json.format[Entity]
 

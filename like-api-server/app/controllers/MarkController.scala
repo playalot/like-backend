@@ -66,7 +66,7 @@ class MarkController @Inject() (
             val user = row._2
             Json.obj(
               "user" -> Json.obj(
-                "user_id" -> user.id.get.toString,
+                "user_id" -> user.id.toString,
                 "nickname" -> user.nickname,
                 "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
                 "likes" -> user.likes

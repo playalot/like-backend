@@ -246,16 +246,13 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def getRecommendedPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
     if (timestamp.isDefined) {
-      val query = (for {
-        (recommend, post) <- recommends join posts on (_.postId === _.id) if post.created < timestamp.get
-      } yield post.id).sortBy(x => x.desc).take(pageSize)
-      db.run(query.result)
+      val query = sql"""SELECT r.post_id FROM recommend r INNER JOIN post p ON r.post_id=p.id WHERE p.created < ${timestamp.get} ORDER BY p.created DESC LIMIT $pageSize""".as[Long]
+      db.run(query)
     } else {
-      val query = (for {
-        (recommend, post) <- recommends join posts on (_.postId === _.id)
-      } yield post.id).sortBy(x => x.desc).take(pageSize)
-      db.run(query.result)
+      val query = sql"""SELECT r.post_id FROM recommend r INNER JOIN post p ON r.post_id=p.id ORDER BY p.created DESC LIMIT $pageSize""".as[Long]
+      db.run(query)
     }
+
   }
 
   override def getFollowingPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
@@ -265,6 +262,14 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       } else {
         db.run(posts.filter(_.userId.inSet(userIds.+:(userId))).sortBy(_.created.desc).map(_.id).take(pageSize).result)
       }
+    }
+  }
+
+  override def getMyPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+    if (timestamp.isDefined) {
+      db.run(posts.filter(p => p.userId === userId && p.created < timestamp.get).sortBy(_.created.desc).map(_.id).take(pageSize).result)
+    } else {
+      db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).map(_.id).take(pageSize).result)
     }
   }
 

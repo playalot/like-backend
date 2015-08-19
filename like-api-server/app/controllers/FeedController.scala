@@ -138,8 +138,7 @@ class FeedController @Inject() (
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
       val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
-      //      val followIds = postService.getFollowingPosts(request.userId.get, followPageSize, timestamp)
-      val followIds = Future.successful(Seq.empty)
+      val followIds = postService.getMyPosts(request.userId.get, followPageSize, timestamp)
       val taggedIds = postService.getTaggedPosts(request.userId.get, taggedPageSize, timestamp)
       //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.4, pageSize, timestamp))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
@@ -153,8 +152,13 @@ class FeedController @Inject() (
       RedisCacheClient.srandmember(KeyUtils.postPromote).map(_.toLong)
     else List[Long]()
 
+    //    var start = System.currentTimeMillis()
     postService.getTaggedPostsTags(request.userId.getOrElse(-1L), taggedPageSize, timestamp).flatMap { reasonTags =>
+      //      var elapsed = (System.currentTimeMillis() - start)
+      //      println(s"Preprocessing postsTags time: $elapsed millsec")
       futureIds.flatMap { results =>
+        //        elapsed = (System.currentTimeMillis() - start)
+        //        println(s"Preprocessing futureIds time: $elapsed millsec")
         //        results.foreach(println)
         val showIds = results.flatten.distinct.sortWith(_ > _).take(pageSize)
         //        println(showIds)
@@ -177,8 +181,12 @@ class FeedController @Inject() (
               pointers(x._2) = -1L
           }
 
+          // start = System.currentTimeMillis()
+
           // Get posts from given ids
           postService.getPostsByIds(showIds ++ ads).flatMap { list =>
+            // elapsed = (System.currentTimeMillis() - start)
+            // println(s"Preprocessing time: $elapsed millsec")
             // Handle empty results
             if (list.isEmpty) {
               Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))

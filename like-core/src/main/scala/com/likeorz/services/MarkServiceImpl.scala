@@ -123,9 +123,10 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getLikes(markId: Long): Future[Seq[(Like, User)]] = {
+  override def getLikes(markId: Long): Future[Seq[(Like, UserInfo)]] = {
     val query = (for {
-      (like, user) <- likes join users on (_.userId === _.id) if like.markId === markId
+      like <- likes if like.markId === markId
+      user <- userinfo if like.userId === user.id
     } yield (like, user)).sortBy(_._1.created.desc)
     db.run(query.result)
   }

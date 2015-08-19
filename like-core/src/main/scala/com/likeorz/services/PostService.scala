@@ -40,6 +40,8 @@ trait PostService {
 
   def getFollowingPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
+  def getMyPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
+
   def getPersonalizedPostsForUser(userId: Long, ratio: Double, pageSize: Int, timestamp: Option[Long]): Seq[Long]
 
   def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]

@@ -113,6 +113,7 @@ class BrandApiController @Inject() (
   def updateBrand(id: Long) = SecuredAction.async(parse.json) { implicit request =>
     request.body.validate[Entity].fold(
       errors => {
+        println(errors)
         Future.successful(BadRequest)
       },
       entity => {

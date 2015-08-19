@@ -1,9 +1,13 @@
 var React = require('react/addons');
+var Reflux = require('reflux');
+var Router = require('react-router');
 var $ = require('jquery');
 var Dropzone = require('react-dropzone');
+var BrandStore = require('../stores/brandstore');
+var BrandActions = require('../actions/brandactions');
 
 var BrandForm = React.createClass({
-  mixins: [React.addons.LinkedStateMixin],
+  mixins: [Router.Navigation, Reflux.connect(BrandStore, 'brandlist'), React.addons.LinkedStateMixin],
   contextTypes: {
     router: React.PropTypes.func
   },
@@ -67,25 +71,38 @@ var BrandForm = React.createClass({
       return false;
     }
     var json = {
-      id: this.state.id,
       name: this.state.name,
       avatar: this.state.avatar,
       description: this.state.description
     };
-    console.log(json);
-    $.ajax({
-      type: 'POST',
-      url: '/api/brand',
-      data: JSON.stringify(json),
-      contentType: 'application/json; charset=utf-8',
-      dataType: 'json',
-      success: function(brand) {
-        console.log(brand);
-        this.setState({id:brand.id});
-        this.uploadFile(brand.id);
-      }.bind(this)
-    });
-    return false;
+    if (this.state.id) {
+      $.ajax({
+        type: 'POST',
+        url: '/api/brand/' + this.state.id,
+        data: JSON.stringify(json),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        success: function(brand) {
+          console.log(brand);
+          this.uploadFile(brand.id);
+          BrandActions.reloadBrandList();
+        }.bind(this)
+      });
+    } else {
+      $.ajax({
+        type: 'POST',
+        url: '/api/brand',
+        data: JSON.stringify(json),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        success: function(brand) {
+          console.log(brand);
+          this.setState({id:brand.id});
+          this.uploadFile(brand.id);
+        }.bind(this)
+      });
+    }
+    this.transitionTo('brandlist');
   },
   render: function() {
     var text = 'Drop brand image here, or click to select file to upload.';

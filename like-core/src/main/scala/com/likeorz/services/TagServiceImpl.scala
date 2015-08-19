@@ -67,8 +67,8 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     val futureIds = RedisCacheClient.hget(KeyUtils.hotTagsWithUsers, tag) match {
       case Some(ids) => Future.successful(ids.split(",").filter(_.length > 0).map(_.toLong).toSeq)
       case None =>
-        val ts7ago = DateTime.now().minusDays(7).getMillis / 1000
-        val query = sql"""SELECT DISTINCT m.user_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag='#$tag' ORDER BY m.created LIMIT 30""".as[Long]
+        val query = sql"""SELECT DISTINCT m.user_id FROM mark m INNER JOIN post p ON m.post_id=p.id WHERE m.tag='#$tag' AND p.user_id=m.user_id ORDER BY m.created LIMIT 100""".as[Long]
+        query.statements.foreach(println)
         db.run(query)
     }
     futureIds.flatMap { pool =>

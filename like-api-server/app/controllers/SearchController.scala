@@ -4,6 +4,7 @@ import javax.inject.{ Named, Inject }
 
 import akka.actor.ActorRef
 import com.likeorz.event.LikeEvent
+import com.likeorz.models.Entity
 import play.api.cache.Cached
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
@@ -65,7 +66,7 @@ class SearchController @Inject() (
       entities <- promoteService.getPromoteEntities(2)
       tags <- tagService.hotTags(15)
     } yield {
-      val entityArr = entities.map { entity => Json.obj("tag" -> entity.name) }
+      val entityArr = (entities.toSet + Entity(None, "GTA", "", "")).map { entity => Json.obj("tag" -> entity.name) }
       val tagArr = tags.filterNot(t => entities.exists(_.name == t)).map { tag => Json.obj("tag" -> tag) }
 
       success(Messages("success.found"), Json.toJson(Random.shuffle(entityArr ++ tagArr)))

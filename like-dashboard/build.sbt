@@ -13,7 +13,6 @@ resolvers +=  "NLPChina Releases" at "http://maven.ansj.org/"
 resolvers += "nlpcn-mvn-repo" at "http://maven.nlpcn.org/"
 
 libraryDependencies ++= Seq(
-  jdbc,
   cache,
   filters,
   ws,

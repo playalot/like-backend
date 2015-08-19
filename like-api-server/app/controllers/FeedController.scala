@@ -138,7 +138,8 @@ class FeedController @Inject() (
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
       val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
-      val followIds = postService.getFollowingPosts(request.userId.get, followPageSize, timestamp)
+      //      val followIds = postService.getFollowingPosts(request.userId.get, followPageSize, timestamp)
+      val followIds = Future.successful(Seq.empty)
       val taggedIds = postService.getTaggedPosts(request.userId.get, taggedPageSize, timestamp)
       //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.4, pageSize, timestamp))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
@@ -193,7 +194,7 @@ class FeedController @Inject() (
               // Filter user who is in blacklist
               val userBlacklist = RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong)
 
-              val futures = posts.filterNot(p => userBlacklist.contains(p._1.userId)).map { row =>
+              val futures = posts.filter(_._1.score.getOrElse(0) >= 0).filterNot(p => userBlacklist.contains(p._1.userId)).map { row =>
                 val post = row._1
                 // Find post shown reason
                 var reason: Int = -1

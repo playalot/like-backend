@@ -48,6 +48,8 @@ trait PostService {
 
   def getRecentPosts(pageSize: Int, timestamp: Option[Long], filter: Option[String]): Future[Seq[Long]]
 
+  def getRecentPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
+
   def recordDelete(photo: String): Future[Unit]
 
   def get30DayHotUsers(num: Int): Future[Seq[User]]

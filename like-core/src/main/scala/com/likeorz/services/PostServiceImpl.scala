@@ -46,7 +46,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
     db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).drop(page * pageSize).take(pageSize).result).flatMap { posts =>
       val futures = posts.map { post =>
-        val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + post.id.get, offset = 0, limit = 20).map(v => (v._1.toLong, v._2.toInt)).toMap
+        val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + post.id.get).map(v => (v._1.toLong, v._2.toInt)).toMap
         if (cachedMarks.nonEmpty) {
           val markIds = cachedMarks.keySet.mkString(", ")
           val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
@@ -68,7 +68,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     } else {
       db.run(posts.filter(_.id inSet ids).result).flatMap { posts =>
         val futures = posts.map { post =>
-          val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + post.id.get, offset = 0, limit = 100).map(v => (v._1.toLong, v._2.toInt)).toMap
+          val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + post.id.get).map(v => (v._1.toLong, v._2.toInt)).toMap
           if (cachedMarks.nonEmpty) {
             val markIds = cachedMarks.keySet.mkString(", ")
             val query = sql"""select m.id, t.tag from mark m inner join tag t on m.tag_id = t.id  where m.id in (#$markIds)""".as[(Long, String)]
@@ -135,7 +135,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])] = {
     // Get top 10 marks for the post from cache
-    val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + postId, offset = page * 100, limit = 100).map(v => (v._1.toLong, v._2.toInt)).toMap
+    val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + postId).map(v => (v._1.toLong, v._2.toInt)).toMap
     Logger.debug("Cached marks: " + cachedMarks)
 
     // Query marks with tagname and user order by created desc
@@ -311,6 +311,14 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       } else {
         db.run(posts.sortBy(_.created.desc).take(pageSize).map(_.id).result)
       }
+    }
+  }
+
+  def getRecentPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+    if (timestamp.isDefined) {
+      db.run(posts.filter(p => p.created < timestamp.get && p.userId === userId).sortBy(_.created.desc).take(pageSize).map(_.id).result)
+    } else {
+      db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).take(pageSize).map(_.id).result)
     }
   }
 

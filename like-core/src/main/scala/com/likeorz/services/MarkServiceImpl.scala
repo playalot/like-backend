@@ -16,7 +16,7 @@ import scala.concurrent.Future
  * Date: 6/1/15
  */
 class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends MarkService
-    with PostsComponent with UsersComponent
+    with PostsComponent with UsersComponent with UserInfoComponent
     with MarksComponent with TagsComponent
     with LikesComponent with CommentsComponent
     with NotificationsComponent with FollowsComponent
@@ -145,16 +145,27 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(comments.filter(c => c.id === commentId && c.userId === userId).delete).map(_ > 0)
   }
 
-  override def getCommentsForMark(markId: Long, order: String): Future[Seq[(Comment, User, Option[User])]] = {
+  override def getCommentsForMark(markId: Long, order: String): Future[Seq[(Comment, UserInfo, Option[UserInfo])]] = {
+    //    val query = if (order == "desc") {
+    //      (for {
+    //        ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
+    //        if comment.markId === markId
+    //      } yield (comment, user, reply)).sortBy(_._1.created.desc)
+    //    } else {
+    //      (for {
+    //        ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
+    //        if comment.markId === markId
+    //      } yield (comment, user, reply)).sortBy(_._1.created)
+    //    }
     val query = if (order == "desc") {
       (for {
-        ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
-        if comment.markId === markId
+        (comment, reply) <- comments joinLeft userinfo on (_.replyId === _.id) if comment.markId === markId
+        user <- userinfo if comment.userId === user.id
       } yield (comment, user, reply)).sortBy(_._1.created.desc)
     } else {
       (for {
-        ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
-        if comment.markId === markId
+        (comment, reply) <- comments joinLeft userinfo on (_.replyId === _.id) if comment.markId === markId
+        user <- userinfo if comment.userId === user.id
       } yield (comment, user, reply)).sortBy(_._1.created)
     }
     db.run(query.result)

@@ -86,7 +86,8 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
 
       if (postIds.nonEmpty) {
         val queryPost = for {
-          (post, user) <- posts join userinfo on (_.userId === _.id) if post.id inSet postIds
+          post <- posts if post.id inSet postIds
+          user <- userinfo if post.userId === user.id
         } yield (post, user)
         //        s = System.nanoTime()
         db.run(queryPost.result).map { postAndUser =>

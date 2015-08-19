@@ -35,7 +35,7 @@ class AdminServiceImpl @Inject() (passwordHasher: PasswordHasher,
         authInfoRepository.update(loginInfo, passwordInfo).map(_ => a)
       case None =>
         val admin = Admin(None, email, passwordInfo.password)
-        db.run(admins returning admins.map(_.id) += admin).map(id => { println(id); admin.copy(id = Some(id)) }).flatMap { a =>
+        db.run(admins returning admins.map(_.id) += admin).map(id => admin.copy(id = Some(id))).flatMap { a =>
           authInfoRepository.add(loginInfo, passwordInfo).map(_ => a)
         }
     }

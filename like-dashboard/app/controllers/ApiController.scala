@@ -69,14 +69,4 @@ class ApiController @Inject() (
     }
   }
 
-  def userInfo(userId: Long) = SecuredAction.async { implicit request =>
-    userService.getUserInfo(userId).map { u =>
-      Ok(Json.obj(
-        "nickname" -> u.nickname,
-        "avatar" -> QiniuUtil.resizeImage(u.avatar, 40),
-        "likes" -> u.likes
-      ))
-    }
-  }
-
 }

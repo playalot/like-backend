@@ -61,7 +61,7 @@ class ServiceModule extends AbstractModule with ScalaModule {
     Environment[Admin, CookieAuthenticator](
       adminService,
       authenticatorService,
-      Seq(),
+      Seq.empty,
       eventBus
     )
   }

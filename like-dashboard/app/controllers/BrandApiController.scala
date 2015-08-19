@@ -9,7 +9,7 @@ import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
 import com.qiniu.storage.UploadManager
 import com.qiniu.util.Auth
 import models.Admin
-import play.api.Play
+import play.api.{ Logger, Play }
 import play.api.i18n.MessagesApi
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
@@ -58,7 +58,6 @@ class BrandApiController @Inject() (
   }
 
   def insertBrand() = SecuredAction.async(parse.json) { implicit request =>
-    println("!!!" + request.body)
     request.body.validate[Entity].fold(
       errors => {
         Future.successful(BadRequest)
@@ -81,21 +80,18 @@ class BrandApiController @Inject() (
   }
 
   def uploadBrandImageToQiniu(id: Long) = SecuredAction.async(parse.multipartFormData) { implicit request =>
-    println(getUploadToken())
-    println(request.body)
     val file = request.body.files.head.ref
     promoteService.getEntity(id).map {
       case Some(entity) =>
         val key = if (entity.avatar == "") {
           val key = "entity_" + id + "_" + (System.currentTimeMillis() / 1000) + ".jpg"
           val res = QiniuUploadManager.put(file.file, key, QiniuAuth.uploadToken(DefaultBucket))
-          println(res.bodyString())
           promoteService.updateEntity(entity.copy(avatar = key))
           key
         } else {
           val key = entity.avatar
           val res = QiniuUploadManager.put(file.file, key, QiniuAuth.uploadToken(DefaultBucket, entity.avatar))
-          println(res.bodyString())
+          Logger.info(res.bodyString())
           key
         }
         Ok(key)

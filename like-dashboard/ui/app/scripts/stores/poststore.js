@@ -3,7 +3,7 @@ var $ = require('jquery');
 var _ = require('lodash');
 var PostActions = require('../actions/postactions');
 
-var PostStore = Reflux.createStore({
+var PostListStore = Reflux.createStore({
     listenables: [PostActions],
     postlist: [],
     filter: '',
@@ -123,4 +123,4 @@ var PostStore = Reflux.createStore({
     }
 });
 
-module.exports = PostStore;
+module.exports = PostListStore;

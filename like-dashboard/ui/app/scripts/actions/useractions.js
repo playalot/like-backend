@@ -3,7 +3,11 @@ var Reflux = require('reflux');
 var UserActions = Reflux.createActions([
     'updateParams',
     'fetchUserList',
-    'toggleVerifyUser'
+    'toggleVerifyUser',
+    'deletePost',
+    'toggleRecommendPost',
+    'toggleBlockPost',
+    'deleteMark'
 ]);
 
 module.exports = UserActions;

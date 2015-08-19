@@ -1,11 +1,8 @@
 var React = require('react/addons');
 var Reflux = require('reflux');
 var Row = require('react-bootstrap').Row;
-var Col = require('react-bootstrap').Col;
 var Input = require('react-bootstrap').Input;
-var Button = require('react-bootstrap').Button;
-var ButtonToolbar = require('react-bootstrap').ButtonToolbar;
-var UserStore = require('../stores/userstore');
+var UserStore = require('../stores/userliststore');
 var UserActions = require('../actions/useractions');
 
 var UserList = React.createClass({
@@ -34,11 +31,11 @@ var UserList = React.createClass({
           </div>
           <div className="table-responsive">
             <table className="table table-striped">
-              <thead><tr><th>#ID</th><th>Avatar</th><th>Nickname</th><th>Mobile</th><th></th></tr></thead>
+              <thead><tr><th>#ID</th><th>Avatar</th><th>Nickname</th><th>Mobile</th><th>Likes</th></tr></thead>
               <tbody>
                 {this.state.userlist.map(function (user) {
                   return (
-                    <tr key={'u_'+user.id}><td>{user.id}</td><td><img src={user.avatar} className="img-circle"/></td><td>{user.nickname}</td><td>{user.mobile}</td><td></td></tr>
+                    <tr key={'u_'+user.id}><td>{user.id}</td><td><a href={'/user/'+user.id}><img src={user.avatar} className="img-circle"/></a></td><td>{user.nickname}</td><td>{user.mobile}</td><td>{user.likes}</td></tr>
                   );
                 })}
                 <tr></tr>

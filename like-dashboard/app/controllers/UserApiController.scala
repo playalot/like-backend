@@ -33,7 +33,8 @@ class UserApiController @Inject() (
           "id" -> user.id,
           "nickname" -> user.nickname,
           "avatar" -> QiniuUtil.resizeImage(user.avatar, 50),
-          "mobile" -> user.mobile
+          "mobile" -> user.mobile,
+          "likes" -> user.likes
         )
       })
       Ok(Json.obj(
@@ -42,8 +43,89 @@ class UserApiController @Inject() (
     }
   }
 
-  def showUser(id: Long) = SecuredAction.async {
-    Future.successful(Ok)
+  def getUserInfo(id: Long) = SecuredAction.async {
+    userService.findById(id).flatMap {
+      case Some(user) =>
+        for {
+          countFollowers <- userService.countFollowers(id)
+          countFriends <- userService.countFollowings(id)
+          countPosts <- postService.countPostsForUser(id)
+          countLikes <- markService.countLikesForUser(id)
+        } yield {
+          Ok(Json.obj(
+            "userId" -> id,
+            "nickname" -> user.nickname,
+            "avatar" -> QiniuUtil.resizeImage(user.avatar, 150),
+            "cover" -> QiniuUtil.resizeImage(user.cover, 300),
+            "likes" -> countLikes,
+            "count" -> Json.obj(
+              "posts" -> countPosts,
+              "following" -> countFriends,
+              "followers" -> countFollowers
+            )
+          ))
+        }
+      case None => Future.successful(NotFound)
+    }
+  }
+
+  def getUserPosts(id: Long, timestamp: Option[Long]) = SecuredAction.async {
+    val screenWidth = 300
+    val pageSize = 48
+    userService.findById(id).flatMap {
+      case Some(user) =>
+        postService.getRecentPostsForUser(id, pageSize, timestamp).flatMap { ids =>
+          if (ids.isEmpty) {
+            Future.successful(Ok(Json.obj("posts" -> Json.arr())))
+          } else {
+            postService.getPostsByIds(ids).flatMap { list =>
+              if (list.isEmpty) {
+                Future.successful(Ok(Json.obj("posts" -> Json.arr())))
+              } else {
+                val sortedList = list.sortBy(-_._1.created)
+                val futures = sortedList.map { row =>
+                  val post = row._1
+                  val markIds = row._2.map(_._1)
+
+                  for {
+                    userInfo <- userService.getUserInfo(post.userId)
+                    isRecommended <- dashboardService.isPostRecommended(post.id.get)
+                    isBlocked <- dashboardService.isPostBlocked(post.id.get)
+                  } yield {
+                    val marksJson = row._2.sortBy(-_._3).map { fields =>
+                      Json.obj(
+                        "markId" -> fields._1,
+                        "tag" -> fields._2,
+                        "likes" -> fields._3
+                      )
+                    }
+                    Json.obj(
+                      "id" -> post.id.get,
+                      "type" -> post.`type`,
+                      "content" -> QiniuUtil.resizeImage(post.content, screenWidth),
+                      "created" -> post.created,
+                      "isRecommended" -> isRecommended,
+                      "isBlocked" -> isBlocked,
+                      "user" -> Json.obj(
+                        "userId" -> post.userId,
+                        "nickname" -> userInfo.nickname,
+                        "avatar" -> QiniuUtil.resizeImage(userInfo.avatar, 50),
+                        "likes" -> userInfo.likes
+                      ),
+                      "marks" -> Json.toJson(marksJson)
+                    )
+                  }
+                }
+                Future.sequence(futures).map { posts =>
+                  Ok(Json.obj("posts" -> Json.toJson(posts), "nextTimestamp" -> sortedList.last._1.created))
+                }
+              }
+            }
+          }
+        }
+      case None =>
+        Future.successful(NotFound)
+    }
   }
 
 }

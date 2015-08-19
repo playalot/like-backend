@@ -3,17 +3,15 @@ package services
 import javax.inject.Inject
 
 import com.likeorz.dao._
-import com.likeorz.models.{ Recommend, Post, User }
-import com.likeorz.utils.KeyUtils
+import com.likeorz.models.{ Recommend, Post }
+import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
 import models.Page
 import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
-import utils.RedisCacheClient
 
 import scala.concurrent.Future
-import scala.util.Random
 
 class DashboardServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends DashboardService
     with PostsComponent with UsersComponent
@@ -40,7 +38,7 @@ class DashboardServiceImpl @Inject() (protected val dbConfigProvider: DatabaseCo
       list = query.result.map { rows => rows.collect { case post => post } }
       result <- db.run(list)
       futures = result.map { post =>
-        val cachedMarks = RedisCacheClient.zrevrangebyscore("post_mark:" + post.id.get, offset = 0, limit = 100).map(v => (v._1.toLong, v._2.toInt)).toMap
+        val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores(KeyUtils.postMark(post.id.get)).map(v => (v._1.toLong, v._2.toInt)).toMap
 
         if (cachedMarks.nonEmpty) {
           val markIds = cachedMarks.keySet.mkString(", ")
@@ -50,7 +48,7 @@ class DashboardServiceImpl @Inject() (protected val dbConfigProvider: DatabaseCo
             (post, marks)
           }
         } else {
-          Future.successful((post, Seq()))
+          Future.successful((post, Seq.empty))
         }
       }
       x <- Future.sequence(futures.toList)
@@ -88,11 +86,13 @@ class DashboardServiceImpl @Inject() (protected val dbConfigProvider: DatabaseCo
   }
 
   override def countPostTotalLikes(filter: String): Future[Seq[(Long, Int)]] = {
-    val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag='#$filter'""".as[Long]
+    val query =
+      sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id
+           |INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag='#$filter'""".as[Long]
     db.run(query).map { ids =>
       val scores = ids.map { pid =>
-        val marks = RedisCacheClient.zrevrangeByScoreWithScores(KeyUtils.postMark(pid), Double.MaxValue, 0, limit = 100).map(v => (v._1.toLong, v._2.toInt)).toMap
-        println(marks)
+        val marks = RedisCacheClient.zrevrangeByScoreWithScores(KeyUtils.postMark(pid))
+          .map(v => (v._1.toLong, v._2.toInt)).toMap
         (pid, marks.values.sum)
       }
       scores.sortWith(_._2 > _._2)

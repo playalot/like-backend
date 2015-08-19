@@ -35,6 +35,10 @@ class YeomanController @Inject() (
     at("index.html").apply(request)
   }
 
+  def path(path: String) = SecuredAction.async { implicit request =>
+    at("index.html").apply(request)
+  }
+
   def redirectRoot(base: String = "/ui/") = SecuredAction {
     request =>
       if (base.endsWith("/")) {

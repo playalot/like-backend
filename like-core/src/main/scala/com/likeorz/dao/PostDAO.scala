@@ -31,9 +31,9 @@ trait ReportsComponent { self: HasDatabaseConfig[JdbcProfile] =>
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def userId = column[Long]("user_id")
     def postId = column[Long]("post_id")
-    def num = column[Long]("num")
     def created = column[Long]("created")
-    override def * = (id.?, userId, postId, num, created) <> (Report.tupled, Report.unapply _)
+    def reason = column[String]("reason")
+    override def * = (id.?, userId, postId, created, reason.?) <> (Report.tupled, Report.unapply _)
   }
 
   protected val reports = TableQuery[ReportsTable]

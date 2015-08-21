@@ -28,6 +28,8 @@ object RebuildCacheJob {
       val subquery = connection2.createStatement()
       val updatequery = connection3.createStatement()
 
+      var count = 0
+
       val resultSet = statement.executeQuery("select id, nickname, avatar, cover from user")
       while (resultSet.next()) {
         val userId = resultSet.getLong("id")
@@ -56,13 +58,17 @@ object RebuildCacheJob {
           val followerCount = rs.getLong(1)
           RedisUtils.hset(KeyUtils.user(userId), "followers", followerCount.toString)
         }
-        rs = subquery.executeQuery("select count(*) from `like` l inner join mark m on l.mark_id=m.id where m.user_id=" + userId)
+        rs = subquery.executeQuery("select count(*) from `like` l inner join mark m on l.mark_id=m.id inner join post p on m.post_id=p.id where m.user_id=" + userId + " or p.user_id=" + userId)
         while (rs.next()) {
           val likeCount = rs.getLong(1)
           RedisUtils.hset(KeyUtils.user(userId), "likes", likeCount.toString)
           updatequery.executeUpdate("update user set likes = " + likeCount + " where id=" + userId)
         }
 
+        count += 1
+        if (count % 2000 == 0) {
+          println("2000 users processed...")
+        }
       }
     } catch {
       case e: Throwable => e.printStackTrace()
@@ -70,8 +76,8 @@ object RebuildCacheJob {
     connection.close()
     connection2.close()
     connection3.close()
-    val preprocessElapsed = (System.nanoTime() - preprocessStart) / 1e9
-    println(s"Preprocessing time: $preprocessElapsed sec")
+    val processElapsed = (System.nanoTime() - preprocessStart) / 1e9
+    println(s"Processing time: $processElapsed sec")
   }
 
   def rebuildMarkCache(): Unit = {

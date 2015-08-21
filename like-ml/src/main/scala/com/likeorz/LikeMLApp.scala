@@ -1,6 +1,6 @@
 package com.likeorz
 
-import com.likeorz.jobs.{ RebuildCacheJob, UserCategories, KMeansOnTags, HotTags }
+import com.likeorz.jobs._
 import com.likeorz.mllib.Test
 import scopt.OptionParser
 
@@ -28,6 +28,8 @@ object LikeMLApp {
         case "Rebuild-UserCounts" => RebuildCacheJob.rebuildUserCountsCache()
         case "Rebuild-PostMarks"  => RebuildCacheJob.rebuildMarkCache()
         case "Update-UserDBLikes" => RebuildCacheJob.updateDBUserLikes()
+        case "RebuildTagUsage"    => RebuildIntervalCountJob.rebuildTagUsageCountCache()
+        case "IncrementalUpdate"  => RebuildIntervalCountJob.incrementalUpdateTagUsageCount()
         case "All" =>
           KMeansOnTags.run(180)
           UserCategories.run(180)

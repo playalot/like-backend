@@ -157,6 +157,12 @@ object RedisUtils {
     }
   }
 
+  def zrevrangeWithScores(key: String, start: Long, end: Long): Map[String, Double] = {
+    withJedisClient[Map[String, Double]] { client =>
+      client.zrevrangeWithScores(key, start, end).map(p => (p.getElement -> p.getScore)).toMap
+    }
+  }
+
   private def withJedisClient[T](f: Jedis => T): T = {
     val jedis = jedisPool.getResource
     try {

@@ -8,5 +8,5 @@ case class Report(
   id: Option[Long],
   userId: Long,
   postId: Long,
-  num: Long = 1,
-  created: Long = System.currentTimeMillis() / 1000)
+  created: Long = System.currentTimeMillis() / 1000,
+  reason: Option[String] = None)

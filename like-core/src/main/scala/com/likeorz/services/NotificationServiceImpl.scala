@@ -58,6 +58,7 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
         RedisCacheClient.zadd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
         Future.successful(0)
     }
+
   }
 
   override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 15): Future[Seq[(Notification, UserInfo, Option[(Post, UserInfo)])]] = {

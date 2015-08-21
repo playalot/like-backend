@@ -36,7 +36,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
       tags <- db.run(tags.filter(_.id inSet (mostUsedIds.toSet ++ recentUsedIds)).result)
     } yield {
       val (t1, t2) = tags.partition(t => recentUsedIds.contains(t.id.get))
-      val result = t1.map(_.tagName) ++ t2.map(_.tagName)
+      val result = t1.map(_.name) ++ t2.map(_.name)
       if (result.size < 20) (result ++ recommendTags.toSeq.take(20 - result.size), recommendTags.toSeq.take(20 - result.size))
       else (result, Seq())
     }
@@ -44,7 +44,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
 
   override def autoComplete(name: String): Future[Seq[Tg]] = {
     val query = (for {
-      tag <- tags if tag.tagName startsWith name.toLowerCase
+      tag <- tags if tag.name startsWith name.toLowerCase
     } yield tag).take(5)
     db.run(query.result)
   }
@@ -58,7 +58,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
         tag <- tags
       } yield tag).sortBy(_.likes.desc).take(120)
       db.run(query.result).map { tags =>
-        Random.shuffle(tags.map(_.tagName)).take(num)
+        Random.shuffle(tags.map(_.name)).take(num)
       }
     }
   }

@@ -7,6 +7,9 @@ object KeyUtils {
   // hash
   def user(uid: Long): String = "user:" + uid
 
+  // Sorted set to store user notifications timestamp
+  def userNotificationTimestamp: String = "notification_ts"
+
   // set
   def postSeen(uid: Long): String = "post_seen:" + uid
 
@@ -15,8 +18,6 @@ object KeyUtils {
 
   // set
   def postPromote: String = "post_promote"
-
-  //  def userBlacklist: String = "user_blacklist"
 
   // hash
   def userCategory: String = "user_category"
@@ -36,5 +37,15 @@ object KeyUtils {
 
   // set
   def bannedUsers: String = "banned_users"
+
+  // white tag list
+  def whiteListTags: String = "white_list_tags"
+
+  // sorted set scheduled job to update tag usages from cache
+  def tagUsage: String = "tag_usage"
+
+  // sorted set scheduled job to update user likes from cache
+  def userLikes: String = "user_likes"
+
 }
 

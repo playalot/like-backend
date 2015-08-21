@@ -61,12 +61,12 @@ class PostController @Inject() (
           request.userId, System.currentTimeMillis / 1000, System.currentTimeMillis / 1000,
           postCommand.place, postCommand.location.map(_.take(2).mkString(" ")))).flatMap { post =>
 
-          // log event
+          // log event to remote mongodb
           eventProducerActor ! LikeEvent(None, "publish", "user", request.userId.toString, Some("post"), Some(post.identify),
             properties = Json.obj("tags" -> Json.toJson(postCommand.tags), "img" -> postCommand.content))
 
+          // only allow post contain one category
           val uniqueCategory = postCommand.tags.find(tag => categories.contains(tag))
-
           val futures = (postCommand.tags.diff(categories) ++ uniqueCategory)
             .filter(t => t.length <= 13 && t.length >= 1)
             .map(tag => postService.addMark(post.id.get, request.userId, tag, request.userId).map(mark => (tag, mark)))
@@ -271,7 +271,11 @@ class PostController @Inject() (
 
   /** Report abuse of a post */
   def report(postId: Long) = (SecuredAction andThen BannedUserCheckAction).async { implicit request =>
-    postService.report(Report(None, request.userId, postId)).map { _ =>
+    val reason = request.body.asJson match {
+      case Some(json) => (json \ "reason").asOpt[String]
+      case None       => None
+    }
+    postService.report(Report(None, request.userId, postId, reason = reason)).map { _ =>
       success("success.report")
     }
   }

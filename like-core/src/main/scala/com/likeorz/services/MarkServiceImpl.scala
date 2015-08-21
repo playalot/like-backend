@@ -11,10 +11,6 @@ import slick.driver.JdbcProfile
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 6/1/15
- */
 class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends MarkService
     with PostsComponent with UsersComponent with UserInfoComponent
     with MarksComponent with TagsComponent
@@ -109,6 +105,7 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         RedisCacheClient.zincrby(KeyUtils.postMark(mark.postId), -1, mark.identify)
         if (RedisCacheClient.zscore(KeyUtils.postMark(mark.postId), mark.identify).getOrElse(-1.0) <= 0) {
           RedisCacheClient.zrem(KeyUtils.postMark(mark.postId), mark.identify)
+          RedisCacheClient.zincrby(KeyUtils.tagUsage, -1, mark.tagId.toString)
           db.run(marks.filter(_.id === mark.id).delete)
         }
         // Decreate user info cache
@@ -143,21 +140,19 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def deleteCommentFromMark(commentId: Long, userId: Long): Future[Boolean] = {
-    db.run(comments.filter(c => c.id === commentId && c.userId === userId).delete).map(_ > 0)
+    val query = sql"""select c.user_id, m.user_id, p.user_id from comment c inner join mark m on c.mark_id=m.id inner join post p on m.post_id=p.id where c.id=$commentId""".as[(Long, Long, Long)]
+    db.run(query.headOption).flatMap {
+      case Some(ids) =>
+        if (ids._1 == userId || ids._2 == userId || ids._3 == userId) {
+          db.run(comments.filter(_.id === commentId).delete).map(_ > 0)
+        } else {
+          Future.successful(false)
+        }
+      case None => Future.successful(false)
+    }
   }
 
   override def getCommentsForMark(markId: Long, order: String): Future[Seq[(Comment, UserInfo, Option[UserInfo])]] = {
-    //    val query = if (order == "desc") {
-    //      (for {
-    //        ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
-    //        if comment.markId === markId
-    //      } yield (comment, user, reply)).sortBy(_._1.created.desc)
-    //    } else {
-    //      (for {
-    //        ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
-    //        if comment.markId === markId
-    //      } yield (comment, user, reply)).sortBy(_._1.created)
-    //    }
     val query = if (order == "desc") {
       (for {
         (comment, reply) <- comments joinLeft userinfo on (_.replyId === _.id) if comment.markId === markId
@@ -184,6 +179,7 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           c <- db.run(comments.filter(_.markId === markId).delete)
           m <- db.run(marks.filter(_.id === markId).delete)
         } yield {
+          RedisCacheClient.zincrby(KeyUtils.tagUsage, -1, mark.tagId.toString)
           RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -l)
           if (mark.userId != post.userId) {
             RedisCacheClient.hincrBy(KeyUtils.user(post.userId), "likes", -l)

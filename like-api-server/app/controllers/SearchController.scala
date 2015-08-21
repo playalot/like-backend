@@ -29,7 +29,7 @@ class SearchController @Inject() (
     tagService.autoComplete(name).map { tags =>
       success(Messages("success.found"), Json.toJson(tags.map(tag => Json.obj(
         "id" -> tag.id.toString,
-        "tag" -> tag.tagName,
+        "tag" -> tag.name,
         "likes" -> tag.likes
       )))
       )
@@ -51,7 +51,7 @@ class SearchController @Inject() (
       })
       val tagJson = Json.toJson(tags.map(tag => Json.obj(
         "mark_id" -> tag.identify,
-        "tag" -> tag.tagName,
+        "tag" -> tag.name,
         "likes" -> tag.likes
       )))
       success(Messages("success.found"), Json.obj(

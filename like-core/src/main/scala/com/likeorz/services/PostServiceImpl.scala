@@ -106,7 +106,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val ts = DateTime.now().minusDays(30).getMillis / 1000
     val query = (for {
       ((post, mark), tag) <- posts join marks on (_.id === _.postId) join tags on (_._2.tagId === _.id)
-      if tag.tagName.toLowerCase === name.toLowerCase && post.created > ts
+      if tag.name.toLowerCase === name.toLowerCase && post.created > ts
     } yield post.id)
       .sortBy(_.desc)
       .drop(offset)
@@ -194,7 +194,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def addMark(postId: Long, authorId: Long, tagName: String, userId: Long): Future[Mark] = {
-    db.run(tags.filter(_.tagName === tagName).take(1).result.headOption).flatMap {
+    db.run(tags.filter(_.name === tagName).take(1).result.headOption).flatMap {
       case Some(tag) => Future.successful(tag.id.get)
       case None      => db.run(tags returning tags.map(_.id) += Tag(None, tagName, userId))
     }.flatMap { tagId =>
@@ -205,7 +205,6 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           if (mark.userId != userId) {
             for {
               l <- db.run(likes += Like(mark.id.get, userId))
-              //n <- db.run(notifications += Notification(None, "LIKE", mark.userId, userId, System.currentTimeMillis / 1000, Some(tagName), Some(postId)))
             } yield {
               // Increase post author likes count
               RedisCacheClient.hincrBy(KeyUtils.user(authorId), "likes", 1)
@@ -224,6 +223,8 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
             mark <- db.run(marks returning marks.map(_.id) += newMark).map(id => newMark.copy(id = Some(id)))
             l <- db.run(likes += Like(mark.id.get, userId))
           } yield {
+            // Increase tag usage count
+            RedisCacheClient.zincrby(KeyUtils.tagUsage, 1, mark.tagId.toString)
             // Increase post author likes count
             RedisCacheClient.hincrBy(KeyUtils.user(authorId), "likes", 1)
             // Increase mark author likes count

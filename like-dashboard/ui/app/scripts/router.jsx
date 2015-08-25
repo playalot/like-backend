@@ -9,6 +9,7 @@ var Home = require('./components/home');
 var PostList = require('./components/postlist');
 var UserList = require('./components/userlist');
 var UserDetail = require('./components/userdetail');
+var TagGroup = require('./components/taggroup');
 var BrandList = require('./components/brandlist');
 var BrandForm = require('./components/brandform');
 
@@ -17,6 +18,7 @@ var routes = (
 		<Route name="postlist" path="/posts" handler={PostList} />
 		<Route name="userlist" path="/users" handler={UserList} />
 		<Route name="userdetail" path="/user/:userId" handler={UserDetail} />
+		<Route name="taggroup" path="/tags" handler={TagGroup} />
 		<Route name="brandlist" path="/brands" handler={BrandList} />
 		<Route name="brandform" path="/brandform" handler={BrandForm} />
 		<Route name="home" path="/home" handler={Home} />

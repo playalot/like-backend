@@ -34,6 +34,11 @@ GET     /api/users/:pg              controllers.UserApiController.fetchUserList(
 GET     /api/user/:id/info          controllers.UserApiController.getUserInfo(id: Long)
 GET     /api/user/:id/posts         controllers.UserApiController.getUserPosts(id: Long, ts: Option[Long] ?= None)
 
+GET     /api/tag/group/:id          controllers.TagApiController.getTagsForGroup(id: Long, page: Int, size: Int = 500)
+GET     /api/tag/groups             controllers.TagApiController.getGroupedTags
+POST    /api/tag/:tid/group/:gid    controllers.TagApiController.setTagGroup(tid: Long, gid: Long)
+POST    /api/tag/group/:name        controllers.TagApiController.addTagGroup(name: String)
+
 # Yeoman
 GET      /                          controllers.YeomanController.index
 GET      /home                      controllers.YeomanController.index
@@ -41,6 +46,7 @@ GET      /posts                     controllers.YeomanController.index
 GET      /brands                    controllers.YeomanController.index
 GET      /brandform                 controllers.YeomanController.index
 GET      /users                     controllers.YeomanController.index
+GET      /tags                      controllers.YeomanController.index
 GET      /user/$id<[0-9]+>          controllers.YeomanController.path(id: String)
 GET      /*file                     controllers.YeomanController.at(file)
 

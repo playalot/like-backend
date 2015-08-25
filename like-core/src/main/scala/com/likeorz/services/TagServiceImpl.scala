@@ -2,10 +2,9 @@ package com.likeorz.services
 
 import javax.inject.Inject
 
-import com.likeorz.models.{ User, Tag => Tg }
-import com.likeorz.dao.{ UsersComponent, MarksComponent, TagsComponent }
+import com.likeorz.models.{ Tag => Tg, TagGroup, User }
+import com.likeorz.dao.{ TagGroupsComponent, UsersComponent, MarksComponent, TagsComponent }
 import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
-import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
@@ -16,7 +15,8 @@ import scala.util.Random
 import scala.collection.JavaConversions._
 
 class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, configuration: Configuration) extends TagService
-    with TagsComponent with MarksComponent with UsersComponent
+    with TagsComponent with MarksComponent
+    with UsersComponent with TagGroupsComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -56,7 +56,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     } else {
       val query = (for {
         tag <- tags
-      } yield tag).sortBy(_.likes.desc).take(120)
+      } yield tag).sortBy(_.usage.desc).take(120)
       db.run(query.result).map { tags =>
         Random.shuffle(tags.map(_.name)).take(num)
       }
@@ -80,6 +80,35 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   override def validTag(tag: String): Boolean = {
     val illegalWords = configuration.getStringList("tag.illegal-words").get.toList
     !illegalWords.exists(w => tag.contains(w))
+  }
+
+  override def getTagGroups: Future[Seq[TagGroup]] = {
+    db.run(tagGroups.result)
+  }
+
+  override def getGroupedTags: Future[Map[TagGroup, Seq[Tg]]] = {
+    db.run(tagGroups.result).flatMap { groups =>
+      val groupIds = groups.map(_.id.get)
+      db.run(tags.filter(_.group inSet groupIds).result).map { tgs =>
+        val groupedTags = tgs.groupBy(_.group)
+        groups.map { group =>
+          (group, groupedTags.getOrElse(group.id.get, Seq()))
+        }.toMap
+      }
+    }
+  }
+
+  override def getTagsForGroup(groupId: Long, pageSize: Int, page: Int): Future[Seq[Tg]] = {
+    db.run(tags.filter(_.group === groupId).sortBy(_.usage.desc).drop(pageSize * page).take(pageSize).result)
+  }
+
+  override def setTagGroup(tagId: Long, groupId: Long): Future[Unit] = {
+    db.run(tags.filter(_.id === tagId).map(_.group).update(groupId)).map(_ => ())
+  }
+
+  override def addTagGroup(name: String): Future[TagGroup] = {
+    val tagGroup = TagGroup(None, name)
+    db.run(tagGroups returning tagGroups.map(_.id) += tagGroup).map(id => tagGroup.copy(id = Some(id)))
   }
 
 }

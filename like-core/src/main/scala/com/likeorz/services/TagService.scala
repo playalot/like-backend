@@ -1,6 +1,6 @@
 package com.likeorz.services
 
-import com.likeorz.models.{ User, Tag }
+import com.likeorz.models.{ TagGroup, User, Tag }
 
 import scala.concurrent.Future
 
@@ -19,5 +19,15 @@ trait TagService {
   def hotUsersForTag(tag: String, num: Int): Future[Seq[User]]
 
   def validTag(tag: String): Boolean
+
+  def getTagGroups: Future[Seq[TagGroup]]
+
+  def getGroupedTags: Future[Map[TagGroup, Seq[Tag]]]
+
+  def getTagsForGroup(groupId: Long, pageSize: Int, page: Int): Future[Seq[Tag]]
+
+  def setTagGroup(tagId: Long, groupId: Long): Future[Unit]
+
+  def addTagGroup(name: String): Future[TagGroup]
 
 }

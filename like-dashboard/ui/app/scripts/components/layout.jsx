@@ -21,7 +21,7 @@ var Layout = React.createClass({
     return (
       <div className="wrap">
         <nav id="w0" className="navbar-inverse navbar-fixed-top navbar" role="navigation">
-          <div className="container">
+          <div className="fluid-`container">
             <div className="navbar-header">
               <button type="button" className="navbar-toggle collapsed" data-toggle="collapse" data-target="#w0-collapse" aria-expanded="false">
                 <span className="sr-only">Toggle navigation</span>
@@ -36,6 +36,7 @@ var Layout = React.createClass({
                 <li><NavItemLink to="home">Home</NavItemLink></li>
                 <li><NavItemLink to="userlist">Users</NavItemLink></li>
                 <li><NavItemLink to="postlist">Posts</NavItemLink></li>
+                <li><NavItemLink to="taggroup">Tags</NavItemLink></li>
                 <li><NavItemLink to="brandlist">Brands</NavItemLink></li>
                 <li className="dropdown">
                   <a className="dropdown-toggle" href="#" data-toggle="dropdown" aria-expanded="false" role="button"> {this.state.email} <span className="caret"></span></a>

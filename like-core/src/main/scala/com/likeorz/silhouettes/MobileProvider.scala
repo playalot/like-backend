@@ -1,7 +1,7 @@
 package com.likeorz.silhouettes
 
 import com.likeorz.silhouettes.MobileProvider._
-import com.likeorz.utils.AVOSUtils
+import com.likeorz.utils.{ MobUtils, AVOSUtils }
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.impl.exceptions.AccessDeniedException
 import play.api.libs.concurrent.Execution.Implicits._
@@ -23,13 +23,26 @@ class MobileProvider() extends Provider {
    */
   def id = ID
 
-  def authenticate(smsCode: SmsCode): Future[LoginInfo] = {
+  def authenticateViaAvos(smsCode: SmsCode): Future[LoginInfo] = {
     val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
     if ((smsCode.mobilePhoneNumber == "66600000166" || smsCode.mobilePhoneNumber == "66666666610") && smsCode.code == "666666") {
       // This is a demo account
       Future.successful(loginInfo)
     } else {
       AVOSUtils.verifySmsCode(smsCode.mobilePhoneNumber, smsCode.zone, smsCode.code).map {
+        case true  => loginInfo
+        case false => throw new AccessDeniedException("Invalid sms code")
+      }
+    }
+  }
+
+  def authenticateViaMob(smsCode: SmsCode): Future[LoginInfo] = {
+    val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
+    if ((smsCode.mobilePhoneNumber == "66600000166" || smsCode.mobilePhoneNumber == "66666666610") && smsCode.code == "666666") {
+      // This is a demo account
+      Future.successful(loginInfo)
+    } else {
+      MobUtils.verifySmsCode(smsCode.mobilePhoneNumber, smsCode.zone, smsCode.code).map {
         case true  => loginInfo
         case false => throw new AccessDeniedException("Invalid sms code")
       }

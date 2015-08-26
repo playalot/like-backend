@@ -196,7 +196,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def addMark(postId: Long, authorId: Long, tagName: String, userId: Long): Future[Mark] = {
     db.run(tags.filter(_.name === tagName).take(1).result.headOption).flatMap {
       case Some(tag) => Future.successful(tag.id.get)
-      case None      => db.run(tags returning tags.map(_.id) += Tag(None, tagName, userId))
+      case None      => db.run(tags returning tags.map(_.id) += Tag(None, tagName))
     }.flatMap { tagId =>
       db.run(marks.filter(m => m.postId === postId && m.tagId === tagId).result.headOption).flatMap {
         case Some(mark) =>
@@ -275,17 +275,17 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
-    val tagIdsQuery = sql"""SELECT DISTINCT m.tag_id FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId""".as[Long]
+    val tagIdsQuery = sql"""SELECT DISTINCT m.tag_id FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId limit 500""".as[Long]
     db.run(tagIdsQuery).flatMap { tagIds =>
       if (tagIds.nonEmpty) {
         val tIds = tagIds.mkString(", ")
         val query = if (timestamp.isDefined) {
           val ts = timestamp.get
-          sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[(Long, Long)]
+          sql"""SELECT DISTINCT p.user_id, p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[(Long, Long)]
         } else {
-          sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[(Long, Long)]
+          sql"""SELECT DISTINCT p.user_id, p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[(Long, Long)]
         }
-        db.run(query).map(x => x.groupBy(_._2).map(_._2.head._1).toSeq)
+        db.run(query).map(results => results.map(_._2).toSeq)
       } else {
         Future.successful(Seq())
       }
@@ -293,7 +293,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPostsTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]] = {
-    val tagsQuery = sql"""SELECT DISTINCT m.tag FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId""".as[String]
+    val tagsQuery = sql"""SELECT DISTINCT m.tag FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId limit 500""".as[String]
     db.run(tagsQuery).map(_.toSet)
   }
 

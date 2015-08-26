@@ -28,13 +28,21 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   val DEFAULT_AVATAR = Play.current.configuration.getString("default.avatar").get
   val DEFAULT_COVER = Play.current.configuration.getString("default.cover").get
 
+  val Country = Map(
+    "BR" -> "55",
+    "US" -> "1",
+    "MO" -> "853",
+    "JP" -> "81",
+    "CX" -> "61"
+  )
+
   override def findById(id: Long): Future[Option[User]] = db.run(users.filter(_.id === id).result.headOption)
 
   override def findByMobileLegacy(mobilePhoneNumber: String): Future[Option[User]] = db.run(users.filter(_.mobile === mobilePhoneNumber).result.headOption)
 
   override def findByMobileAndZone(mobilePhoneNumber: String, zone: String): Future[Option[User]] = {
     val key = s"$zone $mobilePhoneNumber"
-    db.run(socials.filter(u => u.provider === MobileProvider.ID && u.key === key).result.headOption).flatMap {
+    db.run(socials.filter(u => u.provider === MobileProvider.ID && u.key.endsWith(mobilePhoneNumber)).result.headOption).flatMap {
       case Some(social) => db.run(users.filter(_.id === social.userId).result.headOption)
       case None =>
         if (mobilePhoneNumber.startsWith("1") || mobilePhoneNumber.startsWith("666")) {

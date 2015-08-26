@@ -37,6 +37,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     } yield {
       val (t1, t2) = tags.partition(t => recentUsedIds.contains(t.id.get))
       val result = t1.map(_.name) ++ t2.map(_.name)
+      //      (result, recommendTags.toSeq.filterNot(result.contains(_)))
       if (result.size < 20) (result ++ recommendTags.toSeq.take(20 - result.size), recommendTags.toSeq.take(20 - result.size))
       else (result, Seq())
     }

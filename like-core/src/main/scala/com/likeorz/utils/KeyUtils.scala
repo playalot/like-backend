@@ -47,5 +47,8 @@ object KeyUtils {
   // sorted set scheduled job to update user likes from cache
   def userLikes: String = "user_likes"
 
+  // sorted set mapping id -> name
+  def tagNames: String = "tag_names"
+
 }
 

@@ -9,10 +9,12 @@ GET     /status                                     controllers.Application.stat
 
 # Auth
 POST    /v1/sendSmsCode                             controllers.AuthController.sendSmsCode
-POST    /v1/authenticate/mobile                     controllers.AuthController.mobileAuthenticate
+POST    /v1/authenticate/mobile                     controllers.AuthController.mobileAuthenticateViaAvos
+POST    /v1/authenticate/mobile/mob                 controllers.AuthController.mobileAuthenticateViaMob
 POST    /v1/authenticate/:provider                  controllers.AuthController.socialAuthenticate(provider: String)
 GET     /v1/account/list                            controllers.AuthController.getLinkedAccounts
 POST    /v1/account/link/mobile                     controllers.AuthController.linkMobileAccount
+POST    /v1/account/link/mobile/mob                 controllers.AuthController.linkMobileAccountViaMob
 POST    /v1/account/link/:provider                  controllers.AuthController.linkSocialAccount(provider: String)
 DELETE  /v1/account/link/:provider                  controllers.AuthController.unlinkSocialAccount(provider: String)
 
@@ -22,7 +24,6 @@ GET     /v1/friendfeeds                             controllers.FeedController.g
 
 # User
 GET     /v1/user/$id<[0-9]+>                        controllers.UserController.getInfo(id: Long)
-POST    /v1/user/login                              controllers.AuthController.mobileAuthenticate
 PUT     /v1/user/$id<[0-9]+>/refreshToken           controllers.AuthController.refreshSessionToken(id: Long)
 PUT     /v1/user/nickname                           controllers.UserController.updateNickname()
 PUT     /v1/user/avatar                             controllers.UserController.updateAvatar()

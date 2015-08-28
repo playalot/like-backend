@@ -30,7 +30,7 @@ class SearchController @Inject() (
       success(Messages("success.found"), Json.toJson(tags.map(tag => Json.obj(
         "id" -> tag.id.toString,
         "tag" -> tag.name,
-        "likes" -> tag.likes
+        "likes" -> 0
       )))
       )
     }
@@ -52,7 +52,7 @@ class SearchController @Inject() (
       val tagJson = Json.toJson(tags.map(tag => Json.obj(
         "mark_id" -> tag.identify,
         "tag" -> tag.name,
-        "likes" -> tag.likes
+        "likes" -> 0
       )))
       success(Messages("success.found"), Json.obj(
         "tags" -> tagJson,

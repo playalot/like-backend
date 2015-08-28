@@ -206,24 +206,26 @@ class FeedController @Inject() (
                 val post = row._1
                 // Find post shown reason
                 var reason: Int = -1
-                var reasonTag: String = null
+                var reasonTag: String = ""
                 if (post.userId == request.userId.getOrElse(-1L)) {
                   // User own post
                   reason = -1
-                } else if (ads.contains(post.id.get) || results.head.contains(post.id.get)) {
-                  // Editor pick (Ads belong to editor pick)
-                  reason = 2
-                } else if (results.length >= 4 && results(3).contains(post.id.get)) {
-                  // You maybe like
-                  reason = 3
                 } else if (results.length >= 3 && results(2).contains(post.id.get)) {
                   // Based on tags
                   reason = 1
                   row._2.map(_._2).find(t => reasonTags.contains(t)).foreach(t => reasonTag = t)
-                } else if (results.length >= 2 && results(1).contains(post.id.get)) {
-                  // Following
-                  reason = 4
+                } else if (ads.contains(post.id.get) || results.head.contains(post.id.get)) {
+                  // Editor pick (Ads belong to editor pick)
+                  reason = 2
                 }
+                //                else if (results.length >= 4 && results(3).contains(post.id.get)) {
+                //                  // You maybe like
+                //                  reason = 3
+                //                }
+                //                else if (results.length >= 2 && results(1).contains(post.id.get)) {
+                //                  // Following
+                //                  reason = 4
+                //                }
                 // println(s"post[${post.id.get}][${post.content}}] $reason $reasonTag")
                 val markIds = row._2.map(_._1)
                 for {

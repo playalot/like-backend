@@ -19,5 +19,6 @@
   "trailing": true,
   "smarttabs": true,
   "white": true,
-  "maxerr" : 999
+  "maxerr" : 999,
+  "browser": true
 }

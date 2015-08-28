@@ -19,9 +19,8 @@ var Layout = React.createClass({
   render: function() {
 
     return (
-      <div className="wrap">
+      <div className="fluid-container wrap">
         <nav id="w0" className="navbar-inverse navbar-fixed-top navbar" role="navigation">
-          <div className="fluid-`container">
             <div className="navbar-header">
               <button type="button" className="navbar-toggle collapsed" data-toggle="collapse" data-target="#w0-collapse" aria-expanded="false">
                 <span className="sr-only">Toggle navigation</span>
@@ -44,9 +43,9 @@ var Layout = React.createClass({
                 </li>
               </ul>
             </div>
-          </div>
+
         </nav>
-        <div className="container">
+        <div className="main">
           <RouteHandler/>
         </div>
         <footer className="footer">

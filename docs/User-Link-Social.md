@@ -1,4 +1,4 @@
-##User Link Account
+##User Link Social Account
 
 绑定第三方账号
 
@@ -39,9 +39,9 @@ POST
     "code": 1,
     "message": "绑定成功",
     "data": {
-        "user_id" -> "123",
-        "provider_id" -> "weibo",
-        "provider_key" -> "weibo_id"
+        "user_id" : "123",
+        "provider_id" : "weibo",
+        "provider_key" : "weibo_id"
     }
 }
 ```

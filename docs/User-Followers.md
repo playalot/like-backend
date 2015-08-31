@@ -4,7 +4,7 @@
 
 ######URL
 
-http://api.likeorz.com/v1/user/{id:[0-9]+}/fans/{page:[0-9]+}
+http://api.likeorz.com/v1/user/{id:[0-9]+}/followers/{page:[0-9]+}
 
 ######支持格式
 JSON

@@ -1,10 +1,10 @@
-##User Follows
+##User Following
 
 获取用户关注列表
 
 ######URL
 
-http://api.likeorz.com/v1/user/{id:[0-9]+}/follows/{page:[0-9]+}
+http://api.likeorz.com/v1/user/{id:[0-9]+}/following/{page:[0-9]+}
 
 ######支持格式
 JSON

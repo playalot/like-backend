@@ -4,7 +4,7 @@
 
 ######URL
 
-http://api.likeorz.com/v2/homeFeeds
+http://api.likeorz.com/v2/followingFeeds
 
 ######支持格式
 JSON

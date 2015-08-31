@@ -34,9 +34,9 @@ curl -i -X GET -H "LIKE-SESSION-TOKEN:bd625d6a6b6fe5bc0b128954ad5ca39d" http://a
     "message": "Record(s) Found", 
     "data": {
         "user_id": "1", 
-        "nickname": "小改", 
-        "avatar": "http://likeorz.qiniucdn.com/avatar_8.jpg", 
-        "origin_avatar": "http://cdn.likeorz.com/avatar_700_1431757477.jpg?imageView2/1/w/1242/h/1242",
+        "nickname": "小X", 
+        "avatar": "http://likeorz.qiniucdn.com/avatar_8.jpg?imageView2/1/w/1242/h/1242", 
+        "origin_avatar": "http://cdn.likeorz.com/avatar_700_1431757477.jpg",
         "cover": "http://cdn.likeorz.com/cover_700_1431757537.jpg?imageView2/1/w/1242/h/1242",
         "likes": 0, 
         "is_following": 0,

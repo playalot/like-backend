@@ -10,10 +10,6 @@ import scala.concurrent.Future
 
 case class SmsCode(mobilePhoneNumber: String, zone: String, code: String)
 
-/**
- * Created by Guan Guan
- * Date: 5/22/15
- */
 class MobileProvider() extends Provider {
 
   /**

@@ -2,8 +2,8 @@ package com.likeorz.services
 
 import javax.inject.Inject
 
-import com.likeorz.models.{ Tag => Tg, TagGroup, User }
-import com.likeorz.dao.{ TagGroupsComponent, UsersComponent, MarksComponent, TagsComponent }
+import com.likeorz.models.{ Tag => Tg, UserTag, TagGroup, User }
+import com.likeorz.dao._
 import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
 import play.api.Configuration
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
@@ -17,6 +17,7 @@ import scala.collection.JavaConversions._
 class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, configuration: Configuration) extends TagService
     with TagsComponent with MarksComponent
     with UsersComponent with TagGroupsComponent
+    with UserTagsComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -110,6 +111,19 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   override def addTagGroup(name: String): Future[TagGroup] = {
     val tagGroup = TagGroup(None, name)
     db.run(tagGroups returning tagGroups.map(_.id) += tagGroup).map(id => tagGroup.copy(id = Some(id)))
+  }
+
+  override def addUserTag(userId: Long, tagId: Long): Future[UserTag] = {
+    val userTag = UserTag(userId, tagId)
+    db.run(userTags += userTag).map(_ => userTag)
+  }
+
+  override def getUserSubscribeTagIds(userId: Long): Future[Seq[Long]] = {
+    db.run(userTags.filter(_.userId === userId).map(_.tagId).result)
+  }
+
+  override def getUserSubscribeTag(userId: Long, tagId: Long): Future[Option[UserTag]] = {
+    db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).result.headOption)
   }
 
 }

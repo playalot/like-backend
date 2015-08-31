@@ -293,7 +293,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPostsTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]] = {
-    val tagsQuery = sql"""SELECT DISTINCT m.tag FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId limit 500""".as[String]
+    val tagsQuery = sql"""SELECT DISTINCT tag FROM mark WHERE user_id=$userId""".as[String]
     db.run(tagsQuery).map(_.toSet)
   }
 

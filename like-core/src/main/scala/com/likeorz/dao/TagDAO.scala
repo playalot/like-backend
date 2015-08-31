@@ -1,6 +1,6 @@
 package com.likeorz.dao
 
-import com.likeorz.models.{ Tag => Tg, TagGroup, Like, Comment, Mark }
+import com.likeorz.models.{ Tag => Tg, _ }
 import play.api.db.slick.HasDatabaseConfig
 import slick.driver.JdbcProfile
 
@@ -28,6 +28,19 @@ trait TagGroupsComponent { self: HasDatabaseConfig[JdbcProfile] =>
   }
 
   protected val tagGroups = TableQuery[TagGroupsTable]
+}
+
+trait UserTagsComponent { self: HasDatabaseConfig[JdbcProfile] =>
+  import driver.api._
+
+  class UserTagsTable(tag: Tag) extends Table[UserTag](tag, "user_tags") {
+    def userId = column[Long]("user_id", O.PrimaryKey)
+    def tagId = column[Long]("tag_id", O.PrimaryKey)
+    def subscribe = column[Boolean]("subscribe")
+    override def * = (userId, tagId, subscribe) <> (UserTag.tupled, UserTag.unapply _)
+  }
+
+  protected val userTags = TableQuery[UserTagsTable]
 }
 
 trait MarksComponent { self: HasDatabaseConfig[JdbcProfile] =>

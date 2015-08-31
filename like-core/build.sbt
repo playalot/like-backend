@@ -6,8 +6,9 @@ version := "1.1.0"
 
 // Change this to another test framework if you prefer
 libraryDependencies ++= Seq(
+  "cn.jpush.api"              %  "jpush-client"     % "3.2.6",
   "mysql"                     %  "mysql-connector-java" % "5.1.36",
-  "org.postgresql"            %  "postgresql"       % "9.4-1201-jdbc41",
+  "org.postgresql"            %  "postgresql"       % "9.4-1202-jdbc42",
   "org.nlpcn"                 %  "nlp-lang"         % "1.0",
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "redis.clients"             %  "jedis"            % "2.7.3",

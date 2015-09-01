@@ -3,7 +3,7 @@ package controllers
 import javax.inject.{ Named, Inject }
 
 import akka.actor.ActorRef
-import com.likeorz.common.ClassifyPost
+import com.likeorz.push.JPushNotification
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -12,7 +12,7 @@ import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ Notification, Post, Report }
 import com.likeorz.services._
 import services.PushService
-import utils.{ HelperUtils, QiniuUtil }
+import utils.{ HelperUtils, NlpUtils, QiniuUtil }
 
 import scala.concurrent.Future
 
@@ -37,7 +37,7 @@ class PostController @Inject() (
     (__ \ 'location).readNullable[Seq[Double]]
   )(PostCommand.apply _)
 
-  val categories = Seq("手办", "模型", "手绘", "美食", "外设", "设计")
+  val categories = Seq("手办", "高达", "动漫", "手绘", "美食", "外设", "设计")
 
   /**
    * Get Qiniu upload token
@@ -75,10 +75,10 @@ class PostController @Inject() (
             author <- userService.getUserInfo(request.userId)
             results <- Future.sequence(futures)
           } yield {
-            if (author.likes.toLong > 200) {
-              // classify post
-              classificationActor ! ClassifyPost(post.id.get, postCommand.tags, post.created)
-            }
+            //            if (author.likes.toLong > 200) {
+            //              // classify post
+            //              classificationActor ! ClassifyPost(post.id.get, postCommand.tags, post.created)
+            //            }
             val marksJson = results.map { tagAndMark =>
               Json.obj(
                 "mark_id" -> tagAndMark._2.id.get,
@@ -234,7 +234,7 @@ class PostController @Inject() (
             Future.successful(error(4025, Messages("invalid.tagMaxLength")))
           else if (tag.length < 1)
             Future.successful(error(4025, Messages("invalid.tagMinLength")))
-          else if (HelperUtils.isContainSensitiveWord(tag)) {
+          else if (NlpUtils.isContainSensitiveWord(tag)) {
             Future.successful(error(4025, Messages("invalid.tagIllegal")))
           } else
             postService.getPostById(postId).flatMap {
@@ -252,7 +252,12 @@ class PostController @Inject() (
                       notify <- notificationService.insert(notifyMarkUser)
                       count <- notificationService.countForUser(post.userId)
                     } yield {
-                      pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
+                      // Send push notification
+                      if (HelperUtils.compareVersion(getLikeVersion, "1.1.1")) {
+                        pushService.sendPushNotificationViaJPush(JPushNotification(List(post.userId.toString), List(), Messages("notification.mark", nickname, tag), count))
+                      } else {
+                        pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
+                      }
                     }
                   }
                   success(Messages("success.mark"), Json.obj(

@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
+import com.likeorz.push.JPushNotification
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
@@ -9,7 +10,7 @@ import play.api.mvc.Action
 import com.likeorz.models._
 import com.likeorz.services._
 import services.PushService
-import utils.QiniuUtil
+import utils.{ HelperUtils, QiniuUtil }
 
 import scala.concurrent.Future
 
@@ -26,6 +27,8 @@ class CommentController @Inject() (
     pushService: PushService) extends BaseController {
 
   def commentMark(id: Long) = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
+    val likeVersion = getLikeVersion
+
     markService.getMark(id).flatMap {
       case Some(mark) =>
         val replyId = (request.body \ "reply_id").asOpt[Long]
@@ -48,7 +51,12 @@ class CommentController @Inject() (
                     count <- notificationService.countForUser(comment.replyId.get)
                   } yield {
                     // Send push notification
-                    pushService.sendPushNotificationToUser(comment.replyId.get, Messages("notification.reply", nickname, mark.tagName.getOrElse("")), count)
+
+                    if (HelperUtils.compareVersion(likeVersion, "1.1.1")) {
+                      pushService.sendPushNotificationViaJPush(JPushNotification(List(comment.replyId.get.toString), List(), Messages("notification.reply", nickname, mark.tagName.getOrElse("")), count))
+                    } else {
+                      pushService.sendPushNotificationToUser(comment.replyId.get, Messages("notification.reply", nickname, mark.tagName.getOrElse("")), count)
+                    }
                   }
                 } else {
                   if (mark.userId != request.userId) {
@@ -58,7 +66,11 @@ class CommentController @Inject() (
                       count <- notificationService.countForUser(mark.userId)
                     } yield {
                       // Send push notification
-                      pushService.sendPushNotificationToUser(mark.userId, Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count)
+                      if (HelperUtils.compareVersion(likeVersion, "1.1.1")) {
+                        pushService.sendPushNotificationViaJPush(JPushNotification(List(mark.userId.toString), List(), Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count))
+                      } else {
+                        pushService.sendPushNotificationToUser(mark.userId, Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count)
+                      }
                     }
                   }
                   if (post.userId != mark.userId && post.userId != comment.userId) {
@@ -68,7 +80,11 @@ class CommentController @Inject() (
                       count <- notificationService.countForUser(post.userId)
                     } yield {
                       // Send push notification
-                      pushService.sendPushNotificationToUser(post.userId, Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count)
+                      if (HelperUtils.compareVersion(likeVersion, "1.1.1")) {
+                        pushService.sendPushNotificationViaJPush(JPushNotification(List(post.userId.toString), List(), Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count))
+                      } else {
+                        pushService.sendPushNotificationToUser(post.userId, Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count)
+                      }
                     }
                   }
                 }

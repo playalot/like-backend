@@ -29,4 +29,10 @@ class HelperUtilsSpec extends FlatSpec with Matchers {
     HelperUtils.parseTimestamp(ts) shouldEqual Seq(None, None, None)
   }
 
+  it should "compare version correctly" in {
+    HelperUtils.compareVersion("1.1.2", "1.1.1.1") shouldEqual true
+    HelperUtils.compareVersion("1.1.1", "1.1.1.2") shouldEqual false
+    HelperUtils.compareVersion("1.1.2.1", "1.1.1") shouldEqual true
+  }
+
 }

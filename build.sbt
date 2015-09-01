@@ -29,7 +29,7 @@ lazy val likeDashboard = (project in file("like-dashboard"))
 
 lazy val likeWebsite = (project in file("like-website"))
   .dependsOn(likeCore)
-  .enablePlugins(PlayScala, SbtWeb)
+  .enablePlugins(PlayScala)
 
 lazy val likeML = (project in file("like-ml"))
   .enablePlugins(JavaServerAppPackaging)

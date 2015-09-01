@@ -44,7 +44,14 @@ trait BaseController extends Controller with I18nSupport {
     }
   }
 
-  def getScreenWidth(implicit request: Request[AnyContent]): Int = {
+  def getLikeVersion[A](implicit request: Request[A]): String = {
+    request.headers.get("LIKE-VERSION") match {
+      case Some(version) => version
+      case None          => "0.0.0"
+    }
+  }
+
+  def getScreenWidth[A](implicit request: Request[A]): Int = {
     request.headers.get("LIKE-SCREEN-WIDTH") match {
       case Some(width) => try {
         val w = width.toInt

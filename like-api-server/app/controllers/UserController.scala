@@ -3,22 +3,19 @@ package controllers
 import javax.inject.Inject
 
 import com.likeorz.models.Notification
+import com.likeorz.push.JPushNotification
 import play.api.Play
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.Play.current
-import play.api.mvc.Action
+import play.api.mvc.{ AnyContent, Action }
 import com.likeorz.services._
 import services.PushService
-import utils.QiniuUtil
+import utils.{ HelperUtils, QiniuUtil }
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 5/23/15
- */
 class UserController @Inject() (
     val messagesApi: MessagesApi,
     userService: UserService,
@@ -155,7 +152,7 @@ class UserController @Inject() (
         val recoJson = recommends.map { tag =>
           Json.obj("tag" -> tag)
         }
-        success(Messages("success.found"), Json.obj("suggests" -> Json.toJson(jsonArr), "recommends" -> Json.toJson(recoJson)))
+        success(Messages("success.found"), Json.obj("suggests" -> Json.toJson(jsonArr), "recommends" -> Json.toJson(recoJson), "defaults" -> Json.toJson(recoJson)))
     }
   }
 
@@ -203,7 +200,11 @@ class UserController @Inject() (
               count <- notificationService.countForUser(id)
             } yield {
               // Send push notification
-              pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), count)
+              if (HelperUtils.compareVersion(getLikeVersion(request.request), "1.1.1")) {
+                pushService.sendPushNotificationViaJPush(JPushNotification(List(id.toString), List(), Messages("notification.follow", nickname), count))
+              } else {
+                pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), count)
+              }
             }
             success(Messages("success.follow"), Json.obj("is_following" -> following))
           }

@@ -12,6 +12,7 @@ POST    /v1/sendSmsCode                             controllers.AuthController.s
 POST    /v1/authenticate/mobile                     controllers.AuthController.mobileAuthenticateViaAvos
 POST    /v1/authenticate/mobile/mob                 controllers.AuthController.mobileAuthenticateViaMob
 POST    /v1/authenticate/:provider                  controllers.AuthController.socialAuthenticate(provider: String)
+PUT     /v1/user/$id<[0-9]+>/refreshToken           controllers.AuthController.refreshSessionToken(id: Long)
 GET     /v1/account/list                            controllers.AuthController.getLinkedAccounts
 POST    /v1/account/link/mobile                     controllers.AuthController.linkMobileAccount
 POST    /v1/account/link/mobile/mob                 controllers.AuthController.linkMobileAccountViaMob
@@ -21,10 +22,12 @@ DELETE  /v1/account/link/:provider                  controllers.AuthController.u
 # Feed
 GET     /v1/homefeeds                               controllers.FeedController.getHomeFeedsV2(ts: Option[Long] ?= None)
 GET     /v1/friendfeeds                             controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
+GET     /v1/homeFeeds                               controllers.FeedController.getHomeFeedsV2(ts: Option[Long] ?= None)
+GET     /v1/followingFeeds                          controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
+
 
 # User
 GET     /v1/user/$id<[0-9]+>                        controllers.UserController.getInfo(id: Long)
-PUT     /v1/user/$id<[0-9]+>/refreshToken           controllers.AuthController.refreshSessionToken(id: Long)
 PUT     /v1/user/nickname                           controllers.UserController.updateNickname()
 PUT     /v1/user/avatar                             controllers.UserController.updateAvatar()
 PUT     /v1/user/cover                              controllers.UserController.updateCover()
@@ -32,6 +35,8 @@ GET     /v1/user/suggest                            controllers.UserController.s
 GET     /v1/user/$id<[0-9]+>/posts/$pg<[0-9]+>      controllers.UserController.getPostsForUser(id: Long, pg: Int)
 GET     /v1/user/$id<[0-9]+>/follows/$pg<[0-9]+>    controllers.UserController.getFriends(id: Long, pg: Int)
 GET     /v1/user/$id<[0-9]+>/fans/$pg<[0-9]+>       controllers.UserController.getFollowers(id: Long, pg: Int)
+GET     /v1/user/$id<[0-9]+>/following/$pg<[0-9]+>  controllers.UserController.getFriends(id: Long, pg: Int)
+GET     /v1/user/$id<[0-9]+>/followers/$pg<[0-9]+>  controllers.UserController.getFollowers(id: Long, pg: Int)
 POST    /v1/user/$id<[0-9]+>/follow                 controllers.UserController.follow(id: Long)
 DELETE  /v1/user/$id<[0-9]+>/follow                 controllers.UserController.unFollow(id: Long)
 POST    /v1/user/$id<[0-9]+>/block                  controllers.UserController.block(id: Long)
@@ -57,6 +62,7 @@ DELETE  /v1/mark/$id<[0-9]+>                        controllers.MarkController.d
 POST    /v1/mark/$id<[0-9]+>/comment                controllers.CommentController.commentMark(id: Long)
 DELETE  /v1/comment/$id<[0-9]+>                     controllers.CommentController.deleteCommentFromMark(id: Long)
 GET     /v1/mark/$id<[0-9]+>/comment                controllers.CommentController.getCommentsForMark(id: Long, order: String ?= "desc")
+GET     /v1/mark/$id<[0-9]+>/comments               controllers.CommentController.getCommentsForMark(id: Long, order: String ?= "desc")
 
 # Search
 GET     /v1/tag/hot                                 controllers.SearchController.hotTags

@@ -6,7 +6,7 @@ import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.routing.RoundRobinPool
 import com.likeorz.actors.PushNotificationActor
 import com.likeorz.dao.InstallationComponent
-import com.likeorz.push.PushNotification
+import com.likeorz.push.{ JPushNotification, PushNotification }
 import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.{ JsObject, Json }
@@ -26,15 +26,20 @@ class PushServiceImpl @Inject() (system: ActorSystem, protected val dbConfigProv
 
   import driver.api._
 
-  val hostname = Play.current.configuration.getString("push-actor.hostname").get
-  val port = Play.current.configuration.getInt("push-actor.port").get
-
+  //  val hostname = Play.current.configuration.getString("push-actor.hostname").get
+  //  val port = Play.current.configuration.getInt("push-actor.port").get
   //  val remotePushActor = system.actorSelection(s"akka.tcp://LikeActorSystem@$hostname:$port/user/PushNotificationActor")
+
   val pushActorPool: ActorRef = system.actorOf(RoundRobinPool(5).props(Props[PushNotificationActor]), "pushActorPool")
 
   override def sendPushNotification(notification: PushNotification): Unit = {
     //remotePushActor ! push
-    Logger.debug("Send: " + notification)
+    Logger.debug("Send Avos: " + notification)
+    pushActorPool ! notification
+  }
+
+  override def sendPushNotificationViaJPush(notification: JPushNotification): Unit = {
+    Logger.debug("Send JPush: " + notification)
     pushActorPool ! notification
   }
 
@@ -43,10 +48,6 @@ class PushServiceImpl @Inject() (system: ActorSystem, protected val dbConfigProv
       case Some(install) => sendPushNotification(PushNotification(install.objectId, alert, badge, extra))
       case None          => ()
     }
-  }
-
-  override def sendRemotePushNotification(push: PushNotification): Unit = {
-
   }
 
 }

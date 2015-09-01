@@ -38,6 +38,7 @@ tag.exists = 你已经添加过同样的标签啦
 mark.notFound = 没有这个标签
 no.permission = 你没有权限删除这个作品
 no.suchNotification = 没有任何消息提醒
+success.ok = 成功
 success.avatar = 保存头像成功
 success.cover = 保存封面成功
 success.link = 成功绑定了账户

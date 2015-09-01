@@ -52,6 +52,19 @@ trait RecommendsComponent { self: HasDatabaseConfig[JdbcProfile] =>
   protected val recommends = TableQuery[RecommendsTable]
 }
 
+trait FavoritesComponent { self: HasDatabaseConfig[JdbcProfile] =>
+  import driver.api._
+
+  class FavoritesTable(tag: Tag) extends Table[Favorite](tag, "favorite") {
+    def userId = column[Long]("user_id")
+    def postId = column[Long]("post_id")
+    def created = column[Long]("created")
+    override def * = (userId, postId, created) <> (Favorite.tupled, Favorite.unapply _)
+  }
+
+  protected val favorites = TableQuery[FavoritesTable]
+}
+
 trait DeletedPhotosComponent { self: HasDatabaseConfig[JdbcProfile] =>
   import driver.api._
 

@@ -36,6 +36,12 @@ trait PostService {
 
   def updatePostTimestamp(postId: Long): Future[Unit]
 
+  def favorite(postId: Long, userId: Long): Future[Favorite]
+
+  def unFavorite(postId: Long, userId: Long): Future[Unit]
+
+  def isFavorited(postId: Long, userId: Long): Future[Boolean]
+
   def report(report: Report): Future[Report]
 
   def getRecommendedPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]

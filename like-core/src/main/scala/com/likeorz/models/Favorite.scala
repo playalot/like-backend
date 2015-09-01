@@ -1,6 +1,6 @@
 package com.likeorz.models
 
-case class Like(
-  markId: Long,
+case class Favorite(
   userId: Long,
+  postId: Long,
   created: Long = System.currentTimeMillis / 1000)

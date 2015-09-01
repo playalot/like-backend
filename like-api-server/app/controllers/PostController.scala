@@ -113,7 +113,10 @@ class PostController @Inject() (
   def getPost(id: Long) = UserAwareAction.async { implicit request =>
     postService.getPostById(id).flatMap {
       case Some(post) =>
-        userService.getUserInfo(post.userId).map { user =>
+        for {
+          favorited <- Future.successful(false)
+          user <- userService.getUserInfo(post.userId)
+        } yield {
           val location = try {
             post.location.map(_.split(" ").map(_.toDouble))
           } catch {
@@ -125,6 +128,7 @@ class PostController @Inject() (
             "content" -> QiniuUtil.getSizedImage(post.content, 960),
             "description" -> post.description,
             "created" -> post.created,
+            "favorited" -> favorited,
             "place" -> post.place,
             "location" -> location,
             "user" -> Json.obj(
@@ -282,6 +286,20 @@ class PostController @Inject() (
     }
     postService.report(Report(None, request.userId, postId, reason = reason)).map { _ =>
       success("success.report")
+    }
+  }
+
+  /** favorite a post */
+  def favorite(postId: Long) = SecuredAction.async { implicit request =>
+    postService.favorite(postId, request.userId).map { _ =>
+      success("success.ok")
+    }
+  }
+
+  /** unfavorite a post */
+  def unfavorite(postId: Long) = SecuredAction.async { implicit request =>
+    postService.unFavorite(postId, request.userId).map { _ =>
+      success("success.ok")
     }
   }
 

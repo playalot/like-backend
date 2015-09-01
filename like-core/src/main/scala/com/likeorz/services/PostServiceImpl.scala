@@ -21,7 +21,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     with LikesComponent with CommentsComponent
     with RecommendsComponent with FollowsComponent
     with ReportsComponent with DeletedPhotosComponent
-    with HasDatabaseConfigProvider[JdbcProfile] {
+    with FavoritesComponent with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 
@@ -262,6 +262,19 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def report(report: Report): Future[Report] = {
     db.run(reports returning reports.map(_.id) += report).map(id => report.copy(id = Some(id)))
+  }
+
+  override def favorite(postId: Long, userId: Long): Future[Favorite] = {
+    val favorite = Favorite(userId, postId)
+    db.run(favorites += favorite).map(_ => favorite)
+  }
+
+  override def unFavorite(postId: Long, userId: Long): Future[Unit] = {
+    db.run(favorites.filter(fav => fav.userId === userId && fav.postId === postId).delete).map(_ => ())
+  }
+
+  override def isFavorited(postId: Long, userId: Long): Future[Boolean] = {
+    db.run(favorites.filter(fav => fav.userId === userId && fav.postId === postId).take(1).result.headOption).map(x => x.isDefined)
   }
 
   override def getRecommendedPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {

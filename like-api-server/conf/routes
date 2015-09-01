@@ -19,6 +19,7 @@ POST    /v1/account/link/mobile/mob                 controllers.AuthController.l
 POST    /v1/account/link/:provider                  controllers.AuthController.linkSocialAccount(provider: String)
 DELETE  /v1/account/link/:provider                  controllers.AuthController.unlinkSocialAccount(provider: String)
 
+
 # Feed
 GET     /v1/homefeeds                               controllers.FeedController.getHomeFeedsV2(ts: Option[Long] ?= None)
 GET     /v1/friendfeeds                             controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
@@ -50,6 +51,8 @@ GET     /v1/post/$id<[0-9]+>                        controllers.PostController.g
 GET     /v1/post/$id<[0-9]+>/marks/$pg<[0-9]+>      controllers.PostController.getPostMarks(id: Long, pg: Int)
 POST    /v1/post/$id<[0-9]+>/mark                   controllers.PostController.addMark(id: Long)
 POST    /v1/post/$id<[0-9]+>/report                 controllers.PostController.report(id: Long)
+POST    /v1/post/$id<[0-9]+>/favorite               controllers.PostController.favorite(id: Long)
+DELETE  /v1/post/$id<[0-9]+>/favorite               controllers.PostController.unfavorite(id: Long)
 
 # Mark
 GET     /v1/mark/$id<[0-9]+>                        controllers.MarkController.getMark(id: Long)

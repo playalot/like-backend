@@ -37,6 +37,7 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
         "content": "http://storage.likeorz.com/42a477c5614e0fed_1427805894_w_428_h_640_181.jpg", 
         "description": "09R1……", 
         "created": "1427805894",
+        "favorited": false,
         "place(optional)": "Beijing",
         "location(optional)": [11.11, 22.22],
         "is_favored": "0", 
@@ -57,6 +58,7 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
 |type|string|类型|
 |content|string|内容|
 |description|string|描述|
+|favorite|bool|是否已经保存|
 |created|int|发布时间|
 |user|array|用户信息|
 |user_id|int|用户ID|

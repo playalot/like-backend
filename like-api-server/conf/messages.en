@@ -39,6 +39,7 @@ mark.notFound = No Such Mark
 post.notFound = No Such Post
 no.permission = No Permission
 no.suchNotification = No Such Notification
+success.ok = Success
 success.avatar = Change Avatar Success
 success.cover = Change Cover Success
 success.link = Link Account Success

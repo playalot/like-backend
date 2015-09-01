@@ -12,120 +12,11 @@ import utils.{ HelperUtils, QiniuUtil }
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 6/19/15
- */
 class FeedController @Inject() (
     val messagesApi: MessagesApi,
     userService: UserService,
     markService: MarkService,
     postService: PostService) extends BaseController {
-
-  def getHomeFeeds(timestamp: Option[String] = None) = UserAwareAction.async { implicit request =>
-    // Use phone screen width for output photo size
-    val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
-
-    // Parse timestamp list used for each data source
-    val ts = HelperUtils.parseTimestamp(timestamp)
-    // Get post ids from different data source
-    val futureIds = if (request.userId.isDefined) {
-      val recommendIds = postService.getRecommendedPosts(20, ts.head)
-      val followIds = postService.getFollowingPosts(request.userId.get, 20, ts(1))
-      val taggedIds = postService.getTaggedPosts(request.userId.get, 20, ts(2))
-      //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.5))
-      Future.sequence(Seq(recommendIds, followIds, taggedIds))
-    } else {
-      val recommendIds = postService.getRecommendedPosts(20, ts.head)
-      Future.sequence(Seq(recommendIds))
-    }
-
-    // Get promoted posts(Ads)
-    val ads = if (request.userId.isDefined && timestamp.isEmpty && HelperUtils.random(100) > 50)
-      RedisCacheClient.srandmember(KeyUtils.postPromote).map(_.toLong) else List[Long]()
-
-    futureIds.flatMap { results =>
-      val resultIds = results.flatten.toSet ++ ads
-      // Unique post ids
-      val uniqueIds = if (timestamp.isDefined) {
-        if (request.userId.isDefined) {
-          // Remove already seen ids from user history
-          val unseenIds = resultIds -- RedisCacheClient.smembers(KeyUtils.postSeen(request.userId.get)).map(_.toLong)
-          // Update user history
-          if (unseenIds.nonEmpty) RedisCacheClient.sadd(KeyUtils.postSeen(request.userId.get), unseenIds.toSeq.map(_.toString))
-
-          unseenIds
-        } else {
-          resultIds
-        }
-      } else {
-        // Initial home feeds request
-        if (request.userId.isDefined) {
-          // Clear and initialize history cache
-          RedisCacheClient.del(KeyUtils.postSeen(request.userId.get))
-          RedisCacheClient.sadd(KeyUtils.postSeen(request.userId.get), results.flatten.map(_.toString))
-        }
-        resultIds
-      }
-
-      postService.getPostsByIds(resultIds.toSeq).flatMap { list =>
-        // Handle empty results
-        if (list.isEmpty) {
-          Future.successful(success(Messages("success.found"),
-            Json.obj(
-              "posts" -> Json.arr(),
-              "next" -> ts.map(_ => DateTime.now.minusHours(3).getMillis / 1000).mkString(",")
-            )))
-        } else {
-          val idTsMap = list.map(x => (x._1.id.get, x._1.created)).toMap
-          val nextTs = results.map { rs =>
-            if (rs.isEmpty) "-1"
-            else idTsMap.get(rs.last).map(_.toString).getOrElse("")
-          }.mkString(",")
-
-          val promotePosts = list.filter(p => ads.contains(p._1.id.get))
-          val postList = list.filter(p => uniqueIds.contains(p._1.id.get) && !ads.contains(p._1.id.get)).sortBy(-_._1.created).toList
-
-          val posts = if (promotePosts.nonEmpty) HelperUtils.insertAt(promotePosts.head, HelperUtils.random(3, 3), postList) else postList
-
-          val futures = posts.map { row =>
-            val post = row._1
-            val markIds = row._2.map(_._1)
-            for {
-              userInfo <- userService.getUserInfo(post.userId)
-              likedMarks <- markService.checkLikes(request.userId.getOrElse(-1L), markIds)
-            } yield {
-              val marksJson = row._2.sortBy(-_._3).map { fields =>
-                Json.obj(
-                  "mark_id" -> fields._1,
-                  "tag" -> fields._2,
-                  "likes" -> fields._3,
-                  "is_liked" -> likedMarks.contains(fields._1)
-                )
-              }
-              Json.obj(
-                "post_id" -> post.id.get,
-                "type" -> post.`type`,
-                "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
-                "created" -> post.created,
-                "user" -> Json.obj(
-                  "user_id" -> post.userId,
-                  "nickname" -> userInfo.nickname,
-                  "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
-                  "likes" -> userInfo.likes
-                ),
-                "marks" -> Json.toJson(marksJson)
-              )
-            }
-          }
-          Future.sequence(futures).map { posts =>
-            success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts), "next" -> nextTs))
-          }
-        }
-      }
-    } // futureIds end
-
-  }
 
   // Get home feeds, ordered by created
   def getHomeFeedsV2(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
@@ -213,7 +104,7 @@ class FeedController @Inject() (
                 } else if (results.length >= 3 && results(2).contains(post.id.get)) {
                   // Based on tags
                   reason = 1
-                  row._2.map(_._2).find(t => reasonTags.contains(t)).foreach(t => reasonTag = t)
+                  reasonTag = row._2.map(_._2).find(t => reasonTags.contains(t)).getOrElse("")
                 } else if (ads.contains(post.id.get) || results.head.contains(post.id.get)) {
                   // Editor pick (Ads belong to editor pick)
                   reason = 2

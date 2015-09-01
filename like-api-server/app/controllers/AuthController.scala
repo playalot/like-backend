@@ -23,10 +23,6 @@ import utils._
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 5/22/15
- */
 class AuthController @Inject() (
     val messagesApi: MessagesApi,
     userService: UserService,
@@ -99,7 +95,12 @@ class AuthController @Inject() (
     "JP" -> "81",
     "YE" -> "967",
     "MO" -> "417",
-    "HK" -> "852"
+    "HK" -> "852",
+    "AU" -> "61",
+    "GB" -> "44",
+    "ES" -> "34",
+    "TW" -> "886",
+    "SG" -> "65"
   )
 
   /** Authenticate via mobile sms code */

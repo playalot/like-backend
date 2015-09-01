@@ -8,6 +8,7 @@ import akka.util.Timeout
 import com.likeorz.common.{ ClassifyPost, PushUnreadLikes, ApiServerRemoteCount }
 import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ User, Notification }
+import com.likeorz.push.JPushNotification
 import org.joda.time.DateTime
 import play.api._
 import play.api.i18n.{ Lang, Messages, MessagesApi }
@@ -83,7 +84,8 @@ class Application @Inject() (
 
     //    userService.count().map(println)
 
-    //    pushNotificationService.sendNotification(Notification(None, "LIKE", 715L, 715L, 1234, Some("aaa"), Some(123L)))
+    //    val notification = JPushNotification(List("11226"), List(), "test from server2", 11)
+    //    pushService.sendPushNotificationViaJPush(notification)
 
     //    MemcachedCacheClient.save[String]("session_user:e5b7f1ef625fc31c62a6577e71bb9ac1d2491177d1b8bee9d4db4b72ef177014", "715", 900000)
     //    MemcachedCacheClient.save[String]("session_user:187", "187", 900000)

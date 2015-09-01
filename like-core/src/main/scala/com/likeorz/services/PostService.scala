@@ -22,6 +22,8 @@ trait PostService {
 
   def searchByTag(page: Int = 0, pageSize: Int = 20, name: String): Future[Seq[Post]]
 
+  def searchByTagAndTimestamp(name: String = "%", pageSize: Int = 18, timestamp: Option[Long]): Future[Seq[Post]]
+
   def findHotPostForTag(name: String, page: Int = 0, pageSize: Int = 20): Future[Seq[(Post, User)]]
 
   def getTagPostImage(name: String): Future[Option[String]]

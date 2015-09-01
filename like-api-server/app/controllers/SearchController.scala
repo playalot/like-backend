@@ -13,6 +13,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import com.likeorz.services.{ UserService, PromoteService, PostService, TagService }
 import utils.QiniuUtil
 
+import scala.concurrent.Future
 import scala.util.Random
 
 class SearchController @Inject() (
@@ -23,18 +24,6 @@ class SearchController @Inject() (
     userService: UserService,
     cached: Cached,
     promoteService: PromoteService) extends BaseController {
-
-  @deprecated("replaced by searchUsersAndTags")
-  def autoComplete(name: String) = Action.async {
-    tagService.autoComplete(name).map { tags =>
-      success(Messages("success.found"), Json.toJson(tags.map(tag => Json.obj(
-        "id" -> tag.id.toString,
-        "tag" -> tag.name,
-        "likes" -> 0
-      )))
-      )
-    }
-  }
 
   def searchUsersAndTags(name: String) = Action.async {
     for {
@@ -66,7 +55,7 @@ class SearchController @Inject() (
       entities <- promoteService.getPromoteEntities(2)
       tags <- tagService.hotTags(15)
     } yield {
-      val entityArr = (entities.toSet + Entity(None, "GTA", "", "")).map { entity => Json.obj("tag" -> entity.name) }
+      val entityArr = (entities.toSet + Entity(None, "GTA", "", "") + Entity(None, "手绘", "", "")).map { entity => Json.obj("tag" -> entity.name) }
       val tagArr = tags.filterNot(t => entities.exists(_.name == t)).map { tag => Json.obj("tag" -> tag) }
 
       success(Messages("success.found"), Json.toJson(Random.shuffle(entityArr ++ tagArr)))
@@ -136,11 +125,11 @@ class SearchController @Inject() (
     }
   }
 
-  def explore(tag: String) = cached(_ => "explore:" + tag, duration = 600) {
+  def explore(tag: String, ts: Option[Long]) = cached(_ => "explore:" + tag + ":" + ts.getOrElse(""), duration = 600) {
     UserAwareAction.async { implicit request =>
       for {
-        hotUsers <- tagService.hotUsersForTag(tag, 15)
-        results <- postService.searchByTag(0, 30, tag)
+        hotUsers <- if (ts.isEmpty) tagService.hotUsersForTag(tag, 15) else Future.successful(Seq())
+        results <- postService.searchByTagAndTimestamp(tag, 30, ts)
       } yield {
         val hotUsersJson = Json.toJson(hotUsers.map { user =>
           Json.obj(
@@ -167,7 +156,8 @@ class SearchController @Inject() (
         }
         success(Messages("success.found"), Json.obj(
           "hot_users" -> hotUsersJson,
-          "posts" -> Json.toJson(posts)
+          "posts" -> Json.toJson(posts),
+          "next" -> results.lastOption.map(_.created)
         ))
       }
     }

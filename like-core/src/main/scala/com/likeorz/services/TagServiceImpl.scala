@@ -70,7 +70,6 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
       case Some(ids) => Future.successful(ids.split(",").filter(_.length > 0).map(_.toLong).toSeq)
       case None =>
         val query = sql"""SELECT DISTINCT m.user_id FROM mark m INNER JOIN post p ON m.post_id=p.id WHERE m.tag='#$tag' AND p.user_id=m.user_id ORDER BY m.created LIMIT 100""".as[Long]
-        query.statements.foreach(println)
         db.run(query)
     }
     futureIds.flatMap { pool =>

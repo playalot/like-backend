@@ -100,6 +100,25 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  override def searchByTagAndTimestamp(name: String = "%", pageSize: Int = 18, timestamp: Option[Long]): Future[Seq[Post]] = {
+
+    val jian = JianFan.f2j(name).toLowerCase
+    val fan = JianFan.j2f(name).toLowerCase
+
+    val query = if (timestamp.isDefined) {
+      sql"""SELECT DISTINCT m.post_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE (t.tag like '%#${jian}%' OR t.tag like '%#${fan}%') AND m.created<${timestamp.get} order by m.created desc limit $pageSize""".as[Long]
+    } else {
+      sql"""SELECT DISTINCT m.post_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' order by m.created desc limit $pageSize""".as[Long]
+    }
+
+    db.run(query).flatMap { postIds =>
+      val q = (for {
+        post <- posts if post.id inSet postIds
+      } yield post).sortBy(_.created.desc)
+      db.run(q.result)
+    }
+  }
+
   @deprecated("legacy", "1.1.0")
   override def findHotPostForTag(name: String, page: Int = 0, pageSize: Int = 20): Future[Seq[(Post, User)]] = {
     val offset = pageSize * page

@@ -1,7 +1,328 @@
 @(message: String)
 
-@main("Welcome to Play") {
+@main("like - 将兴趣玩到极致") {
 
-    @play20.welcome(message)
+    <!--HEADER-->
+    <header id='header'>
+        <div id='menu-bar' class='animated fadeIn'>
+            <div class='container'>
+                <div class='logo'>
+                    <img src="@routes.Assets.versioned("images/logo@2x.png")" alt>
+                </div>
+                <nav  id="nav" class='nav'>
+                    <ul class='nav-inner'>
+                        <li class='current'><a href="#header">首页</a></li>
+                        <li><a href="#features">功能</a></li>
+                        <li><a href="#about">谁在玩like</a></li>
+                        <li><a href="#screenshots">界面</a></li>
+                        <li><a href="#reviews">序言</a></li>
+                        <li><a href="#download">下载</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        <div class="container">
+            <div class='row header-content'>
+                <div class='col-sm-10 col-md-7 col-lg-7 animated fadeInRight'>
+                    <h1>让特立独行的人</h1>
+                    <h1>找到同类</h1>
+                    <div id='header-btn'>
+                        <h5>Available on iOS</h5>
+                        <a class='btn btn-download scrollTo-download'>下&nbsp;&nbsp;载</a>
+                    </div>
+                </div>
+                @*<div class='col-xs-10 col-sm-6 col-sm-offset-3 col-md-5 col-lg-5 col-lg-pull-6'>*@
+                    @*<img src="@routes.Assets.versioned("images/head@2x.png")" class='img-responsive animated fadeInUp' alt>*@
+                @*</div>*@
+            </div>
+        </div>
+    </header>
+
+    <!--FEATURES-->
+    <section id='features'>
+        <div class="container">
+            <div class='row'>
+                <div class='col-sm-4 col-md-4 col-lg-4 left wow fadeInLeft'>
+                    <div class='row'>
+                        <div class='col-sm-12 col-md-8 col-lg-8'>
+                            <h4>晒出你的新玩具</h4>
+                            <p>分享给懂你的人</p>
+                            <p>哪里都找不到的认同感</p>
+                        </div>
+                        <div class='col-sm-3 col-md-4 col-lg-4'>
+                            <div class='circle-icon-rspv'><div class='icon ion-ios-eye-outline'></div></div>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col-sm-12 col-md-8 col-lg-8'>
+                            <h4>开放式标签新玩法</h4>
+                            <p>用户可以随意添加标签</p>
+                            <p>吐槽卖萌停不下来</p>
+                        </div>
+                        <div class='col-sm-3 col-md-4 col-lg-4'>
+                            <div class='circle-icon-rspv'><div class='icon ion-ios-pricetags-outline' style='padding-top: 52%'></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class='col-sm-4 col-sm-push-4 col-md-4 col-md-push-4 col-lg-4 col-lg-push-4 right wow fadeInRight'>
+                    <div class='row feature-descprtion'>
+                        <div class='col-sm-3 col-md-4 col-lg-4'>
+                            <div class='circle-icon-rspv'><div class='icon ion-ios-game-controller-b-outline'></div></div>
+                        </div>
+                        <div class='col-sm-12 col-md-8 col-lg-8'>
+                            <h4>首页迅速聚集同好</h4>
+                            <p>不需要主动搜索</p>
+                            <p>你的同类和感兴趣的内容会自动出现在你眼前</p>
+                        </div>
+                    </div>
+                    <div class='row'>
+                        <div class='col-sm-3 col-md-4 col-lg-4'>
+                            <div class='circle-icon-rspv'><div class='icon ion-ios-heart-outline' style='padding-top: 54%'></div></div>
+                        </div>
+                        <div class='col-sm-12 col-md-8 col-lg-8'>
+                            <h4>没有粉丝也会被赞</h4>
+                            <p>图片会根据标签推送给同好</p>
+                            <p>标签越多赞越多</p>
+                        </div>
+                    </div>
+                </div>
+                <div class='col-xs-10 col-xs-offset-1 col-sm-4 col-sm-offset-0 col-sm-pull-4 col-md-4 col-md-pull-4 col-lg-4 col-lg-pull-4'>
+                    <img src="@routes.Assets.versioned("images/phone.png")" class='img-responsive wow fadeInUp' alt>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!--WHO-->
+    <section id='about'>
+        <div class="container">
+            <div class='row wow fadeInUp'>
+                <div class='wow fadeInDown'>
+                    <h2>谁在玩like</h2>
+                </div>
+                <div class='col-xs-6 col-sm-6 col-md-3 col-lg-3'>
+                    <img src="@routes.Assets.versioned("images/avatar1.jpg")" alt class="img-circle">
+                    <div class='text'>
+                        <h3>手办原型师 Kiking</h3>
+                        <p>国内知名手办原型师</p>
+                        <p>纯手工制作, 把二次元</p>
+                        <p>hobbymax创始人</p>
+                    </div>
+                </div>
+                <div class='col-xs-6 col-sm-6 col-md-3 col-lg-3'>
+                    <img src="@routes.Assets.versioned("images/avatar2.jpg")" alt class="img-circle">
+                    <div class='text'>
+                        <h3>外设发烧友 Sky酱</h3>
+                        <p>Like运营君</p>
+                        <p>外设志 创始人</p>
+                        <p>喜欢外设、高达、美食和摄影</p>
+                    </div>
+                </div>
+                <div class='col-xs-6 col-sm-6 col-md-3 col-lg-3'>
+                    <img src="@routes.Assets.versioned("images/avatar3.jpg")" alt class="img-circle">
+                    <div class='text'>
+                        <h3>插画师 静电场朔</h3>
+                        <p>设计师/插画师/模特</p>
+                        <p>大宇宙酿创始人</p>
+                        <p>现居东京, 喜欢有故事的item</p>
+                    </div>
+                </div>
+                <div class='col-xs-6 col-sm-6 col-md-3 col-lg-3'>
+                    <img src="@routes.Assets.versioned("images/avatar4.jpg")" alt class="img-circle">
+                    <div class='text'>
+                        <h3>纹身师 TATTMO</h3>
+                        <p>摇滚乐队鼓手</p>
+                        <p>刺青疯子</p>
+                        <p>为10822个人纹过身</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!--SCREENSHOTS-->
+    <section id='screenshots'>
+        <div class="container">
+            <div class='wow fadeInDown'>
+                <h2>界面预览</h2>
+            </div>
+            <div id="screens-carousel" class="owl-carousel wow fadeInUp">
+                <a href='@routes.Assets.versioned("images/screen1.jpg")' class='item' data-lightbox-gallery="gallery1">
+                    <img src="@routes.Assets.versioned("images/screen1.jpg")" class='img-responsive' alt>
+                </a>
+                <a href='@routes.Assets.versioned("images/screen2.jpg")' class='item' data-lightbox-gallery="gallery1">
+                    <img src="@routes.Assets.versioned("images/screen2.jpg")" class='img-responsive' alt>
+                </a>
+                <a href='@routes.Assets.versioned("images/screen3.jpg")' class='item' data-lightbox-gallery="gallery1">
+                    <img src="@routes.Assets.versioned("images/screen3.jpg")" class='img-responsive' alt>
+                </a>
+                <a href='@routes.Assets.versioned("images/screen4.jpg")' class='item' data-lightbox-gallery="gallery1">
+                    <img src="@routes.Assets.versioned("images/screen4.jpg")" class='img-responsive' alt>
+                </a>
+                <a href='@routes.Assets.versioned("images/screen5.jpg")' class='item' data-lightbox-gallery="gallery1">
+                    <img src="@routes.Assets.versioned("images/screen5.jpg")" class='img-responsive' alt>
+                </a>
+                <a href='@routes.Assets.versioned("images/screen6.jpg")' class='item' data-lightbox-gallery="gallery1">
+                    <img src="@routes.Assets.versioned("images/screen6.jpg")" class='img-responsive' alt>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!--REVIEWS-->
+    <section id='reviews'>
+        <div class="container">
+            <div class='item'>
+                <p class='quote'>未来谁都无法预知，但别在机会降临时毫无准备，成功就在放弃后的一小步，激情是风，风有时会把船帆吹断，但没有风，帆船就不能航行，坚持你的喜欢，再迷茫都不要停下脚步，加油，梦想！</p>
+                <div class='author'>
+                    <div class='name'>Kiking</div>
+                    <div class='position'>hobbymax创始人, 知名手办原型师</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!--DOWNLOAD-->
+    <section id='download'>
+        <div class="container">
+            <div class='wow fadeInDown'>
+                <h2>现在就去下载应用 (/≧▽≦/)</h2>
+            </div>
+            <p class='download-buttons'>
+                <a class='btn btn-icon btn-download-ios' href="https://itunes.apple.com/cn/app/like-ni-de-xin-wan-ju/id975648403?mt=8"><span class='icon ion-social-apple'></span>App Store</a>
+                <a class='btn btn-icon btn-download-andriod disabled' href=""><span class='icon ion-social-android'></span>Coming Soon</a>
+            </p>
+        </div>
+    </section>
+
+    <!--FOOTER-->
+    <footer id='footer'>
+        <div class="container">
+            <div id='footer-content'>
+                <h2><img src="@routes.Assets.versioned("images/logo@2x.png")" alt></h2>
+                <p id='social-links'>
+                    <a href="http://weibo.com/p/1006065608059350" class='icon'><img src="@routes.Assets.versioned("images/weibo.png")"/></a>
+                    <a href="mailto:guoguo@@likeorz.com" class='icon ion-ios-email-outline'></a>
+                    <a href="" ><img src="@routes.Assets.versioned("images/barcode.jpg")"/></a>
+                </p>
+                <p class='copyright'>Copyright © 2015 Like Co. Ltd</p>
+            </div>
+        </div>
+    </footer>
+    <div id='static-footer'></div>
+
+    <script src="@routes.Assets.versioned("javascripts/jquery-2.1.1.min.js")"></script>
+    <script src="@routes.Assets.versioned("javascripts/owl.carousel.min.js")"></script>
+    <script src="@routes.Assets.versioned("javascripts/wow.js")"></script>
+    <script src="@routes.Assets.versioned("javascripts/jquery.nav.js")"></script>
+    <script src="@routes.Assets.versioned("javascripts/jquery.scrollTo.min.js")"></script>
+    <script src="@routes.Assets.versioned("javascripts/nivo-lightbox.min.js")"></script>
+    <script type="text/javascript">
+		// general variables
+		myWindow = $(window)
+		windowHeight = myWindow.height()
+		header = $('#header')
+		showNav = $('#show-nav')
+		hideNav = $('#hide-nav')
+		navUl = $('#nav-ul')
+
+		// set header height
+//		if (windowHeight>=900) {
+//			header.css('height', windowHeight - 250)
+//		}
+//		else{
+//			header.css('height', windowHeight)
+//		}
+
+		headerHeight = header.outerHeight()
+		headerWidth = header.outerWidth()
+
+		$(document).ready(function() {
+
+			// wow.js initialization
+			if (myWindow.width()>530) {
+				new WOW().init();
+			};
+
+			// jquery.nav.js initialization
+			$('.nav-inner', '#header').onePageNav();
+
+            // owl.carousel.js initialization
+			$("#screens-carousel").owlCarousel({
+				items : 4,
+				itemsDesktop : [1199,4],
+				itemsDesktopSmall : [980,3],
+				itemsTablet: [768,2],
+				itemsMobile : [480,1],
+			});
+		});
+		// Responsive navigation show/hide
+		function showNavig() {
+			navUl.css('display','block')
+			hideNav.css('display','block')
+			showNav.css('display','none')
+		}
+		function hideNavig() {
+			navUl.css('display','none')
+			showNav.css('display','block')
+			hideNav.css('display','none')
+		}
+		showNav.click(function() {
+			showNavig();
+		});
+		hideNav.click(function() {
+			hideNavig();
+		});
+		$( "#off-nav" ).click(function() {
+			hideNavig();
+		});
+		$( "#nav-ul > li" ).click(function() {
+			if (myWindow.width()<=767) {
+				hideNavig();
+			};
+		});
+
+		// Resize event handler
+		myWindow.resize(function() {
+			// show/hide responsive navigation
+			if (myWindow.width()>767) {
+				navUl.css('display','block')
+			}
+			else{
+				navUl.css('display','none')
+			}
+		});
+
+        // scrollTo buttons
+		menuBarHeight = $('#menu-bar-fixed').outerHeight();
+
+        $('.scrollTo-download').click(function(){
+			$.scrollTo( $('#download').offset().top-menuBarHeight+'px' , 800 );
+		});
+
+		footerHeight = $('footer').outerHeight();
+		$('#static-footer').css('margin-top', footerHeight+'px');
+
+		// scroll event
+		window.onscroll = scroll;
+
+		function scroll () {
+
+			var wScrollTop = $(window).scrollTop();
+			var wScrollBot = wScrollTop + $(window).height();
+			var pageHeight = $(document).height();
+			var footerContent = $("#footer-content")
+
+			// fixed footer opacity change onscroll
+			if(wScrollBot>pageHeight-(footerHeight/2)){
+				var newOpacity = (0.99/(footerHeight/2)) * (wScrollBot-(pageHeight-(footerHeight/2)))
+				footerContent.css('opacity', newOpacity);
+			}
+			else{
+				footerContent.css('opacity','0');
+			}
+
+		}
+	</script>
 
 }

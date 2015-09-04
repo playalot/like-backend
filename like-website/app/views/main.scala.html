@@ -2,12 +2,46 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
     <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="keywords" content="玩具, 社群, 动漫, 二次元, 图片, 滤镜, 社交, 流行文化, 设计, 品牌">
+        <meta name="description" content="在 like 中分享你的兴趣与爱好, 可以在照片上打标签, 找到共同兴趣的朋友">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-itunes-app" content="app-id=975648403">
+        <meta name="format-detection" content="telephone=no" searchtype="map">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta property="og:site_name" content="like">
+        <meta property="og:type" content="object">
+        <meta property="og:image" content="@routes.Assets.versioned("images/favicon.png")">
+        <meta property="og:title" content="@title">
+        <meta property="og:url" content="http://likeorz.com">
+        <meta property="og:description" content="玩具, 社群, 动漫, 二次元, 图片, 滤镜, 社交, 流行文化, 设计, 品牌">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.ico")">
         <title>@title</title>
-        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("../assets/stylesheets/main.css")">
-        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
-        <script src="@routes.Assets.versioned("javascripts/hello.js")" type="text/javascript"></script>
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/owl.theme.css")" >
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/owl.carousel.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/animate.min.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/ionicons.min.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/customize.css")">
+        <script>
+        var _hmt = _hmt || [];
+        (function() {
+        var hm = document.createElement("script");
+        hm.src = "//hm.baidu.com/hm.js?35df52851e3b1c2864faba98ec9adb5e";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+        })();
+        </script>
+        <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+          <script src="@routes.Assets.versioned("lib/html5shiv/html5shiv.min.js")"></script>
+          <script src="@routes.Assets.versioned("lib/respond/dest/respond.min.js")"></script>
+        <![endif]-->
     </head>
     <body>
         @content

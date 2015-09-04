@@ -35,3 +35,12 @@ ansible_ssh_user=root
 root_path=/root/
 ansible_connection=ssh
 ansible_ssh_user=root
+
+
+[like_website]
+120.26.40.101
+
+[like_website:vars]
+root_path=/root/
+ansible_connection=ssh
+ansible_ssh_user=root

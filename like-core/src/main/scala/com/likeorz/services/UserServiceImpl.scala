@@ -14,10 +14,6 @@ import slick.driver.JdbcProfile
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 5/22/15
- */
 class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends UserService
     with UsersComponent with SocialAccountsComponent
     with FollowsComponent with BlocksComponent

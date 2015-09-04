@@ -30,10 +30,16 @@ trait TagService {
 
   def addTagGroup(name: String): Future[TagGroup]
 
-  def addUserTag(userId: Long, tagId: Long): Future[UserTag]
+  def getUserTag(userId: Long, tagId: Long): Future[Option[UserTag]]
+
+  def subscribeTag(userId: Long, tagId: Long): Future[UserTag]
+
+  def unsubscribeTag(userId: Long, tagId: Long): Future[Int]
 
   def getUserSubscribeTagIds(userId: Long): Future[Seq[Long]]
 
   def getUserSubscribeTag(userId: Long, tagId: Long): Future[Option[UserTag]]
+
+  def getTagByName(tagName: String): Future[Option[Tag]]
 
 }

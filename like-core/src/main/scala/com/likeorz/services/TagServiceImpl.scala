@@ -112,9 +112,26 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     db.run(tagGroups returning tagGroups.map(_.id) += tagGroup).map(id => tagGroup.copy(id = Some(id)))
   }
 
-  override def addUserTag(userId: Long, tagId: Long): Future[UserTag] = {
-    val userTag = UserTag(userId, tagId)
-    db.run(userTags += userTag).map(_ => userTag)
+  override def getUserTag(userId: Long, tagId: Long): Future[Option[UserTag]] = {
+    db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).result.headOption)
+  }
+
+  override def subscribeTag(userId: Long, tagId: Long): Future[UserTag] = {
+    db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).result.headOption).flatMap {
+      case Some(tag) =>
+        if (tag.subscribe == false) {
+          db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).map(_.subscribe).update(true)).map(_ => tag.copy(subscribe = true))
+        } else {
+          Future.successful(tag)
+        }
+      case None =>
+        val userTag = UserTag(userId, tagId)
+        db.run(userTags += userTag).map(_ => userTag)
+    }
+  }
+
+  override def unsubscribeTag(userId: Long, tagId: Long): Future[Int] = {
+    db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).map(_.subscribe).update(false))
   }
 
   override def getUserSubscribeTagIds(userId: Long): Future[Seq[Long]] = {
@@ -123,6 +140,10 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
 
   override def getUserSubscribeTag(userId: Long, tagId: Long): Future[Option[UserTag]] = {
     db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).result.headOption)
+  }
+
+  override def getTagByName(tagName: String): Future[Option[Tg]] = {
+    db.run(tags.filter(_.name === tagName).result.headOption)
   }
 
 }

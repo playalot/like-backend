@@ -32,3 +32,4 @@
 4055 failed.lastAccount
 4056 failed.unlink
 |4057|Banned|封号用户|
+|4058|Tag Subscribe||

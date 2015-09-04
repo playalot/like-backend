@@ -21,7 +21,7 @@ DELETE  /v1/account/link/:provider                  controllers.AuthController.u
 
 
 # Feed
-GET     /v1/homefeeds                               controllers.FeedController.getHomeFeedsV2(ts: Option[Long] ?= None)
+GET     /v1/homefeeds                               controllers.FeedController.getHomeFeedsV1(ts: Option[Long] ?= None)
 GET     /v1/friendfeeds                             controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
 GET     /v1/homeFeeds                               controllers.FeedController.getHomeFeedsV2(ts: Option[Long] ?= None)
 GET     /v1/followingFeeds                          controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
@@ -34,6 +34,7 @@ PUT     /v1/user/avatar                             controllers.UserController.u
 PUT     /v1/user/cover                              controllers.UserController.updateCover()
 GET     /v1/user/suggest                            controllers.UserController.suggestTags()
 GET     /v1/user/$id<[0-9]+>/posts/$pg<[0-9]+>      controllers.UserController.getPostsForUser(id: Long, pg: Int)
+GET     /v1/user/favorites                          controllers.UserController.getFavoritePostsForUser(ts: Option[Long] ?= None)
 GET     /v1/user/$id<[0-9]+>/follows/$pg<[0-9]+>    controllers.UserController.getFriends(id: Long, pg: Int)
 GET     /v1/user/$id<[0-9]+>/fans/$pg<[0-9]+>       controllers.UserController.getFollowers(id: Long, pg: Int)
 GET     /v1/user/$id<[0-9]+>/following/$pg<[0-9]+>  controllers.UserController.getFriends(id: Long, pg: Int)
@@ -66,6 +67,11 @@ POST    /v1/mark/$id<[0-9]+>/comment                controllers.CommentControlle
 DELETE  /v1/comment/$id<[0-9]+>                     controllers.CommentController.deleteCommentFromMark(id: Long)
 GET     /v1/mark/$id<[0-9]+>/comment                controllers.CommentController.getCommentsForMark(id: Long, order: String ?= "desc")
 GET     /v1/mark/$id<[0-9]+>/comments               controllers.CommentController.getCommentsForMark(id: Long, order: String ?= "desc")
+
+# Tag
+GET     /v1/tag/:name/subscribe                     controllers.UserController.getUserTag(name: String)
+POST    /v1/tag/:id/subscribe                       controllers.UserController.subscribeTag(id: Long)
+DELETE  /v1/tag/:id/subscribe                       controllers.UserController.unSubscribeTag(id: Long)
 
 # Search
 GET     /v1/tag/hot                                 controllers.SearchController.hotTags

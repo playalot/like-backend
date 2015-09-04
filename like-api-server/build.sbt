@@ -17,7 +17,7 @@ libraryDependencies ++= Seq(
   cache,
   filters,
   "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.4.1",
-  "com.typesafe.akka"         %% "akka-remote"      % "2.3.12",
+  "com.typesafe.akka"         %% "akka-remote"      % "2.3.13",
   "com.github.nscala-time"    %% "nscala-time"      % "2.2.0",
   "com.typesafe.play"         %% "play-mailer"      % "3.0.1",
   "net.ceedubs"               %% "ficus"            % "1.1.2",

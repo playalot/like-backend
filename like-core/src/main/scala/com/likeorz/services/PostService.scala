@@ -14,6 +14,8 @@ trait PostService {
 
   def countPostsForUser(userId: Long): Future[Long]
 
+  def countFavoriteForUser(userId: Long): Future[Long]
+
   def getPostById(postId: Long): Future[Option[Post]]
 
   def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]]
@@ -59,6 +61,8 @@ trait PostService {
   def getRecentPosts(pageSize: Int, timestamp: Option[Long], filter: Option[String]): Future[Seq[Long]]
 
   def getRecentPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
+
+  def getFavoritePostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[(Seq[Long], Option[Long])]
 
   def recordDelete(photo: String): Future[Unit]
 

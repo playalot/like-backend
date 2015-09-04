@@ -43,6 +43,17 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  override def countFavoriteForUser(userId: Long): Future[Long] = {
+    RedisCacheClient.hget(KeyUtils.user(userId), "favorites") match {
+      case Some(number) => Future.successful(number.toLong)
+      case None =>
+        db.run(favorites.filter(_.userId === userId).length.result).map { number =>
+          RedisCacheClient.hset(KeyUtils.user(userId), "favorites", number.toString)
+          number
+        }
+    }
+  }
+
   override def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
     db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).drop(page * pageSize).take(pageSize).result).flatMap { posts =>
       val futures = posts.map { post =>
@@ -266,11 +277,14 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def favorite(postId: Long, userId: Long): Future[Favorite] = {
     val favorite = Favorite(userId, postId)
-    db.run(favorites += favorite).map(_ => favorite)
+    db.run(favorites += favorite).map { _ =>
+      RedisCacheClient.hincrBy(KeyUtils.user(userId), "favorites", 1)
+      favorite
+    }
   }
 
   override def unFavorite(postId: Long, userId: Long): Future[Unit] = {
-    db.run(favorites.filter(fav => fav.userId === userId && fav.postId === postId).delete).map(_ => ())
+    db.run(favorites.filter(fav => fav.userId === userId && fav.postId === postId).delete).map(_ => RedisCacheClient.hincrBy(KeyUtils.user(userId), "favorites", -1))
   }
 
   override def isFavorited(postId: Long, userId: Long): Future[Boolean] = {
@@ -352,11 +366,19 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  def getRecentPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+  override def getRecentPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
     if (timestamp.isDefined) {
       db.run(posts.filter(p => p.created < timestamp.get && p.userId === userId).sortBy(_.created.desc).take(pageSize).map(_.id).result)
     } else {
       db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).take(pageSize).map(_.id).result)
+    }
+  }
+
+  override def getFavoritePostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[(Seq[Long], Option[Long])] = {
+    if (timestamp.isDefined) {
+      db.run(favorites.filter(fav => fav.created < timestamp.get && fav.userId === userId).sortBy(_.created.desc).take(pageSize).result).map(rs => (rs.map(_.postId), rs.lastOption.map(_.created)))
+    } else {
+      db.run(favorites.filter(_.userId === userId).sortBy(_.created.desc).take(pageSize).result).map(rs => (rs.map(_.postId), rs.lastOption.map(_.created)))
     }
   }
 

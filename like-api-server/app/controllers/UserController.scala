@@ -9,7 +9,7 @@ import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.Play.current
-import play.api.mvc.{ AnyContent, Action }
+import play.api.mvc.Action
 import com.likeorz.services._
 import services.PushService
 import utils.{ HelperUtils, QiniuUtil }
@@ -33,8 +33,9 @@ class UserController @Inject() (
       case Some(user) =>
         for {
           countFollowers <- userService.countFollowers(id)
-          countFriends <- userService.countFollowings(id)
+          countFollowing <- userService.countFollowings(id)
           countPosts <- postService.countPostsForUser(id)
+          countFavorite <- postService.countFavoriteForUser(id)
           countLikes <- markService.countLikesForUser(id)
           isFollowing <- if (request.userId.isDefined) userService.isFollowing(request.userId.get, id) else Future.successful(0)
         } yield {
@@ -46,10 +47,15 @@ class UserController @Inject() (
             "cover" -> QiniuUtil.getSizedImage(user.cover, getScreenWidth),
             "likes" -> countLikes,
             "is_following" -> isFollowing,
+            // Todo
             "count" -> Json.obj(
               "post" -> countPosts,
-              "follow" -> countFriends,
-              "fan" -> countFollowers
+              "posts" -> countPosts,
+              "follow" -> countFollowing,
+              "following" -> countFollowing,
+              "fan" -> countFollowers,
+              "followers" -> countFollowers,
+              "favorites" -> countFavorite
             )
           ))
         }
@@ -143,6 +149,53 @@ class UserController @Inject() (
     }
   }
 
+  def getFavoritePostsForUser(ts: Option[Long]) = SecuredAction.async { implicit request =>
+    postService.getFavoritePostsForUser(request.userId, 21, ts).flatMap { results =>
+      val ids = results._1
+      postService.getPostsByIds(ids).flatMap { list =>
+        if (list.isEmpty) {
+          Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
+        } else {
+          val sortedList = list.sortBy(-_._1.created)
+          val futures = sortedList.map { row =>
+            val post = row._1
+            val markIds = row._2.map(_._1)
+
+            for {
+              userInfo <- userService.getUserInfo(post.userId)
+              likedMarks <- markService.checkLikes(request.userId, markIds)
+            } yield {
+              val marksJson = row._2.sortBy(-_._3).map { fields =>
+                Json.obj(
+                  "mark_id" -> fields._1,
+                  "tag" -> fields._2,
+                  "likes" -> fields._3,
+                  "is_liked" -> likedMarks.contains(fields._1)
+                )
+              }
+              Json.obj(
+                "post_id" -> post.id.get,
+                "type" -> post.`type`,
+                "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+                "created" -> post.created,
+                "user" -> Json.obj(
+                  "user_id" -> post.userId,
+                  "nickname" -> userInfo.nickname,
+                  "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
+                  "likes" -> userInfo.likes
+                ),
+                "marks" -> Json.toJson(marksJson)
+              )
+            }
+          }
+          Future.sequence(futures).map { posts =>
+            success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts), "next" -> results._2))
+          }
+        }
+      }
+    }
+  }
+
   def suggestTags() = SecuredAction.async { implicit request =>
     tagService.suggestTagsForUser(request.userId).map {
       case (tags, recommends) =>
@@ -208,8 +261,7 @@ class UserController @Inject() (
             }
             success(Messages("success.follow"), Json.obj("is_following" -> following))
           }
-        case None =>
-          Future.successful(error(4022, Messages("invalid.userId")))
+        case None => Future.successful(error(4022, Messages("invalid.userId")))
       }
     }
   }
@@ -241,17 +293,42 @@ class UserController @Inject() (
     }
   }
 
-  def searchUser(name: String) = SecuredAction.async { implicit request =>
-    userService.searchByName(name).map { users =>
-      val jsonArr = Json.toJson(users.map { user =>
-        Json.obj(
-          "id" -> user.identify,
-          "nickname" -> user.nickname,
-          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
-          "likes" -> user.likes
-        )
-      })
-      success(Messages("success.found"), Json.obj("users" -> jsonArr))
+  def getUserTag(tagName: String) = SecuredAction.async { implicit request =>
+    tagService.getTagByName(tagName).flatMap {
+      case Some(tag) =>
+        if (tag.group > 0) {
+          tagService.getUserTag(request.userId, tag.id.get).map {
+            case Some(userTag) =>
+              success(Messages("success.found"), Json.obj(
+                "id" -> tag.id.get,
+                "tag" -> tag.name,
+                "subscribed" -> true
+              ))
+            case None =>
+              success(Messages("success.found"), Json.obj(
+                "id" -> tag.id.get,
+                "tag" -> tag.name,
+                "subscribed" -> false
+              ))
+          }
+        } else {
+          Future.successful(success(Messages("success.found"), Json.obj()))
+        }
+      case None => Future.successful(success(Messages("success.found"), Json.obj()))
+    }
+  }
+
+  def subscribeTag(tagId: Long) = SecuredAction.async { implicit request =>
+    tagService.subscribeTag(request.userId, tagId).map(_ => success(Messages("success.subscribeTag")))
+  }
+
+  def unSubscribeTag(tagId: Long) = SecuredAction.async { implicit request =>
+    tagService.unsubscribeTag(request.userId, tagId).map { rs =>
+      if (rs == 1) {
+        success(Messages("success.unSubscribeTag"))
+      } else {
+        error(4058, Messages("failed"))
+      }
     }
   }
 

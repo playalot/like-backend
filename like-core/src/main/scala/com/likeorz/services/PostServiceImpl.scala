@@ -21,7 +21,8 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     with LikesComponent with CommentsComponent
     with RecommendsComponent with FollowsComponent
     with ReportsComponent with DeletedPhotosComponent
-    with FavoritesComponent with HasDatabaseConfigProvider[JdbcProfile] {
+    with FavoritesComponent with UserTagsComponent
+    with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 
@@ -225,9 +226,10 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def addMark(postId: Long, authorId: Long, tagName: String, userId: Long): Future[Mark] = {
     db.run(tags.filter(_.name === tagName).take(1).result.headOption).flatMap {
-      case Some(tag) => Future.successful(tag.id.get)
-      case None      => db.run(tags returning tags.map(_.id) += Tag(None, tagName))
-    }.flatMap { tagId =>
+      case Some(tag) => Future.successful(tag)
+      case None      => db.run(tags returning tags.map(_.id) += Tag(None, tagName)).map(id => Tag(Some(id), tagName))
+    }.flatMap { tag =>
+      val tagId = tag.id.get
       db.run(marks.filter(m => m.postId === postId && m.tagId === tagId).result.headOption).flatMap {
         case Some(mark) =>
           // If other people create an existed mark, it equals user like the mark
@@ -249,9 +251,15 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           }
         case None =>
           val newMark = Mark(None, postId, tagId, Some(tagName), userId)
+          val userTag = UserTag(userId, tagId)
+          (userTags += userTag).statements.foreach(println)
           for {
+            // Add a new mark
             mark <- db.run(marks returning marks.map(_.id) += newMark).map(id => newMark.copy(id = Some(id)))
+            // Also likes count + 1
             l <- db.run(likes += Like(mark.id.get, userId))
+            // If the tag is important, let user subscribe this tag automatically
+            ut <- if (tag.group > 0) db.run(userTags += userTag).map(_ => ()) else Future.successful(())
           } yield {
             // Increase tag usage count
             RedisCacheClient.zincrby(KeyUtils.tagUsage, 1, mark.tagId.toString)

@@ -14,8 +14,8 @@ libraryDependencies ++= Seq(
   "redis.clients"             %  "jedis"            % "2.7.3",
   "com.typesafe.play"         %% "play-slick"       % "1.0.1",
   "com.typesafe.play"         %% "play-slick-evolutions"     % "1.0.1",
-  "com.mohiva"                %% "play-silhouette"           % "3.0.1",
-  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.1"    % "test"
+  "com.mohiva"                %% "play-silhouette"           % "3.0.2",
+  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.2"    % "test"
 )
 
 //********************************************************

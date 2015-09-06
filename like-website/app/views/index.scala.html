@@ -165,6 +165,12 @@
                 <a href='@routes.Assets.versioned("images/screen6.jpg")' class='item' data-lightbox-gallery="gallery1">
                     <img src="@routes.Assets.versioned("images/screen6.jpg")" class='img-responsive' alt>
                 </a>
+                <a href='@routes.Assets.versioned("images/screen7.jpg")' class='item' data-lightbox-gallery="gallery1">
+                    <img src="@routes.Assets.versioned("images/screen7.jpg")" class='img-responsive' alt>
+                </a>
+                <a href='@routes.Assets.versioned("images/screen8.jpg")' class='item' data-lightbox-gallery="gallery1">
+                    <img src="@routes.Assets.versioned("images/screen8.jpg")" class='img-responsive' alt>
+                </a>
             </div>
         </div>
     </section>
@@ -189,7 +195,7 @@
                 <h2>现在就去下载应用 (/≧▽≦/)</h2>
             </div>
             <p class='download-buttons'>
-                <a class='btn btn-icon btn-download-ios' href="https://itunes.apple.com/cn/app/like-ni-de-xin-wan-ju/id975648403?mt=8"><span class='icon ion-social-apple'></span>App Store</a>
+                <a class='btn btn-icon btn-download-ios' href="https://itunes.apple.com/cn/app/like-ni-de-xin-wan-ju/id975648403"><span class='icon ion-social-apple'></span>App Store</a>
                 <a class='btn btn-icon btn-download-andriod disabled' href=""><span class='icon ion-social-android'></span>Coming Soon</a>
             </p>
         </div>
@@ -210,13 +216,18 @@
         </div>
     </footer>
     <div id='static-footer'></div>
-
+    <div class="weixin-tip">
+        <p>
+            <img src="@routes.Assets.versioned("images/wechat_appstore_popup.png")" alt="微信打开"/>
+        </p>
+    </div>
     <script src="@routes.Assets.versioned("javascripts/jquery-2.1.1.min.js")"></script>
     <script src="@routes.Assets.versioned("javascripts/owl.carousel.min.js")"></script>
     <script src="@routes.Assets.versioned("javascripts/wow.js")"></script>
     <script src="@routes.Assets.versioned("javascripts/jquery.nav.js")"></script>
     <script src="@routes.Assets.versioned("javascripts/jquery.scrollTo.min.js")"></script>
     <script src="@routes.Assets.versioned("javascripts/nivo-lightbox.min.js")"></script>
+
     <script type="text/javascript">
 		// general variables
 		myWindow = $(window)
@@ -225,6 +236,15 @@
 		showNav = $('#show-nav')
 		hideNav = $('#hide-nav')
 		navUl = $('#nav-ul')
+
+        function is_weixin() {
+            var ua = navigator.userAgent.toLowerCase();
+            if (ua.match(/MicroMessenger/i) == "micromessenger") {
+                return true;
+            } else {
+                return false;
+            }
+        }
 
 		// set header height
 //		if (windowHeight>=900) {
@@ -279,7 +299,7 @@
 		$( "#nav-ul > li" ).click(function() {
 			if (myWindow.width()<=767) {
 				hideNavig();
-			};
+			}
 		});
 
 		// Resize event handler
@@ -297,8 +317,22 @@
 		menuBarHeight = $('#menu-bar-fixed').outerHeight();
 
         $('.scrollTo-download').click(function(){
-			$.scrollTo( $('#download').offset().top-menuBarHeight+'px' , 800 );
+            var isWeixin = is_weixin();
+            if(isWeixin){
+                $(".weixin-tip").css("height",windowHeight);
+                $(".weixin-tip").show();
+            } else {
+                $.scrollTo( $('#download').offset().top-menuBarHeight+'px' , 800 );
+            }
 		});
+
+        $(".btn-download-ios").click(function(){
+            var isWeixin = is_weixin();
+            if(isWeixin){
+                $(".weixin-tip").css("height",winHeight);
+                $(".weixin-tip").show();
+            }
+        });
 
 		footerHeight = $('footer').outerHeight();
 		$('#static-footer').css('margin-top', footerHeight+'px');

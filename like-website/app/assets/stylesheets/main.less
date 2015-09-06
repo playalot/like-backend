@@ -50,3 +50,26 @@
 @import "lib/bootstrap/less/responsive-utilities.less";
 
 @import "customize.less";
+
+/**************************
+******11. Wechat popup ****
+**************************/
+.weixin-tip {
+  display: none;
+  position: fixed;
+  left:0;
+  top:0;
+  bottom:0;
+  background: rgba(0,0,0,0.8);
+  filter:alpha(opacity=80);
+  height: 100%;
+  width: 100%;
+  z-index: 100;
+  p {
+    text-align: center;
+    padding:0 5%;
+  }
+  img {
+    width: 100%;
+  }
+}

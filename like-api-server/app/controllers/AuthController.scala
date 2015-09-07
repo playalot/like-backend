@@ -104,7 +104,7 @@ class AuthController @Inject() (
   )
 
   /** Authenticate via mobile sms code */
-  def mobileAuthenticateViaMob = Action.async(parse.json) { implicit request =>
+  def mobileAuthenticateViaMobIOS = Action.async(parse.json) { implicit request =>
     request.body.validate[SmsCode].fold(
       errors => {
         Future.successful(error(4012, Messages("invalid.mobileCode")))
@@ -113,7 +113,70 @@ class AuthController @Inject() (
         println(smsCodeRaw)
         val smsCode = smsCodeRaw.copy(zone = countryMapping.getOrElse(smsCodeRaw.zone, smsCodeRaw.zone))
         println(smsCode)
-        mobileProvider.authenticateViaMob(smsCode).flatMap { loginInfo =>
+        mobileProvider.authenticateViaMobIOS(smsCode).flatMap { loginInfo =>
+          userService.findByMobileAndZone(smsCode.mobilePhoneNumber, smsCode.zone).flatMap {
+            case Some(user) => // User already exists
+              for {
+                // Create new sekikl;p;l'ssion token
+                sessionToken <- sessionTokenGenerator.generate
+                value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
+                // Create new refresh token
+                refreshToken <- refreshTokenGenerator.generate
+                // Refresh user's refresh token and updated time
+                unit <- userService.updateRefreshToken(user.id.get, HashUtils.hashPassword(refreshToken))
+              } yield {
+                success(Messages("success.login"), Json.obj(
+                  "user_id" -> user.identify,
+                  "session_token" -> sessionToken,
+                  "refresh_token" -> refreshToken,
+                  "expires_in" -> TOKEN_EXPIRY
+                ))
+              }
+            case None => // Register new user
+              for {
+                refreshToken <- refreshTokenGenerator.generate
+                user <- userService.insert(User(None, Some(smsCode.mobilePhoneNumber), None,
+                  HashUtils.hashPassword(refreshToken),
+                  GenerateUtils.generateNickname(),
+                  DEFAULT_AVATAR, DEFAULT_COVER,
+                  GenerateUtils.currentSeconds(),
+                  GenerateUtils.currentSeconds(),
+                  0, Some(HashUtils.hashPassword(refreshToken))
+                ))
+                link <- userService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone + " " + smsCode.mobilePhoneNumber)
+                sessionToken <- sessionTokenGenerator.generate
+                value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
+              } yield {
+                success(Messages("success.login"), Json.obj(
+                  "user_id" -> user.identify,
+                  "session_token" -> sessionToken,
+                  "refresh_token" -> refreshToken,
+                  "expires_in" -> TOKEN_EXPIRY
+                )
+                )
+              }
+          }
+        }
+      }.recover {
+        case e: Exception =>
+          Logger.error(e.getMessage)
+          error(4012, Messages("invalid.mobileCode"))
+      }
+    )
+  }
+
+  /** Authenticate via mobile sms code */
+  def mobileAuthenticateViaMobAndroid = Action.async(parse.json) { implicit request =>
+    println(request.body)
+    request.body.validate[SmsCode].fold(
+      errors => {
+        Future.successful(error(4012, Messages("invalid.mobileCode")))
+      },
+      smsCodeRaw => {
+        println(smsCodeRaw)
+        val smsCode = smsCodeRaw.copy(zone = countryMapping.getOrElse(smsCodeRaw.zone, smsCodeRaw.zone))
+        println(smsCode)
+        mobileProvider.authenticateViaMobAndroid(smsCode).flatMap { loginInfo =>
           userService.findByMobileAndZone(smsCode.mobilePhoneNumber, smsCode.zone).flatMap {
             case Some(user) => // User already exists
               for {
@@ -409,7 +472,7 @@ class AuthController @Inject() (
       smsCode => userService.findByMobileAndZone(smsCode.mobilePhoneNumber, smsCode.zone).flatMap {
         case Some(user) => Future.successful(error(4011, Messages("invalid.mobileExists")))
         case None =>
-          mobileProvider.authenticateViaMob(smsCode).flatMap { loginInfo =>
+          mobileProvider.authenticateViaMobIOS(smsCode).flatMap { loginInfo =>
             for {
               link <- userService.updateMobile(request.userId, smsCode.mobilePhoneNumber, smsCode.zone.toInt)
             } yield {

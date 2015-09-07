@@ -22,7 +22,7 @@ class PushLikeNotificationActor @Inject() (notificationService: NotificationServ
   def receive = {
     case PushUnreadLikes =>
       log.debug("Start push likes to users")
-      Thread.sleep(scala.util.Random.nextInt(50000))
+      Thread.sleep(scala.util.Random.nextInt(30) * 1000)
       RedisCacheClient.zrangebyscore(KeyUtils.pushLikes, 0, Double.MaxValue).foreach { userId =>
         for {
           countLikes <- notificationService.countUnreadLikesForUser(userId.toLong)

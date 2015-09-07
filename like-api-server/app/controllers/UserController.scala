@@ -300,15 +300,19 @@ class UserController @Inject() (
           tagService.getUserTag(request.userId, tag.id.get).map {
             case Some(userTag) =>
               success(Messages("success.found"), Json.obj(
-                "id" -> tag.id.get,
-                "tag" -> tag.name,
-                "subscribed" -> true
+                "tag" -> Json.obj(
+                  "id" -> tag.id.get,
+                  "tag" -> tag.name,
+                  "subscribed" -> true
+                )
               ))
             case None =>
               success(Messages("success.found"), Json.obj(
-                "id" -> tag.id.get,
-                "tag" -> tag.name,
-                "subscribed" -> false
+                "tag" -> Json.obj(
+                  "id" -> tag.id.get,
+                  "tag" -> tag.name,
+                  "subscribed" -> false
+                )
               ))
           }
         } else {
@@ -319,7 +323,16 @@ class UserController @Inject() (
   }
 
   def subscribeTag(tagId: Long) = SecuredAction.async { implicit request =>
-    tagService.subscribeTag(request.userId, tagId).map(_ => success(Messages("success.subscribeTag")))
+    tagService.getTagById(tagId).flatMap {
+      case Some(tag) =>
+        if (tag.group > 0) {
+          tagService.subscribeTag(request.userId, tagId).map(_ => success(Messages("success.subscribeTag")))
+        } else {
+          Future.successful(error(4058, Messages("failed.subscribeTag")))
+        }
+      case None => Future.successful(error(4058, Messages("failed.subscribeTag")))
+    }
+
   }
 
   def unSubscribeTag(tagId: Long) = SecuredAction.async { implicit request =>

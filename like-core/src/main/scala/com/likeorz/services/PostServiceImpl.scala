@@ -233,11 +233,12 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       db.run(marks.filter(m => m.postId === postId && m.tagId === tagId).result.headOption).flatMap {
         case Some(mark) =>
           // If other people create an existed mark, it equals user like the mark
-          // Note this is actually not executed since front-end disallow create same mark
+          // !Note this is actually not executed since front-end disallow create same mark
           if (mark.userId != userId) {
-            for {
-              l <- db.run(likes += Like(mark.id.get, userId))
-            } yield {
+            db.run(likes.filter(l => l.markId === mark.id.get && l.userId === userId).result.headOption).flatMap {
+              case Some(like) => Future.successful(())
+              case None       => db.run(likes += Like(mark.id.get, userId)).map(_ => ())
+            } map { _ =>
               // Increase post author likes count
               RedisCacheClient.hincrBy(KeyUtils.user(authorId), "likes", 1)
               // Increase mark author likes count
@@ -252,14 +253,18 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         case None =>
           val newMark = Mark(None, postId, tagId, Some(tagName), userId)
           val userTag = UserTag(userId, tagId)
-          (userTags += userTag).statements.foreach(println)
           for {
             // Add a new mark
             mark <- db.run(marks returning marks.map(_.id) += newMark).map(id => newMark.copy(id = Some(id)))
             // Also likes count + 1
             l <- db.run(likes += Like(mark.id.get, userId))
             // If the tag is important, let user subscribe this tag automatically
-            ut <- if (tag.group > 0) db.run(userTags += userTag).map(_ => ()) else Future.successful(())
+            ut <- if (tag.group > 0) {
+              db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).result.headOption).flatMap {
+                case Some(userTag) => Future.successful(())
+                case None          => db.run(userTags += userTag).map(_ => ())
+              }
+            } else Future.successful(())
           } yield {
             // Increase tag usage count
             RedisCacheClient.zincrby(KeyUtils.tagUsage, 1, mark.tagId.toString)
@@ -329,17 +334,24 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
-    val tagIdsQuery = sql"""SELECT DISTINCT m.tag_id FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId limit 500""".as[Long]
-    db.run(tagIdsQuery).flatMap { tagIds =>
+    //    val tagIdsQuery = sql"""SELECT DISTINCT m.tag_id FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId limit 500""".as[Long]
+    //    var start = System.currentTimeMillis()
+    //
+    //    db.run(tagIdsQuery).flatMap { tagIds =>
+    db.run(userTags.filter(t => t.userId === userId && t.subscribe === true).map(_.tagId).result).flatMap { tagIds =>
+      //      var elapsed = (System.currentTimeMillis() - start)
+      //      println(s"Preprocessing postsTagsIds time: $elapsed millsec")
       if (tagIds.nonEmpty) {
         val tIds = tagIds.mkString(", ")
         val query = if (timestamp.isDefined) {
           val ts = timestamp.get
-          sql"""SELECT DISTINCT p.user_id, p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[(Long, Long)]
+          sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit ${pageSize * pageSize}""".as[(Long, Long)]
         } else {
-          sql"""SELECT DISTINCT p.user_id, p.id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id IN (#${tIds}) order by p.created desc limit $pageSize""".as[(Long, Long)]
+          sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id IN (#${tIds}) order by p.created desc limit ${pageSize * pageSize}""".as[(Long, Long)]
         }
-        db.run(query).map(results => results.map(_._2).toSeq)
+        db.run(query).map { results =>
+          results.groupBy(_._2).map(_._2.head._1).toSeq.sortBy(pid => pid).reverse.take(pageSize)
+        }
       } else {
         Future.successful(Seq())
       }
@@ -347,7 +359,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPostsTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]] = {
-    val tagsQuery = sql"""SELECT DISTINCT tag FROM mark WHERE user_id=$userId""".as[String]
+    val tagsQuery = sql"""select tag from tag where id in (select tag_id from user_tags where user_id=$userId)""".as[String]
     db.run(tagsQuery).map(_.toSet)
   }
 

@@ -42,4 +42,6 @@ trait TagService {
 
   def getTagByName(tagName: String): Future[Option[Tag]]
 
+  def getTagById(id: Long): Future[Option[Tag]]
+
 }

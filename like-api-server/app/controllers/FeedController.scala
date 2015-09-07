@@ -3,7 +3,6 @@ package controllers
 import javax.inject.Inject
 
 import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
-import org.joda.time.DateTime
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
@@ -51,6 +50,7 @@ class FeedController @Inject() (
         //        elapsed = (System.currentTimeMillis() - start)
         //        println(s"Preprocessing futureIds time: $elapsed millsec")
         //        results.foreach(println)
+
         val showIds = results.flatten.distinct.sortWith(_ > _).take(pageSize)
         //        println(showIds)
         val pointers = results.map(_.sortWith(_ > _).headOption.getOrElse(-1L)).toArray

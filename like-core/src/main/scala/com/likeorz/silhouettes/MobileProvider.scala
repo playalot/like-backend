@@ -32,18 +32,32 @@ class MobileProvider() extends Provider {
     }
   }
 
-  def authenticateViaMob(smsCode: SmsCode): Future[LoginInfo] = {
+  def authenticateViaMobIOS(smsCode: SmsCode): Future[LoginInfo] = {
     val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
     if ((smsCode.mobilePhoneNumber == "66600000166" || smsCode.mobilePhoneNumber == "66666666610") && smsCode.code == "666666") {
       // This is a demo account
       Future.successful(loginInfo)
     } else {
-      MobUtils.verifySmsCode(smsCode.mobilePhoneNumber, smsCode.zone, smsCode.code).map {
+      MobUtils.verifySmsCodeIOS(smsCode.mobilePhoneNumber, smsCode.zone, smsCode.code).map {
         case true  => loginInfo
         case false => throw new AccessDeniedException("Invalid sms code")
       }
     }
   }
+
+  def authenticateViaMobAndroid(smsCode: SmsCode): Future[LoginInfo] = {
+    val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
+    if ((smsCode.mobilePhoneNumber == "66600000166" || smsCode.mobilePhoneNumber == "66666666610") && smsCode.code == "666666") {
+      // This is a demo account
+      Future.successful(loginInfo)
+    } else {
+      MobUtils.verifySmsCodeAndroid(smsCode.mobilePhoneNumber, smsCode.zone, smsCode.code).map {
+        case true  => loginInfo
+        case false => throw new AccessDeniedException("Invalid sms code")
+      }
+    }
+  }
+
 }
 
 /**

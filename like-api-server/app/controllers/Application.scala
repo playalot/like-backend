@@ -5,7 +5,7 @@ import javax.inject.{ Named, Inject }
 import akka.actor.{ ActorRef, ActorPath, ActorSystem }
 import akka.pattern.ask
 import akka.util.Timeout
-import com.likeorz.common.{ ClassifyPost, PushUnreadLikes, ApiServerRemoteCount }
+import com.likeorz.common.{ PushUnreadLikes, ClassifyPost, ApiServerRemoteCount }
 import com.likeorz.event.LikeEvent
 import com.likeorz.models.{ User, Notification }
 import com.likeorz.push.JPushNotification

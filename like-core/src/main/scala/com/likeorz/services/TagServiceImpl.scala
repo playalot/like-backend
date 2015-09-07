@@ -119,7 +119,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   override def subscribeTag(userId: Long, tagId: Long): Future[UserTag] = {
     db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).result.headOption).flatMap {
       case Some(tag) =>
-        if (tag.subscribe == false) {
+        if (!tag.subscribe) {
           db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).map(_.subscribe).update(true)).map(_ => tag.copy(subscribe = true))
         } else {
           Future.successful(tag)
@@ -144,6 +144,10 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
 
   override def getTagByName(tagName: String): Future[Option[Tg]] = {
     db.run(tags.filter(_.name === tagName).result.headOption)
+  }
+
+  override def getTagById(id: Long): Future[Option[Tg]] = {
+    db.run(tags.filter(_.id === id).result.headOption)
   }
 
 }

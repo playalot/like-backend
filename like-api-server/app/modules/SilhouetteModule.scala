@@ -2,7 +2,8 @@ package modules
 
 import actors.{ ClassificationActor, EventProducerActor }
 import com.google.inject.{ Provides, AbstractModule }
-import com.likeorz.actors.PushLikeNotificationActor
+import com.kenshoo.play.metrics.{ MetricsServiceImpl, MetricsService }
+import com.likeorz.actors.{ PushNotificationActor, PushLikeNotificationActor }
 import com.likeorz.silhouettes.MobileProvider
 import com.mohiva.play.silhouette.api.EventBus
 import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
@@ -23,7 +24,7 @@ import play.api.Configuration
 import play.api.libs.ws.WSClient
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.concurrent.AkkaGuiceSupport
-import services.{ PushServiceImpl, PushService }
+import services.{ OnStartServiceImpl, OnStartService, PushServiceImpl, PushService }
 
 /**
  * The Guice module which wires all Silhouette dependencies.
@@ -31,6 +32,10 @@ import services.{ PushServiceImpl, PushService }
 class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
   override def configure(): Unit = {
+    // services start on application start
+    bind[OnStartService].to[OnStartServiceImpl].asEagerSingleton()
+    bind[MetricsService].to[MetricsServiceImpl].asEagerSingleton()
+    //
     bind[TagService].to[TagServiceImpl]
     bind[PostService].to[PostServiceImpl]
     bind[UserService].to[UserServiceImpl]
@@ -47,6 +52,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     bindActor[EventProducerActor]("event-producer-actor")
     bindActor[ClassificationActor]("classification-actor")
     bindActor[PushLikeNotificationActor]("push-likes-actor")
+    bindActor[PushNotificationActor]("push-notification-actor")
   }
 
   /**

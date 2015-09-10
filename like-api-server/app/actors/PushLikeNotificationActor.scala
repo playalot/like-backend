@@ -4,6 +4,7 @@ import javax.inject.{ Inject, Singleton }
 
 import akka.actor.{ Actor, ActorLogging, Props }
 import com.likeorz.common.PushUnreadLikes
+import com.likeorz.push.JPushNotification
 import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
 import com.likeorz.services.NotificationService
 import services.PushService
@@ -30,6 +31,7 @@ class PushLikeNotificationActor @Inject() (notificationService: NotificationServ
           push <- if (countTotal > 0 && countLikes > 0 && RedisCacheClient.zscore(KeyUtils.pushLikes, userId).isDefined) pushService.sendPushNotificationToUser(userId.toLong, s"你收到了${countLikes}个赞,快来看看", countTotal) else Future.successful(())
         } yield {
           RedisCacheClient.zrem(KeyUtils.pushLikes, userId)
+          pushService.sendPushNotificationViaJPush(JPushNotification(List(userId), List(), s"你收到了${countLikes}个赞,快来看看", countTotal))
         }
       }
     case _ => log.error("Invalid message!")

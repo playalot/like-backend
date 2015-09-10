@@ -1,6 +1,6 @@
 package services
 
-import javax.inject.{ Inject, Singleton }
+import javax.inject.{ Named, Inject, Singleton }
 
 import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.routing.RoundRobinPool
@@ -20,7 +20,10 @@ import scala.concurrent.Future
  * Date: 6/23/15
  */
 @Singleton
-class PushServiceImpl @Inject() (system: ActorSystem, protected val dbConfigProvider: DatabaseConfigProvider)
+class PushServiceImpl @Inject() (
+  system: ActorSystem,
+  @Named("push-notification-actor") pushNotificationActor: ActorRef,
+  protected val dbConfigProvider: DatabaseConfigProvider)
     extends PushService
     with InstallationComponent with HasDatabaseConfigProvider[JdbcProfile] {
 
@@ -30,17 +33,16 @@ class PushServiceImpl @Inject() (system: ActorSystem, protected val dbConfigProv
   //  val port = Play.current.configuration.getInt("push-actor.port").get
   //  val remotePushActor = system.actorSelection(s"akka.tcp://LikeActorSystem@$hostname:$port/user/PushNotificationActor")
 
-  val pushActorPool: ActorRef = system.actorOf(RoundRobinPool(5).props(Props[PushNotificationActor]), "pushActorPool")
-
   override def sendPushNotification(notification: PushNotification): Unit = {
     //remotePushActor ! push
     Logger.debug("Send Avos: " + notification)
-    pushActorPool ! notification
+    pushNotificationActor ! notification
   }
 
   override def sendPushNotificationViaJPush(notification: JPushNotification): Unit = {
     Logger.debug("Send JPush: " + notification)
-    pushActorPool ! notification
+    // TODO
+    //pushNotificationActor ! notification
   }
 
   override def sendPushNotificationToUser(userId: Long, alert: String, badge: Int, extra: JsObject = Json.obj()): Future[Unit] = {

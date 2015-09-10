@@ -8,6 +8,7 @@ import play.api.{ Logger, Play }
 
 import scala.concurrent.Future
 
+@deprecated
 object AVOSUtils {
 
   val AVOSCloudApplicationId = Play.current.configuration.getString("avoscloud.appId").get
@@ -55,24 +56,6 @@ object AVOSUtils {
         "Content-Type" -> "application/json")
       .put(Json.obj("deviceType" -> deviceType, "deviceToken" -> deviceToken))
       .map(response => (response.json \ "objectId").as[String])
-  }
-
-  def pushNotificationLocal(targetId: String, alert: String, badge: Int, extra: JsObject = Json.obj()): Future[Boolean] = {
-    Logger.debug(s"[AVOSCloud] Debug push notification")
-    val body = Json.obj(
-      "where" -> Json.obj("objectId" -> targetId),
-      "data" -> extra.deepMerge(Json.obj("alert" -> Json.obj(
-        "loc-key" -> "APNS_NewLike",
-        "loc-args" -> Json.toJson(Seq("XXXX"))
-      ), "badge" -> badge))
-    )
-    Logger.debug(Json.prettyPrint(body))
-    WS.url(s"$AVOSCloudApplicationUrl/push")
-      .withHeaders(
-        "X-AVOSCloud-Application-Id" -> AVOSCloudApplicationId,
-        "X-AVOSCloud-Application-Key" -> AVOSCloudApplicationKey,
-        "Content-Type" -> "application/json; charset=utf-8"
-      ).post(Json.stringify(body)).map(response => response.status == 200)
   }
 
   def pushNotification(targetId: String, alert: String, badge: Int, extra: JsObject = Json.obj()): Future[Boolean] = {

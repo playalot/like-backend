@@ -4,7 +4,7 @@ resolvers ++= Seq(
   Resolver.sonatypeRepo("snapshots")
 )
 // The Play Plugin
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.2")
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.3")
 
 addSbtPlugin("com.twitter" % "scrooge-sbt-plugin" % "3.16.3")
 

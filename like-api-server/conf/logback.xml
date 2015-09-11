@@ -22,7 +22,6 @@
             </timeBasedFileNamingAndTriggeringPolicy>
             <maxHistory>356</maxHistory>
         </rollingPolicy>
-
         <encoder>
             <charset>UTF-8</charset>
             <pattern>[%level] %date from %logger in %thread %n%message%n%xException%n</pattern>
@@ -30,10 +29,10 @@
     </appender>
 
     <logger name="play" level="INFO" />
-    <logger name="application" level="INFO" />
+    <logger name="application" level="DEBUG" />
     <logger name="com.mohiva" level="INFO" />
-
     <logger name="like-api-server" level="DEBUG" />
+    <logger name="com.likeorz" level="DEBUG" />
 
     <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
     <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
@@ -45,5 +44,4 @@
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </root>
-
 </configuration>

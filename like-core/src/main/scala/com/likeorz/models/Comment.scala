@@ -7,6 +7,7 @@ package com.likeorz.models
 case class Comment(
     id: Option[Long],
     markId: Long,
+    postId: Long,
     userId: Long,
     replyId: Option[Long],
     content: String,

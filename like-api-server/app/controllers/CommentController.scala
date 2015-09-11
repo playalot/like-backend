@@ -27,7 +27,6 @@ class CommentController @Inject() (
     pushService: PushService) extends BaseController {
 
   def commentMark(id: Long) = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
-    val likeVersion = getLikeVersion
 
     markService.getMark(id).flatMap {
       case Some(mark) =>
@@ -35,7 +34,7 @@ class CommentController @Inject() (
         val content = (request.body \ "content").as[String].trim
         val place = (request.body \ "place").asOpt[String]
         val created = System.currentTimeMillis / 1000
-        markService.commentMark(id, Comment(None, id, request.userId, replyId, content, created, place)).map { comment =>
+        markService.commentMark(id, Comment(None, id, mark.postId, request.userId, replyId, content, created, place)).map { comment =>
           for {
             nickname <- userService.getNickname(request.userId)
             rowOpt <- markService.getMarkWithPost(id)
@@ -51,12 +50,8 @@ class CommentController @Inject() (
                     count <- notificationService.countForUser(comment.replyId.get)
                   } yield {
                     // Send push notification
-
-                    if (HelperUtils.compareVersion(likeVersion, "1.1.1")) {
-                      pushService.sendPushNotificationViaJPush(JPushNotification(List(comment.replyId.get.toString), List(), Messages("notification.reply", nickname, mark.tagName.getOrElse("")), count))
-                    } else {
-                      pushService.sendPushNotificationToUser(comment.replyId.get, Messages("notification.reply", nickname, mark.tagName.getOrElse("")), count)
-                    }
+                    pushService.sendPushNotificationViaJPush(JPushNotification(List(comment.replyId.get.toString), List(), Messages("notification.reply", nickname, mark.tagName.getOrElse("")), count))
+                    pushService.sendPushNotificationToUser(comment.replyId.get, Messages("notification.reply", nickname, mark.tagName.getOrElse("")), count)
                   }
                 } else {
                   if (mark.userId != request.userId) {
@@ -66,11 +61,8 @@ class CommentController @Inject() (
                       count <- notificationService.countForUser(mark.userId)
                     } yield {
                       // Send push notification
-                      if (HelperUtils.compareVersion(likeVersion, "1.1.1")) {
-                        pushService.sendPushNotificationViaJPush(JPushNotification(List(mark.userId.toString), List(), Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count))
-                      } else {
-                        pushService.sendPushNotificationToUser(mark.userId, Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count)
-                      }
+                      pushService.sendPushNotificationViaJPush(JPushNotification(List(mark.userId.toString), List(), Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count))
+                      pushService.sendPushNotificationToUser(mark.userId, Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count)
                     }
                   }
                   if (post.userId != mark.userId && post.userId != comment.userId) {
@@ -80,11 +72,8 @@ class CommentController @Inject() (
                       count <- notificationService.countForUser(post.userId)
                     } yield {
                       // Send push notification
-                      if (HelperUtils.compareVersion(likeVersion, "1.1.1")) {
-                        pushService.sendPushNotificationViaJPush(JPushNotification(List(post.userId.toString), List(), Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count))
-                      } else {
-                        pushService.sendPushNotificationToUser(post.userId, Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count)
-                      }
+                      pushService.sendPushNotificationViaJPush(JPushNotification(List(post.userId.toString), List(), Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count))
+                      pushService.sendPushNotificationToUser(post.userId, Messages("notification.comment", nickname, mark.tagName.getOrElse("")), count)
                     }
                   }
                 }

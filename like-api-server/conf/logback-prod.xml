@@ -7,15 +7,18 @@
     <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${application.home}/logs/application.log</file>
+        <file>${application.home}/logs/like-api-server.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- Daily rollover with compression -->
-            <fileNamePattern>application-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
-            <!-- keep 30 days worth of history -->
-            <maxHistory>30</maxHistory>
+            <fileNamePattern>${application.home}/logs/like-api-server.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>50MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>356</maxHistory>
         </rollingPolicy>
+
         <encoder>
-            <pattern>%date{yyyy-MM-dd HH:mm:ss} [%level] from %logger in %thread - %message%n%xException</pattern>
+            <charset>UTF-8</charset>
+            <pattern>[%level] %date from %logger in %thread %n%message%n%xException%n</pattern>
         </encoder>
     </appender>
 
@@ -25,28 +28,19 @@
         </encoder>
     </appender>
 
-    <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="FILE" />
-    </appender>
-
-    <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="STDOUT" />
-    </appender>
-
     <logger name="play" level="INFO" />
     <logger name="application" level="INFO" />
+    <logger name="like-api-server" level="INFO" />
 
     <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
     <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
     <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
     <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
     <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
-    <!-- Set logging for all Akka library classes to INFO -->
-    <logger name="akka" level="INFO" />
 
-    <root level="WARN">
-        <appender-ref ref="ASYNCFILE" />
-        <appender-ref ref="ASYNCSTDOUT" />
+    <root level="ERROR">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
     </root>
 
 </configuration>

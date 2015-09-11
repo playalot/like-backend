@@ -22,6 +22,11 @@ POST    /v1/account/link/:provider                  controllers.AuthController.l
 DELETE  /v1/account/link/:provider                  controllers.AuthController.unlinkSocialAccount(provider: String)
 
 
+# Welcome
+GET     /v1/welcome/tags                            controllers.UserController.getRecommendTags
+POST    /v1/welcome/preference                      controllers.UserController.choosePreferTags
+
+
 # Feed
 GET     /v1/homefeeds                               controllers.FeedController.getHomeFeedsV1(ts: Option[Long] ?= None)
 GET     /v1/friendfeeds                             controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
@@ -37,9 +42,9 @@ PUT     /v1/user/cover                              controllers.UserController.u
 GET     /v1/user/suggest                            controllers.UserController.suggestTags()
 GET     /v1/user/$id<[0-9]+>/posts/$pg<[0-9]+>      controllers.UserController.getPostsForUser(id: Long, pg: Int)
 GET     /v1/user/favorites                          controllers.UserController.getFavoritePostsForUser(ts: Option[Long] ?= None)
-GET     /v1/user/$id<[0-9]+>/follows/$pg<[0-9]+>    controllers.UserController.getFriends(id: Long, pg: Int)
+GET     /v1/user/$id<[0-9]+>/follows/$pg<[0-9]+>    controllers.UserController.getFollowing(id: Long, pg: Int)
 GET     /v1/user/$id<[0-9]+>/fans/$pg<[0-9]+>       controllers.UserController.getFollowers(id: Long, pg: Int)
-GET     /v1/user/$id<[0-9]+>/following/$pg<[0-9]+>  controllers.UserController.getFriends(id: Long, pg: Int)
+GET     /v1/user/$id<[0-9]+>/following/$pg<[0-9]+>  controllers.UserController.getFollowing(id: Long, pg: Int)
 GET     /v1/user/$id<[0-9]+>/followers/$pg<[0-9]+>  controllers.UserController.getFollowers(id: Long, pg: Int)
 POST    /v1/user/$id<[0-9]+>/follow                 controllers.UserController.follow(id: Long)
 DELETE  /v1/user/$id<[0-9]+>/follow                 controllers.UserController.unFollow(id: Long)
@@ -91,3 +96,6 @@ GET     /v1/notification/count                      controllers.NotificationCont
 #Info
 POST    /v1/feedback                                controllers.InfoController.feedback
 POST    /v1/installation                            controllers.InfoController.installation
+
+# Metrics
+GET     /stats/metrics                              controllers.Application.metrics

@@ -87,6 +87,7 @@ object RebuildCacheJob {
 
     println("Rebuild posts marks cache start!")
     val preprocessStart = System.nanoTime()
+    var count = 0
     try {
       // make the connection
       connection = MysqlUtils.getConnection(conf)
@@ -94,19 +95,24 @@ object RebuildCacheJob {
 
       // create the statement, and run the select query
       val statement = connection.createStatement()
-      val subquery = connection2.createStatement()
 
-      val resultSet = statement.executeQuery("select id from post")
+      val querySQL = "select m.id, count(1) from `like` l inner join mark m on l.mark_id=m.id where m.post_id = ? group by m.id"
+      val subquery = connection2.prepareStatement(querySQL)
+
+      val resultSet = statement.executeQuery("select id from post order by id desc")
       while (resultSet.next()) {
         val postId = resultSet.getLong("id")
-
-        val rs = subquery.executeQuery(s"select m.id, count(1) from `like` l inner join mark m on l.mark_id=m.id where m.post_id=$postId group by m.id")
+        print(postId + ",")
+        subquery.setLong(1, postId)
+        val rs = subquery.executeQuery()
         while (rs.next()) {
           val markId = rs.getLong(1)
           val count = rs.getLong(2)
           RedisUtils.zadd(KeyUtils.postMark(postId), count, markId.toString)
         }
       }
+      count += 1
+      if (count % 200 == 0) println("Processed " + count)
     } catch {
       case e: Throwable => e.printStackTrace()
     }

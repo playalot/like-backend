@@ -24,6 +24,8 @@ object LikeMLApp {
         case "TrainCluster"       => KMeansOnTags.run(180)
         case "Cluster"            => UserCategories.run(180)
         case "HotTags"            => HotTags.run(30)
+        case "UserTags"           => UserTagsJob.populateUserTags()
+        case "UserAddTag"         => UserTagsJob.addTagForAllUser(28)
         case "CategoryCache"      => UserCategories.buildCategoryCache(30)
         case "Rebuild-UserCounts" => RebuildCacheJob.rebuildUserCountsCache()
         case "Rebuild-PostMarks"  => RebuildCacheJob.rebuildMarkCache()

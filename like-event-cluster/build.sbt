@@ -5,7 +5,7 @@ name := """like-event-cluster"""
 
 version := "1.0.0"
 
-resolvers += Resolver.mavenLocal
+//resolvers += Resolver.mavenLocal
 
 libraryDependencies ++= Seq(
   "com.typesafe"      %  "config"         % "1.3.0",
@@ -14,10 +14,8 @@ libraryDependencies ++= Seq(
   "org.joda"          %  "joda-convert"   % "1.7",
   "ch.qos.logback"    %  "logback-classic"% "1.1.3",
   "mysql"             %  "mysql-connector-java" % "5.1.36",
-  "org.spark-project.akka" %% "akka-actor"  % "2.3.4-1-spark",
-  "org.spark-project.akka" %% "akka-remote" % "2.3.4-1-spark",
-  "org.apache.spark"  %% "spark-core"     % "1.4.1",
-  "org.apache.spark"  %% "spark-mllib"    % "1.4.1",
+  "org.apache.spark"  %% "spark-core"     % "1.5.0",
+  "org.apache.spark"  %% "spark-mllib"    % "1.5.0",
   "org.mongodb"       %% "casbah"         % "2.8.2",
   "com.typesafe.play" %% "play-ws"        % "2.4.3",
   "com.typesafe.akka" %% "akka-actor"     % "2.3.13",

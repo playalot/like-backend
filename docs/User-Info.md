@@ -30,20 +30,21 @@ curl -i -X GET -H "LIKE-SESSION-TOKEN:bd625d6a6b6fe5bc0b128954ad5ca39d" http://a
 
 ```json
 {
-    "code": "1", 
-    "message": "Record(s) Found", 
+    "code": 1,
+    "message": "Record(s) Found",
     "data": {
-        "user_id": "1", 
-        "nickname": "小X", 
-        "avatar": "http://likeorz.qiniucdn.com/avatar_8.jpg?imageView2/1/w/1242/h/1242", 
-        "origin_avatar": "http://cdn.likeorz.com/avatar_700_1431757477.jpg",
-        "cover": "http://cdn.likeorz.com/cover_700_1431757537.jpg?imageView2/1/w/1242/h/1242",
-        "likes": 0, 
+        "user_id": "11",
+        "nickname": "你要怎样",
+        "avatar": "http://cdn.likeorz.com/avatar_11_1422968054.jpg?imageView2/5/w/240",
+        "origin_avatar": "http://cdn.likeorz.com/avatar_11_1422968054.jpg?imageView2/5/w/1242",
+        "cover": "http://cdn.likeorz.com/cover_11_1430571065.jpg?imageView2/0/w/1242/h/1242/q/85",
+        "likes": 57,
         "is_following": 0,
-        "count":{
-            "post": 0,
-            "follow": 1,
-            "fan": 1
+        "count": {
+            "posts": 18,
+            "following": 1,
+            "followers": 1,
+            "favorites": 10
         }
     }
 }
@@ -52,14 +53,3 @@ curl -i -X GET -H "LIKE-SESSION-TOKEN:bd625d6a6b6fe5bc0b128954ad5ca39d" http://a
 ######返回字段说明
 |返回值字段|字段类型|字段说明|
 |--------|-------|-------|
-|user_id|int|用户ID|
-|nickname|string|昵称|
-|avatar|string|头像|
-|origin_avatar|string|头像原图|
-|cover|string|封面原图|
-|likes|int|获得总赞数|
-|is_following|int|是否关注|
-|count|array|统计信息|
-|post|int|内容总数|
-|follow|int|关注数|
-|fan|int|粉丝数|

@@ -1,0 +1,7 @@
+---
+
+- hosts: [like_monitor]
+  sudo: True
+  roles:
+    - { role: 'ansible-influxdb' }
+

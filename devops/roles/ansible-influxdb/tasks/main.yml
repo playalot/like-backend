@@ -1,0 +1,67 @@
+- name: InfluxDB | Fetch package | Debian
+  get_url: url=http://s3.amazonaws.com/influxdb/influxdb_{{ influxdb.version }}_amd64.deb dest=/usr/local/src/influxdb_{{ influxdb.version }}_amd64.deb
+  when: ansible_os_family == "Debian"
+  tags:
+      - influxdb
+
+- name: InfluxDB | Install package | Debian
+  command: dpkg --skip-same-version -i /usr/local/src/influxdb_{{ influxdb.version }}_amd64.deb
+  register: dpkg_result
+  changed_when: "dpkg_result.stdout.startswith('Selecting')"
+  when: ansible_os_family == "Debian"
+  tags:
+      - influxdb
+
+- name: InfluxDB | Fetch package | RedHat
+  get_url: url=https://s3.amazonaws.com/influxdb/influxdb-{{ influxdb.version }}-1.x86_64.rpm dest=/usr/local/src/influxdb_{{ influxdb.version }}-1.x86_64.rpm
+  when: ansible_os_family == "RedHat"
+  tags:
+      - influxdb
+
+- name: InfluxDB | Install package | RedHat
+  yum: name=/usr/local/src/influxdb_{{ influxdb.version }}-1.x86_64.rpm state=installed
+  when: ansible_os_family == "RedHat"
+  tags:
+      - influxdb
+
+- name: InfluxDB | Link influx CLI
+  file: src=/opt/influxdb/influx dest=/usr/local/bin/influx state=link
+  tags:
+      - influxdb
+
+- name: InfluxDB | Check for ip address in config file
+  command: grep -E '^\s*hostname.*{{ ansible_default_ipv4.address }}' {{influxdb.config_file}}
+  register: config_has_ip
+  ignore_errors: true
+  changed_when: false
+  tags:
+      - influxdb
+
+- name: InfluxDB | Delete raft dir before hostname change
+  file: dest=/opt/influxdb/shared/data/raft state=absent
+  when: config_has_ip|failed
+  tags:
+      - influxdb
+
+- name: Create storage dir
+  file: path="{{influxdb.storage_dir}}" state=directory group={{influxdb.group}} owner={{influxdb.user}}
+  tags:
+    - influxdb
+
+- name: Ensure log directory
+  file: path="{{influxdb.log_dir}}" state=directory group={{influxdb.group}} owner={{influxdb.user}}
+  tags:
+    - influxdb
+
+- name: Ensure config directory
+  file: path="{{influxdb.config_dir}}" state=directory group={{influxdb.group}} owner={{influxdb.user}}
+  tags:
+    - influxdb
+
+- name: InfluxDB | Start Service
+  service: name=influxdb state=started
+
+- name: InfluxDB | Update config
+  template: src={{ influxdb.config_tpl }} dest={{influxdb.config_file}}
+  notify:
+    - restart influxdb

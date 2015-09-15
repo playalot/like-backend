@@ -44,3 +44,9 @@ ansible_ssh_user=root
 root_path=/root/
 ansible_connection=ssh
 ansible_ssh_user=root
+
+[like_monitor]
+120.26.49.224 root_path=/root/ ansible_connection=ssh ansible_ssh_user=root
+
+
+

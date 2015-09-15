@@ -1,0 +1,16 @@
+---
+# defaults file for influxdb
+influxdb:
+  version: 0.9.3
+  web_admin: True
+  web_admin_port: 8083
+  http_port: 8086
+  config_tpl: 'influxdb.conf.j2'
+  storage_dir: '/mnt/influxdb/db'
+  wal_dir: '/mnt/influxdb/wal'
+  hh_dir: '/mnt/influxdb/hh'
+  log_dir: '/var/log/influxdb/'
+  config_dir: '/etc/opt/influxdb/'
+  config_file: '/etc/opt/influxdb/influxdb.conf'
+  group: 'influxdb'
+  user: 'influxdb'

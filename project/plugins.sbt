@@ -24,6 +24,8 @@ addSbtPlugin("com.sksamuel.scapegoat" %% "sbt-scapegoat" % "1.0.0")
 
 addSbtPlugin("com.orrsella" % "sbt-stats" % "1.0.5")
 
+addSbtPlugin("io.kamon" % "aspectj-play-runner" % "0.1.3")
+
 // Web Plugins
 addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.1.0")
 
@@ -44,3 +46,4 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-gzip" % "1.0.0")
 addSbtPlugin("com.github.ddispaltro" % "sbt-reactjs" % "0.5.2")
 
 addSbtPlugin("com.tuplejump" % "sbt-yeoman" % "0.8.1")
+

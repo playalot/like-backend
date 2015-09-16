@@ -21,7 +21,7 @@ lazy val likeAkkaCommon = (project in file("like-akka-common"))
 
 lazy val likeApiServer = (project in file("like-api-server"))
   .dependsOn(likeCore, likeAkkaCommon)
-  .enablePlugins(PlayScala)
+  .enablePlugins(PlayScala, AspectjPlayRunner, AspectjRunner)
 
 lazy val likeDashboard = (project in file("like-dashboard"))
   .dependsOn(likeCore)

@@ -96,6 +96,3 @@ GET     /v1/notification/count                      controllers.NotificationCont
 #Info
 POST    /v1/feedback                                controllers.InfoController.feedback
 POST    /v1/installation                            controllers.InfoController.installation
-
-# Metrics
-GET     /stats/metrics                              controllers.Application.metrics

@@ -12,6 +12,8 @@ resolvers += "nlpcn-mvn-repo" at "http://maven.nlpcn.org/"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
+val kamonVersion = "0.5.1"
+
 libraryDependencies ++= Seq(
   ws,
   cache,
@@ -22,9 +24,16 @@ libraryDependencies ++= Seq(
   "com.typesafe.play"         %% "play-mailer"      % "3.0.1",
   "net.ceedubs"               %% "ficus"            % "1.1.2",
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
-  "com.kenshoo"               %% "metrics-play"     % "2.4.3",
-  "com.github.cb372"          %% "scalacache-memcached"      % "0.6.4",
-  "org.scalatest"             %% "scalatest"                 % "2.2.5" % "test"
+  "com.github.cb372"          %% "scalacache-memcached" % "0.6.4",
+  "io.kamon"                  %% "kamon-core"           % kamonVersion,
+//  "io.kamon"                  %% "kamon-akka"           % kamonVersion,
+//  "io.kamon"                  %% "kamon-akka-remote"    % kamonVersion,
+  "io.kamon"                  %% "kamon-play-24"        % kamonVersion,
+  "io.kamon"                  %% "kamon-statsd"         % kamonVersion,
+  "io.kamon"                  %% "kamon-log-reporter"   % kamonVersion,
+  "io.kamon"                  %% "kamon-system-metrics" % kamonVersion,
+  "org.aspectj"               %  "aspectjweaver"        % "1.8.6",
+  "org.scalatest"             %% "scalatest"            % "2.2.5" % "test"
 )
 
 routesGenerator := InjectedRoutesGenerator

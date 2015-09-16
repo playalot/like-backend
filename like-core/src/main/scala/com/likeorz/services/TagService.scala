@@ -4,10 +4,6 @@ import com.likeorz.models.{ UserTag, TagGroup, User, Tag }
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 5/25/15
- */
 trait TagService {
 
   def suggestTagsForUser(userId: Long): Future[(Seq[String], Seq[String])]
@@ -34,6 +30,8 @@ trait TagService {
 
   def subscribeTag(userId: Long, tagId: Long): Future[UserTag]
 
+  def subscribeTags(tags: Seq[UserTag]): Future[Unit]
+
   def unsubscribeTag(userId: Long, tagId: Long): Future[Int]
 
   def getUserSubscribeTagIds(userId: Long): Future[Seq[Long]]
@@ -43,5 +41,7 @@ trait TagService {
   def getTagByName(tagName: String): Future[Option[Tag]]
 
   def getTagById(id: Long): Future[Option[Tag]]
+
+  def getTagWithImage(tagName: String): Future[Option[(Tag, Option[String])]]
 
 }

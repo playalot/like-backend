@@ -130,6 +130,11 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
+  override def subscribeTags(tags: Seq[UserTag]): Future[Unit] = {
+    (userTags ++= tags).statements.foreach(println)
+    db.run(userTags ++= tags).map(_ => ())
+  }
+
   override def unsubscribeTag(userId: Long, tagId: Long): Future[Int] = {
     db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).map(_.subscribe).update(false))
   }
@@ -148,6 +153,16 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
 
   override def getTagById(id: Long): Future[Option[Tg]] = {
     db.run(tags.filter(_.id === id).result.headOption)
+  }
+
+  override def getTagWithImage(tagName: String): Future[Option[(Tg, Option[String])]] = {
+    db.run(tags.filter(_.name === tagName).result.headOption).flatMap {
+      case Some(tag) =>
+
+        val query = sql"""select p.content from post p inner join mark m on p.id=m.post_id where m.post_id in (select r.post_id from post p inner join recommend r on p.id=r.post_id) and m.tag_id=${tag.id.get} ORDER BY p.created desc limit 1""".as[String]
+        db.run(query).map(url => Some(tag, url.headOption))
+      case None => Future.successful(None)
+    }
   }
 
 }

@@ -34,7 +34,7 @@ trait MarkService {
 
   def deleteCommentFromMark(commentId: Long, userId: Long): Future[Boolean]
 
-  def getCommentsForMark(markId: Long, order: String): Future[Seq[(Comment, UserInfo, Option[UserInfo])]]
+  def getCommentsForMark(markId: Long): Future[Seq[(Comment, UserInfo, Option[UserInfo])]]
 
   def deleteMark(markId: Long): Future[Unit]
 

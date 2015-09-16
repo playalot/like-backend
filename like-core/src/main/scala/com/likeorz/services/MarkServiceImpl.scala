@@ -87,12 +87,12 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           RedisCacheClient.zincrby(KeyUtils.postMark(mark.postId), 1, mark.identify)
           // Increate user info cache
           RedisCacheClient.hincrBy(KeyUtils.user(postAuthorId), "likes", 1)
-          RedisCacheClient.zincrby(KeyUtils.pushLikes, 1, postAuthorId.toString)
+          RedisCacheClient.zincrby(KeyUtils.newLikes, 1, postAuthorId.toString)
 
           if (postAuthorId != mark.userId) {
             RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", 1)
             // Increase like push cached which is to be pushed as notification to user
-            RedisCacheClient.zincrby(KeyUtils.pushLikes, 1, mark.userId.toString)
+            RedisCacheClient.zincrby(KeyUtils.newLikes, 1, mark.userId.toString)
           }
           ()
         }
@@ -110,10 +110,10 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         }
         // Decreate user info cache
         RedisCacheClient.hincrBy(KeyUtils.user(postAuthor), "likes", -1)
-        RedisCacheClient.zincrby(KeyUtils.pushLikes, -1, postAuthor.toString)
+        RedisCacheClient.zincrby(KeyUtils.newLikes, -1, postAuthor.toString)
         if (postAuthor != mark.userId) {
           RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -1)
-          RedisCacheClient.zincrby(KeyUtils.pushLikes, -1, mark.userId.toString)
+          RedisCacheClient.zincrby(KeyUtils.newLikes, -1, mark.userId.toString)
         }
         ()
       }
@@ -152,24 +152,27 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getCommentsForMark(markId: Long, order: String): Future[Seq[(Comment, UserInfo, Option[UserInfo])]] = {
-    val query = if (order == "desc") {
-      (for {
-        (comment, reply) <- comments joinLeft userinfo on (_.replyId === _.id) if comment.markId === markId
-        user <- userinfo if comment.userId === user.id
-      } yield (comment, user, reply)).sortBy(_._1.created.desc)
-    } else {
-      (for {
-        (comment, reply) <- comments joinLeft userinfo on (_.replyId === _.id) if comment.markId === markId
-        user <- userinfo if comment.userId === user.id
-      } yield (comment, user, reply)).sortBy(_._1.created)
+  override def getCommentsForMark(markId: Long): Future[Seq[(Comment, UserInfo, Option[UserInfo])]] = {
+    timedFuture("retrieve comments for mark: " + markId) {
+      for {
+        commentList <- db.run(comments.filter(_.markId === markId).sortBy(_.created).result)
+        uids <- Future.successful {
+          commentList.map(_.userId) ++ commentList.flatMap(_.replyId)
+        }
+        users <- db.run(userinfo.filter(_.id inSet (uids)).result)
+      } yield {
+        val userInfoMap = users.map(u => (u.id -> u)).toMap
+        commentList.map { c =>
+          (c, userInfoMap(c.userId), c.replyId.map(userInfoMap(_)))
+        }
+      }
     }
-    db.run(query.result)
   }
 
   override def deleteMark(markId: Long): Future[Unit] = {
     val query = for {
-      (mark, post) <- marks join posts on (_.postId === _.id) if mark.id === markId
+      mark <- marks if mark.id === markId
+      post <- posts if mark.postId === post.id
     } yield (mark, post)
 
     db.run(query.result.headOption).flatMap {

@@ -7,22 +7,23 @@ import com.likeorz.models._
 import com.likeorz.silhouettes.MobileProvider
 import com.likeorz.utils.{ GenerateUtils, KeyUtils, RedisCacheClient }
 import com.mohiva.play.silhouette.api.LoginInfo
-import play.api.Play
+import play.api.Configuration
 import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
 
 import scala.concurrent.Future
 
-class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends UserService
+class UserServiceImpl @Inject() (configuration: Configuration, protected val dbConfigProvider: DatabaseConfigProvider) extends UserService
     with UsersComponent with SocialAccountsComponent
     with FollowsComponent with BlocksComponent
-    with MarksComponent with HasDatabaseConfigProvider[JdbcProfile] {
+    with MarksComponent with UserInfoComponent
+    with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
 
-  val DEFAULT_AVATAR = Play.current.configuration.getString("default.avatar").get
-  val DEFAULT_COVER = Play.current.configuration.getString("default.cover").get
+  val DEFAULT_AVATAR = configuration.getString("default.avatar").get
+  val DEFAULT_COVER = configuration.getString("default.cover").get
 
   val Country = Map(
     "BR" -> "55",
@@ -119,10 +120,10 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getFollowers(userId: Long, page: Int): Future[Seq[User]] = {
+  override def getFollowers(userId: Long, page: Int): Future[Seq[UserInfo]] = {
     val query = (for {
-      (follow, user) <- follows join users on (_.fromId === _.id)
-      if follow.toId === userId
+      follow <- follows if follow.toId === userId
+      user <- userinfo if follow.fromId === user.id
     } yield (follow, user)).sortBy(_._1.created.desc).drop(page * 20).take(20)
     db.run(query.map(_._2).result)
   }
@@ -138,10 +139,10 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getFollowings(userId: Long, page: Int): Future[Seq[User]] = {
+  override def getFollowings(userId: Long, page: Int): Future[Seq[UserInfo]] = {
     val query = (for {
-      (follow, user) <- follows join users on (_.toId === _.id)
-      if follow.fromId === userId
+      follow <- follows if follow.fromId === userId
+      user <- userinfo if follow.toId === user.id
     } yield (follow, user)).sortBy(_._1.created.desc).drop(page * 20).take(20)
     db.run(query.map(_._2).result)
   }
@@ -208,6 +209,15 @@ class UserServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
         RedisCacheClient.hset(KeyUtils.user(id), "cover", cover)
         true
       } else { false }
+    }
+  }
+
+  override def syncDBLikesFromCache(userId: Long): Future[Unit] = {
+    val cachedLikes = RedisCacheClient.hget(KeyUtils.user(userId), "likes").map(_.toLong).getOrElse(0L)
+    if (cachedLikes > 0) {
+      db.run(users.filter(_.id === userId).map(x => x.likes).update(cachedLikes)).map(_ => ())
+    } else {
+      Future.successful(())
     }
   }
 

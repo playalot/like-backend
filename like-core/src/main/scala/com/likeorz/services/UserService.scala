@@ -29,11 +29,11 @@ trait UserService {
 
   def countFollowers(id: Long): Future[Long]
 
-  def getFollowers(userId: Long, page: Int): Future[Seq[User]]
+  def getFollowers(userId: Long, page: Int): Future[Seq[UserInfo]]
 
   def countFollowings(id: Long): Future[Long]
 
-  def getFollowings(userId: Long, page: Int): Future[Seq[User]]
+  def getFollowings(userId: Long, page: Int): Future[Seq[UserInfo]]
 
   def insert(user: User): Future[User]
 
@@ -48,6 +48,8 @@ trait UserService {
   def updateAvatar(id: Long, avatar: String): Future[Boolean]
 
   def updateCover(id: Long, cover: String): Future[Boolean]
+
+  def syncDBLikesFromCache(userId: Long): Future[Unit]
 
   def isFollowing(fromId: Long, toId: Long): Future[Int]
 
@@ -70,4 +72,5 @@ trait UserService {
   def getUserInfoFromCache(userId: Long): CachedUserInfo
 
   def listUsers(pageSize: Int, page: Int, filter: String): Future[Seq[User]]
+
 }

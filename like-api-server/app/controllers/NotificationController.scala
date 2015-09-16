@@ -8,10 +8,6 @@ import play.api.libs.concurrent.Execution.Implicits._
 import com.likeorz.services.NotificationService
 import utils.QiniuUtil
 
-/**
- * Created by Guan Guan
- * Date: 6/1/15
- */
 class NotificationController @Inject() (
     val messagesApi: MessagesApi,
     notificationService: NotificationService) extends BaseController {
@@ -82,4 +78,5 @@ class NotificationController @Inject() (
       ))
     }
   }
+
 }

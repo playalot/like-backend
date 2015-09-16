@@ -14,10 +14,6 @@ import utils.QiniuUtil
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 6/2/15
- */
 class MarkController @Inject() (
     @Named("event-producer-actor") eventProducerActor: ActorRef,
     val messagesApi: MessagesApi,

@@ -10,10 +10,6 @@ import play.api.mvc.Results._
 import play.api.routing.Router
 import scala.concurrent._
 
-/**
- * Created by Guan Guan
- * Date: 5/24/15
- */
 class ErrorHandler @Inject() (
     env: Environment,
     config: Configuration,

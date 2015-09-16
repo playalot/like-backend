@@ -75,10 +75,6 @@ class PostController @Inject() (
             author <- userService.getUserInfo(request.userId)
             results <- Future.sequence(futures)
           } yield {
-            //            if (author.likes.toLong > 200) {
-            //              // classify post
-            //              classificationActor ! ClassifyPost(post.id.get, postCommand.tags, post.created)
-            //            }
             val marksJson = results.map { tagAndMark =>
               Json.obj(
                 "mark_id" -> tagAndMark._2.id.get,
@@ -114,7 +110,7 @@ class PostController @Inject() (
     postService.getPostById(id).flatMap {
       case Some(post) =>
         for {
-          favorited <- Future.successful(false)
+          favorited <- if (request.userId.isDefined) postService.isFavorited(id, request.userId.get) else Future.successful(false)
           user <- userService.getUserInfo(post.userId)
         } yield {
           val location = try {
@@ -257,11 +253,8 @@ class PostController @Inject() (
                       count <- notificationService.countForUser(post.userId)
                     } yield {
                       // Send push notification
-                      if (HelperUtils.compareVersion(getLikeVersion, "1.1.1")) {
-                        pushService.sendPushNotificationViaJPush(JPushNotification(List(post.userId.toString), List(), Messages("notification.mark", nickname, tag), count))
-                      } else {
-                        pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
-                      }
+                      pushService.sendPushNotificationViaJPush(JPushNotification(List(post.userId.toString), List(), Messages("notification.mark", nickname, tag), count))
+                      pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
                     }
                   }
                   success(Messages("success.mark"), Json.obj(

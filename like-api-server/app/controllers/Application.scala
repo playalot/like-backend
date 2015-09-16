@@ -1,17 +1,20 @@
 package controllers
 
+import java.io.StringWriter
 import javax.inject.{ Named, Inject }
 
-import akka.actor.{ ActorRef, ActorPath, ActorSystem }
+import akka.actor.{ Props, ActorRef, ActorPath, ActorSystem }
 import akka.pattern.ask
 import akka.util.Timeout
+import com.fasterxml.jackson.databind.{ ObjectWriter, ObjectMapper }
+import com.likeorz.actors.{ EventLogSubscriber, PublishEventSubscriber, MarkEventSubscriber, RecommendToAllEventSubscriber }
 import com.likeorz.common.{ PushUnreadLikes, ClassifyPost, ApiServerRemoteCount }
-import com.likeorz.event.LikeEvent
+import com.likeorz.event.{ LikeEventType, LikeEventBus, LikeEvent }
 import com.likeorz.models.{ User, Notification }
 import com.likeorz.push.JPushNotification
-import org.joda.time.DateTime
 import play.api._
 import play.api.i18n.{ Lang, Messages, MessagesApi }
+import play.api.libs.concurrent.Akka
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.libs.concurrent.Execution.Implicits._
@@ -26,18 +29,14 @@ class Application @Inject() (
     system: ActorSystem,
     @Named("event-producer-actor") eventProducerActor: ActorRef,
     @Named("classification-actor") classificationActor: ActorRef,
-    @Named("push-likes-actor") pushLikesActor: ActorRef,
     val messagesApi: MessagesApi,
     userService: UserService,
     markService: MarkService,
     pushService: PushService,
     postService: PostService,
     tagService: TagService,
+    eventBusService: EventBusService,
     notificationService: NotificationService) extends BaseController {
-
-  system.scheduler.schedule(scala.math.abs(10 - DateTime.now.getMinuteOfHour).minutes, 10.minutes) {
-    pushLikesActor ! PushUnreadLikes
-  }
 
   def index = Action { implicit request =>
 
@@ -46,6 +45,8 @@ class Application @Inject() (
     Logger.debug(Messages("invalid.sessionToken")(Messages(Lang("en"), messagesApi)))
 
     Logger.debug(Messages("invalid.mobileCode"))
+
+    //    eventBusService.publish(LikeEvent(None, "mark", "user", "1111", Some("mark"), Some("sdfsd"), properties = Json.obj("tag" -> "sdfs")))
 
     //    var preprocessStart = System.nanoTime()
     //    var response = Await.result(classificationActor.ask(com.likeorz.common.Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔")))(10.second).map(_.asInstanceOf[Int]), 20.seconds)
@@ -87,6 +88,7 @@ class Application @Inject() (
     //    val notification = JPushNotification(List("11226"), List(), "test from server2", 11)
     //    pushService.sendPushNotificationViaJPush(notification)
 
+    //    pushService.sendPushNotificationToUser(715, "test", 10)
     //    MemcachedCacheClient.save[String]("session_user:e5b7f1ef625fc31c62a6577e71bb9ac1d2491177d1b8bee9d4db4b72ef177014", "715", 900000)
     //    MemcachedCacheClient.save[String]("session_user:187", "187", 900000)
     //    MemcachedCacheClient.save[String]("session_user:715", "715", 900000)

@@ -2,8 +2,7 @@ package modules
 
 import actors.{ ClassificationActor, EventProducerActor }
 import com.google.inject.{ Provides, AbstractModule }
-import com.kenshoo.play.metrics.{ MetricsServiceImpl, MetricsService }
-import com.likeorz.actors.{ PushNotificationActor, PushLikeNotificationActor }
+import com.likeorz.actors.{ PushNotificationActor, PushNewLikesActor }
 import com.likeorz.silhouettes.MobileProvider
 import com.mohiva.play.silhouette.api.EventBus
 import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
@@ -32,9 +31,10 @@ import services.{ OnStartServiceImpl, OnStartService, PushServiceImpl, PushServi
 class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
   override def configure(): Unit = {
-    // services start on application start
+    // Services start on application start
     bind[OnStartService].to[OnStartServiceImpl].asEagerSingleton()
-    bind[MetricsService].to[MetricsServiceImpl].asEagerSingleton()
+    // Event bus
+    bind[EventBusService].to[EventBusServiceImpl]
     //
     bind[TagService].to[TagServiceImpl]
     bind[PostService].to[PostServiceImpl]
@@ -51,7 +51,7 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     bind[Clock].toInstance(Clock())
     bindActor[EventProducerActor]("event-producer-actor")
     bindActor[ClassificationActor]("classification-actor")
-    bindActor[PushLikeNotificationActor]("push-likes-actor")
+    bindActor[PushNewLikesActor]("push-likes-actor")
     bindActor[PushNotificationActor]("push-notification-actor")
   }
 

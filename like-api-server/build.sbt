@@ -6,8 +6,6 @@ version := "1.1.0"
 
 resolvers := ("Atlassian Releases" at "https://maven.atlassian.com/public/") +: resolvers.value
 
-resolvers +=  "NLPChina Releases" at "http://maven.ansj.org/"
-
 resolvers += "nlpcn-mvn-repo" at "http://maven.nlpcn.org/"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
@@ -23,7 +21,6 @@ libraryDependencies ++= Seq(
   "com.github.nscala-time"    %% "nscala-time"      % "2.2.0",
   "com.typesafe.play"         %% "play-mailer"      % "3.0.1",
   "net.ceedubs"               %% "ficus"            % "1.1.2",
-  "net.codingwell"            %% "scala-guice"      % "4.0.0",
   "com.github.cb372"          %% "scalacache-memcached" % "0.6.4",
   "io.kamon"                  %% "kamon-core"           % kamonVersion,
 //  "io.kamon"                  %% "kamon-akka"           % kamonVersion,

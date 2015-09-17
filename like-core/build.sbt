@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
   "org.nlpcn"                 %  "nlp-lang"         % "1.0",
   "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "redis.clients"             %  "jedis"            % "2.7.3",
+  "net.codingwell"            %% "scala-guice"      % "4.0.0",
   "org.scalaz"                %% "scalaz-core"      % "7.1.3",
   "com.typesafe.play"         %% "play-slick"       % "1.0.1",
   "com.typesafe.play"         %% "play-slick-evolutions"     % "1.0.1",

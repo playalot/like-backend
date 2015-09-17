@@ -2,7 +2,7 @@ package modules
 
 import actors.{ ClassificationActor, EventProducerActor }
 import com.google.inject.{ Provides, AbstractModule }
-import com.likeorz.actors.{ PushNotificationActor, PushNewLikesActor }
+import com.likeorz.actors._
 import com.likeorz.silhouettes.MobileProvider
 import com.mohiva.play.silhouette.api.EventBus
 import com.mohiva.play.silhouette.impl.providers.oauth2.FacebookProvider
@@ -15,7 +15,6 @@ import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 
 import com.mohiva.play.silhouette.impl.util._
 import com.mohiva.play.silhouette.api.util._
-import com.likeorz.services._
 
 import play.api.Play
 import play.api.Play.current
@@ -33,17 +32,9 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
   override def configure(): Unit = {
     // Services start on application start
     bind[OnStartService].to[OnStartServiceImpl].asEagerSingleton()
-    // Event bus
-    bind[EventBusService].to[EventBusServiceImpl]
-    //
-    bind[TagService].to[TagServiceImpl]
-    bind[PostService].to[PostServiceImpl]
-    bind[UserService].to[UserServiceImpl]
-    bind[MarkService].to[MarkServiceImpl]
-    bind[InfoService].to[InfoServiceImpl]
     bind[PushService].to[PushServiceImpl]
-    bind[PromoteService].to[PromoteServiceImpl]
-    bind[NotificationService].to[NotificationServiceImpl]
+
+    // SilhouetteModule
     bind[CacheLayer].to[PlayCacheLayer]
     bind[PasswordHasher].toInstance(new BCryptPasswordHasher)
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator(32))

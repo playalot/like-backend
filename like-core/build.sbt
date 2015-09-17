@@ -4,6 +4,8 @@ name := """like-core"""
 
 version := "1.1.0"
 
+resolvers +=  "NLPChina Releases" at "http://maven.ansj.org/"
+
 // Change this to another test framework if you prefer
 libraryDependencies ++= Seq(
   "cn.jpush.api"              %  "jpush-client"     % "3.2.7",

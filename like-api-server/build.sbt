@@ -24,7 +24,6 @@ libraryDependencies ++= Seq(
   "com.github.cb372"          %% "scalacache-memcached" % "0.6.4",
   "io.kamon"                  %% "kamon-core"           % kamonVersion,
 //  "io.kamon"                  %% "kamon-akka"           % kamonVersion,
-//  "io.kamon"                  %% "kamon-akka-remote"    % kamonVersion,
   "io.kamon"                  %% "kamon-play-24"        % kamonVersion,
   "io.kamon"                  %% "kamon-statsd"         % kamonVersion,
   "io.kamon"                  %% "kamon-log-reporter"   % kamonVersion,

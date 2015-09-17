@@ -33,7 +33,7 @@ object KeyUtils {
   def hotTagsWithUsers: String = "hot_tags_users"
 
   // sorted set
-  def pushLikes: String = "push_likes"
+  def newLikes: String = "push_likes"
 
   // set
   def bannedUsers: String = "banned_users"
@@ -49,6 +49,12 @@ object KeyUtils {
 
   // sorted set mapping id -> name
   def tagNames: String = "tag_names"
+
+  // sorted set
+  def timeline(userId: Long) = "timeline:" + userId
+
+  // Set
+  def timelineIds(userId: Long) = "timeline_ids:" + userId
 
 }
 

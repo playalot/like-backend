@@ -42,6 +42,8 @@ trait TagService {
 
   def getTagById(id: Long): Future[Option[Tag]]
 
+  def getUserIdsForTag(tagId: Long): Future[Seq[Long]]
+
   def getTagWithImage(tagName: String): Future[Option[(Tag, Option[String])]]
 
 }

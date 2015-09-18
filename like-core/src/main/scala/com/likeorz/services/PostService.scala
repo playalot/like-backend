@@ -30,7 +30,7 @@ trait PostService {
 
   def getTagPostImage(name: String): Future[Option[String]]
 
-  def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])]
+  def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, UserInfo, Option[UserInfo])])]
 
   def deletePostById(postId: Long, userId: Long): Future[Unit]
 
@@ -50,13 +50,13 @@ trait PostService {
 
   def getFollowingPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
-  def getMyPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
+  def getPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
   def getPersonalizedPostsForUser(userId: Long, ratio: Double, pageSize: Int, timestamp: Option[Long]): Seq[Long]
 
   def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
-  def getTaggedPostsTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]]
+  def getUserTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]]
 
   def getRecentPosts(pageSize: Int, timestamp: Option[Long], filter: Option[String]): Future[Seq[Long]]
 

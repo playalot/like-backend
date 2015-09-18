@@ -22,6 +22,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     with RecommendsComponent with FollowsComponent
     with ReportsComponent with DeletedPhotosComponent
     with FavoritesComponent with UserTagsComponent
+    with UserInfoComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -45,14 +46,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def countFavoriteForUser(userId: Long): Future[Long] = {
-    RedisCacheClient.hget(KeyUtils.user(userId), "favorites") match {
-      case Some(number) => Future.successful(number.toLong)
-      case None =>
-        db.run(favorites.filter(_.userId === userId).length.result).map { number =>
-          RedisCacheClient.hset(KeyUtils.user(userId), "favorites", number.toString)
-          number
-        }
-    }
+    db.run(favorites.filter(_.userId === userId).length.result).map(_.toLong)
   }
 
   override def getPostsByUserId(userId: Long, page: Int, pageSize: Int): Future[Seq[(Post, Seq[(Long, String, Int)])]] = {
@@ -100,15 +94,21 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def searchByTag(page: Int = 0, pageSize: Int = 18, name: String = "%"): Future[Seq[Post]] = {
     val offset = pageSize * page
 
-    val jian = JianFan.f2j(name).toLowerCase
-    val fan = JianFan.j2f(name).toLowerCase
+    val jian = JianFan.f2j(name.trim).toLowerCase
+    val fan = JianFan.j2f(name.trim).toLowerCase
 
-    val query = sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' order by p.created desc  limit $offset,$pageSize""".as[Long]
-    db.run(query).flatMap { postIds =>
-      val q = (for {
-        post <- posts if post.id inSet postIds
-      } yield post).sortBy(_.created.desc)
-      db.run(q.result)
+    val query = if (jian == fan) {
+      sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id where m.tag_id in (SELECT id FROM tag WHERE tag LIKE '%#${jian}%') order by p.created desc limit $offset,$pageSize""".as[Long]
+    } else {
+      sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id where m.tag_id in (SELECT id FROM tag WHERE tag LIKE '%#${jian}%' OR tag like '%#${fan}%') order by p.created desc limit $offset,$pageSize""".as[Long]
+    }
+    timedFuture("search tag: " + name) {
+      db.run(query).flatMap { postIds =>
+        val q = (for {
+          post <- posts if post.id inSet postIds
+        } yield post).sortBy(_.created.desc)
+        db.run(q.result)
+      }
     }
   }
 
@@ -164,42 +164,46 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(posts.filter(_.id === postId).result.headOption)
   }
 
-  override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, User, Option[User])])] = {
+  override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, UserInfo, Option[UserInfo])])] = {
     // Get top 10 marks for the post from cache
-    val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + postId).map(v => (v._1.toLong, v._2.toInt)).toMap
-    Logger.debug("Cached marks: " + cachedMarks)
+    timedFuture("get marks for post: " + postId) {
+      val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + postId).map(v => (v._1.toLong, v._2.toInt)).toMap
+      Logger.debug("Cached marks: " + cachedMarks)
 
-    // Query marks with tagname and user order by created desc
-    // TODO: user from cache
-    val markIds = cachedMarks.keySet.mkString(", ")
-    val marksQuery = sql"""SELECT m.id, t.tag, m.created, m.user_id, u.nickname, u.avatar, u.likes FROM mark m INNER JOIN tag t ON m.tag_id=t.id INNER JOIN user u ON m.user_id=u.id WHERE m.id in (#$markIds)""".as[(Long, String, Long, Long, String, String, Long)]
+      // Query marks with tagname and user order by created desc
+      // TODO: user from cache
+      val markIds = cachedMarks.keySet.mkString(", ")
+      val marksQuery = sql"""SELECT m.id, t.tag, m.created, m.user_id, u.nickname, u.avatar, u.likes FROM mark m INNER JOIN tag t ON m.tag_id=t.id INNER JOIN user u ON m.user_id=u.id WHERE m.id in (#$markIds)""".as[(Long, String, Long, Long, String, String, Long)]
 
-    //    val mQuery = (for {
-    //      ((mark, tag), user) <- marks join tags on (_.tagId === _.id) join users on (_._1.userId === _.id)
-    //      if mark.id inSet cachedMarks.keySet
-    //    } yield (mark.id, tag.tagName, mark.created, user))
+      //    val mQuery = (for {
+      //      ((mark, tag), user) <- marks join tags on (_.tagId === _.id) join users on (_._1.userId === _.id)
+      //      if mark.id inSet cachedMarks.keySet
+      //    } yield (mark.id, tag.tagName, mark.created, user))
 
-    //    val likesQuery = for {
-    //      like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
-    //    } yield like.markId
+      //    val likesQuery = for {
+      //      like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
+      //    } yield like.markId
 
-    // Query all likes on the given set of marks
-    val likesQuery = for {
-      like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
-    } yield like.markId
+      // Query all likes on the given set of marks
+      val likesQuery = for {
+        like <- likes.filter(x => x.userId === userId.getOrElse(0L) && (x.markId inSet cachedMarks.keySet))
+      } yield like.markId
 
-    // Query all comments on the give set of marks
-    val commentsQuery = for {
-      ((comment, user), reply) <- comments join users on (_.userId === _.id) joinLeft users on (_._1.replyId === _.id)
-      if comment.markId inSet cachedMarks.keySet
-    } yield (comment, user, reply)
-    for {
-      markList <- if (cachedMarks.keySet.nonEmpty) db.run(marksQuery) else Future.successful(Seq())
-      likeList <- db.run(likesQuery.result)
-      commentsOnMarks <- db.run(commentsQuery.result)
-    } yield {
-      //      (markList, cachedMarks, likeList, commentsOnMarks)
-      (markList, likeList.toSet, cachedMarks, commentsOnMarks)
+      for {
+        markList <- if (cachedMarks.keySet.nonEmpty) db.run(marksQuery) else Future.successful(Seq())
+        likeList <- db.run(likesQuery.result)
+        commentList <- db.run(comments.filter(_.postId === postId).sortBy(_.created.desc).result)
+        uids <- Future.successful {
+          commentList.map(_.userId) ++ commentList.flatMap(_.replyId)
+        }
+        users <- db.run(userinfo.filter(_.id inSet (uids)).result)
+      } yield {
+        val userInfoMap = users.map(u => (u.id -> u)).toMap
+        val commentsOnMarks = commentList.map { c =>
+          (c, userInfoMap(c.userId), c.replyId.map(userInfoMap(_)))
+        }
+        (markList, likeList.toSet, cachedMarks, commentsOnMarks)
+      }
     }
   }
 
@@ -216,8 +220,9 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
       val markIds = markResults.map(_.id.getOrElse(-1L))
       for {
+        deleteFavorite <- db.run(favorites.filter(_.postId === postId).delete)
         deleteLikes <- db.run(likes.filter(_.markId inSet markIds).delete)
-        deleteComments <- db.run(comments.filter(_.markId inSet markIds).delete)
+        deleteComments <- db.run(comments.filter(_.postId === postId).delete)
         deleteMarks <- db.run(marks.filter(_.postId === postId).delete)
         deletePost <- db.run(posts.filter(_.id === postId).delete)
       } yield {}
@@ -325,7 +330,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getMyPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+  override def getPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
     if (timestamp.isDefined) {
       db.run(posts.filter(p => p.userId === userId && p.created < timestamp.get).sortBy(_.created.desc).map(_.id).take(pageSize).result)
     } else {
@@ -334,15 +339,9 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
-    //    val tagIdsQuery = sql"""SELECT DISTINCT m.tag_id FROM mark m JOIN post p ON m.post_id=p.id WHERE m.user_id=$userId limit 500""".as[Long]
-    //    var start = System.currentTimeMillis()
-    //
-    //    db.run(tagIdsQuery).flatMap { tagIds =>
     db.run(userTags.filter(t => t.userId === userId && t.subscribe === true).map(_.tagId).result).flatMap { tagIds =>
-      //      var elapsed = (System.currentTimeMillis() - start)
-      //      println(s"Preprocessing postsTagsIds time: $elapsed millsec")
       if (tagIds.nonEmpty) {
-        val tIds = tagIds.mkString(", ")
+        val tIds = Random.shuffle(tagIds).take(500).mkString(", ")
         val query = if (timestamp.isDefined) {
           val ts = timestamp.get
           sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit ${pageSize * pageSize}""".as[(Long, Long)]
@@ -358,8 +357,8 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getTaggedPostsTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]] = {
-    val tagsQuery = sql"""select tag from tag where id in (select tag_id from user_tags where user_id=$userId)""".as[String]
+  override def getUserTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]] = {
+    val tagsQuery = sql"""select tag from tag where id in (select tag_id from user_tags where user_id=$userId and subscribe=true)""".as[String]
     db.run(tagsQuery).map(_.toSet)
   }
 

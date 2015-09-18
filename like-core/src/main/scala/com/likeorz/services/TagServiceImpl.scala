@@ -155,6 +155,10 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     db.run(tags.filter(_.id === id).result.headOption)
   }
 
+  override def getUserIdsForTag(tagId: Long): Future[Seq[Long]] = {
+    db.run(userTags.filter(_.tagId === tagId).map(_.userId).result)
+  }
+
   override def getTagWithImage(tagName: String): Future[Option[(Tg, Option[String])]] = {
     db.run(tags.filter(_.name === tagName).result.headOption).flatMap {
       case Some(tag) =>

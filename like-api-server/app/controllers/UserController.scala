@@ -2,9 +2,10 @@ package controllers
 
 import javax.inject.Inject
 
-import com.likeorz.models.Notification
+import com.likeorz.models.{ UserTag, Notification }
 import com.likeorz.push.JPushNotification
 import play.api.Play
+import play.api.cache.Cached
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
@@ -12,12 +13,14 @@ import play.api.Play.current
 import play.api.mvc.Action
 import com.likeorz.services._
 import services.PushService
-import utils.{ HelperUtils, QiniuUtil }
+import utils.QiniuUtil
 
 import scala.concurrent.Future
+import scala.util.Random
 
 class UserController @Inject() (
     val messagesApi: MessagesApi,
+    cached: Cached,
     userService: UserService,
     tagService: TagService,
     markService: MarkService,
@@ -35,7 +38,7 @@ class UserController @Inject() (
           countFollowers <- userService.countFollowers(id)
           countFollowing <- userService.countFollowings(id)
           countPosts <- postService.countPostsForUser(id)
-          countFavorite <- postService.countFavoriteForUser(id)
+          countFavorite <- if (request.userId.isDefined && request.userId.get == id) postService.countFavoriteForUser(id) else Future.successful(0L)
           countLikes <- markService.countLikesForUser(id)
           isFollowing <- if (request.userId.isDefined) userService.isFollowing(request.userId.get, id) else Future.successful(0)
         } yield {
@@ -178,6 +181,7 @@ class UserController @Inject() (
                 "type" -> post.`type`,
                 "content" -> QiniuUtil.getPhoto(post.content, "medium"),
                 "created" -> post.created,
+                "favorited" -> true,
                 "user" -> Json.obj(
                   "user_id" -> post.userId,
                   "nickname" -> userInfo.nickname,
@@ -209,11 +213,11 @@ class UserController @Inject() (
     }
   }
 
-  def getFriends(id: Long, page: Int) = Action.async {
+  def getFollowing(id: Long, page: Int) = Action.async {
     userService.getFollowings(id, page).map { list =>
       val jsonArr = list.map { user =>
         Json.obj(
-          "user_id" -> user.identify,
+          "user_id" -> user.id.toString,
           "nickname" -> user.nickname,
           "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
           "likes" -> user.likes
@@ -227,7 +231,7 @@ class UserController @Inject() (
     userService.getFollowers(id, page).map { list =>
       val jsonArr = list.map { user =>
         Json.obj(
-          "user_id" -> user.identify,
+          "user_id" -> user.id.toString,
           "nickname" -> user.nickname,
           "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
           "likes" -> user.likes
@@ -253,11 +257,8 @@ class UserController @Inject() (
               count <- notificationService.countForUser(id)
             } yield {
               // Send push notification
-              if (HelperUtils.compareVersion(getLikeVersion(request.request), "1.1.1")) {
-                pushService.sendPushNotificationViaJPush(JPushNotification(List(id.toString), List(), Messages("notification.follow", nickname), count))
-              } else {
-                pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), count)
-              }
+              pushService.sendPushNotificationViaJPush(JPushNotification(List(id.toString), List(), Messages("notification.follow", nickname), count))
+              pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), count)
             }
             success(Messages("success.follow"), Json.obj("is_following" -> following))
           }
@@ -293,17 +294,18 @@ class UserController @Inject() (
     }
   }
 
-  def getUserTag(tagName: String) = SecuredAction.async { implicit request =>
+  def getUserTag(tagName: String) = UserAwareAction.async { implicit request =>
+
     tagService.getTagByName(tagName).flatMap {
       case Some(tag) =>
         if (tag.group > 0) {
-          tagService.getUserTag(request.userId, tag.id.get).map {
+          tagService.getUserTag(request.userId.getOrElse(-1L), tag.id.get).map {
             case Some(userTag) =>
               success(Messages("success.found"), Json.obj(
                 "tag" -> Json.obj(
                   "id" -> tag.id.get,
                   "tag" -> tag.name,
-                  "subscribed" -> true
+                  "subscribed" -> userTag.subscribe
                 )
               ))
             case None =>
@@ -341,6 +343,52 @@ class UserController @Inject() (
         success(Messages("success.unSubscribeTag"))
       } else {
         error(4058, Messages("failed"))
+      }
+    }
+  }
+
+  def getRecommendTags = cached("welcomeTags") {
+    Action.async {
+      val tags = Seq("电影", "玩具", "美食", "吃货", "手办", "粘土", "外设", "耳机", "车模", "手绘", "动漫", "摄影", "旅行", "机车", "创意", "海贼王", "高达", "钢铁侠", "萌", "猫", "DIY", "设计", "圣斗士", "乐高", "变形金刚")
+
+      val futures = tags.map { tagName =>
+        tagService.getTagWithImage(tagName)
+      }
+
+      Future.sequence(futures).map { x =>
+        val jsonArr = Random.shuffle(x.flatten).map {
+          case (tag, imgOpt) => Json.obj(
+            "id" -> tag.id.get,
+            "tag" -> tag.name,
+            "likes" -> tag.usage,
+            "group" -> tag.group,
+            "image" -> imgOpt.map(QiniuUtil.getPhoto(_, "medium"))
+          )
+        }
+        success(Messages("success.found"), Json.obj(
+          "tags" -> Json.toJson(jsonArr)
+        ))
+      }
+    }
+  }
+
+  def choosePreferTags = SecuredAction.async(parse.json) { implicit request =>
+    val groupIds = (request.body \ "groups").as[Seq[Long]]
+    val tagIds = (request.body \ "tags").as[Seq[Long]]
+
+    tagService.getGroupedTags.flatMap { results =>
+      val tags = results.filter(g => groupIds.contains(g._1.id.get))
+        .flatMap { pair =>
+          val topN = pair._2.length / 3
+          pair._2.sortBy(_.usage).reverse.take(topN)
+        }
+      val userTags = tags.map(tag => UserTag(request.userId, tag.id.get)).toSeq
+
+      for {
+        subscribedIds <- tagService.getUserSubscribeTagIds(request.userId)
+        result <- tagService.subscribeTags(userTags.filterNot(t => subscribedIds.contains(t.tagId)))
+      } yield {
+        success(Messages("success.found"))
       }
     }
   }

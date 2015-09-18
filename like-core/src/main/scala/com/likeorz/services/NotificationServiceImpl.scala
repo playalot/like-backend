@@ -10,10 +10,6 @@ import slick.driver.JdbcProfile
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 6/1/15
- */
 class NotificationServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends NotificationService
     with NotificationsComponent with PostsComponent with UsersComponent with UserInfoComponent
     with HasDatabaseConfigProvider[JdbcProfile] {

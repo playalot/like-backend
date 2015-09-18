@@ -6,7 +6,7 @@ import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
-import com.likeorz.services.{ UserService, PostService, MarkService }
+import com.likeorz.services.{ RedisService, UserService, PostService, MarkService }
 import utils.{ HelperUtils, QiniuUtil }
 
 import scala.concurrent.Future
@@ -15,7 +15,8 @@ class FeedController @Inject() (
     val messagesApi: MessagesApi,
     userService: UserService,
     markService: MarkService,
-    postService: PostService) extends BaseController {
+    postService: PostService,
+    redisService: RedisService) extends BaseController {
 
   // Get home feeds, ordered by created
   def getHomeFeedsV2(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
@@ -25,10 +26,15 @@ class FeedController @Inject() (
     val followPageSize = 10
     val taggedPageSize = 10
 
+    // Update user last seen
+    if (request.userId.isDefined) {
+      redisService.updateActiveUser(request.userId.get)
+    }
+
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
       val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
-      val followIds = postService.getMyPosts(request.userId.get, followPageSize, timestamp)
+      val followIds = postService.getPostsForUser(request.userId.get, followPageSize, timestamp)
       val taggedIds = postService.getTaggedPosts(request.userId.get, taggedPageSize, timestamp)
       //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.4, pageSize, timestamp))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
@@ -43,7 +49,7 @@ class FeedController @Inject() (
     else List[Long]()
 
     //    var start = System.currentTimeMillis()
-    postService.getTaggedPostsTags(request.userId.getOrElse(-1L), taggedPageSize, timestamp).flatMap { reasonTags =>
+    postService.getUserTags(request.userId.getOrElse(-1L), taggedPageSize, timestamp).flatMap { reasonTags =>
       //      var elapsed = (System.currentTimeMillis() - start)
       //      println(s"Preprocessing postsTags time: $elapsed millsec")
       futureIds.flatMap { results =>
@@ -71,8 +77,6 @@ class FeedController @Inject() (
               // no items in the next page, set timestamp to -1
               pointers(x._2) = -1L
           }
-
-          // start = System.currentTimeMillis()
 
           // Get posts from given ids
           postService.getPostsByIds(showIds ++ ads).flatMap { list =>
@@ -168,10 +172,14 @@ class FeedController @Inject() (
     val followPageSize = 10
     val taggedPageSize = 10
 
+    if (request.userId.isDefined) {
+      redisService.updateActiveUser(request.userId.get)
+    }
+
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
       val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
-      val followIds = postService.getMyPosts(request.userId.get, followPageSize, timestamp)
+      val followIds = postService.getPostsForUser(request.userId.get, followPageSize, timestamp)
       val taggedIds = postService.getTaggedPosts(request.userId.get, taggedPageSize, timestamp)
       //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.4, pageSize, timestamp))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
@@ -186,7 +194,7 @@ class FeedController @Inject() (
     else List[Long]()
 
     //    var start = System.currentTimeMillis()
-    postService.getTaggedPostsTags(request.userId.getOrElse(-1L), taggedPageSize, timestamp).flatMap { reasonTags =>
+    postService.getUserTags(request.userId.getOrElse(-1L), taggedPageSize, timestamp).flatMap { reasonTags =>
       //      var elapsed = (System.currentTimeMillis() - start)
       //      println(s"Preprocessing postsTags time: $elapsed millsec")
       futureIds.flatMap { results =>

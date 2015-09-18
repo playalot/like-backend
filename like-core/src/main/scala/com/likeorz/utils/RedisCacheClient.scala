@@ -185,6 +185,12 @@ object RedisCacheClient {
     }
   }
 
+  def expire(key: String, seconds: Int): Long = {
+    withJedisClient[Long] { client =>
+      client.expire(key, seconds)
+    }
+  }
+
   private def withJedisClient[T](f: Jedis => T): T = {
     val jedis = jedisPool.getResource
     try {

@@ -25,7 +25,8 @@ class PostController @Inject() (
     userService: UserService,
     postService: PostService,
     notificationService: NotificationService,
-    pushService: PushService) extends BaseController {
+    pushService: PushService,
+    eventBusService: EventBusService) extends BaseController {
 
   case class PostCommand(content: String, `type`: Option[String], tags: Seq[String], place: Option[String], location: Option[Seq[Double]])
 
@@ -64,7 +65,8 @@ class PostController @Inject() (
           // log event to remote mongodb
           eventProducerActor ! LikeEvent(None, "publish", "user", request.userId.toString, Some("post"), Some(post.identify),
             properties = Json.obj("tags" -> Json.toJson(postCommand.tags), "img" -> postCommand.content))
-
+//          eventBusService.publish(LikeEvent(None, "publish", "user", request.userId.toString, Some("post"), Some(post.identify),
+//            properties = Json.obj("tags" -> Json.toJson(postCommand.tags), "img" -> postCommand.content)))
           // only allow post contain one category
           val uniqueCategory = postCommand.tags.find(tag => categories.contains(tag))
           val futures = (postCommand.tags.diff(categories) ++ uniqueCategory)
@@ -241,6 +243,7 @@ class PostController @Inject() (
               case Some(post) =>
                 // log event
                 eventProducerActor ! LikeEvent(None, "mark", "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag))
+//                eventBusService.publish(LikeEvent(None, "mark", "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag)))
                 for {
                   nickname <- userService.getNickname(request.userId)
                   mark <- postService.addMark(postId, post.userId, tag, request.userId)

@@ -7,11 +7,11 @@ object KeyUtils {
   // hash
   def user(uid: Long): String = "user:" + uid
 
-  // Sorted set to store user notifications timestamp
-  def userNotificationTimestamp: String = "notification_ts"
+  // sorted set
+  def timeline(userId: Long) = "timeline:" + userId
 
-  // set
-  def postSeen(uid: Long): String = "post_seen:" + uid
+  // Set
+  def timelineIds(userId: Long) = "timeline_ids:" + userId
 
   // sorted set
   def postMark(pid: Long): String = "post_mark:" + pid
@@ -50,11 +50,11 @@ object KeyUtils {
   // sorted set mapping id -> name
   def tagNames: String = "tag_names"
 
-  // sorted set
-  def timeline(userId: Long) = "timeline:" + userId
+  // Sorted set to store user notifications timestamp
+  def userNotificationTimestamp: String = "notification_ts"
 
-  // Set
-  def timelineIds(userId: Long) = "timeline_ids:" + userId
+  // Track last user seen
+  def activeUsers: String = "active_users"
 
 }
 

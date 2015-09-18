@@ -10,8 +10,9 @@ import com.fasterxml.jackson.databind.{ ObjectWriter, ObjectMapper }
 import com.likeorz.actors.{ EventLogSubscriber, PublishEventSubscriber, MarkEventSubscriber, RecommendToAllEventSubscriber }
 import com.likeorz.common.{ PushUnreadLikes, ClassifyPost, ApiServerRemoteCount }
 import com.likeorz.event.{ LikeEventType, LikeEventBus, LikeEvent }
-import com.likeorz.models.{ User, Notification }
+import com.likeorz.models.{ TimelineFeed, User, Notification }
 import com.likeorz.push.JPushNotification
+import com.likeorz.utils.RedisCacheClient
 import play.api._
 import play.api.i18n.{ Lang, Messages, MessagesApi }
 import play.api.libs.concurrent.Akka
@@ -46,7 +47,7 @@ class Application @Inject() (
 
     Logger.debug(Messages("invalid.mobileCode"))
 
-    //    eventBusService.publish(LikeEvent(None, "mark", "user", "1111", Some("mark"), Some("sdfsd"), properties = Json.obj("tag" -> "sdfs")))
+    //    eventBusService.publish(LikeEvent(None, "publish", "user", "1234", Some("post"), Some("1234"), properties = Json.obj("tags" -> Json.toJson(Seq("111", "222", "333")), "img" -> "123123.jpg")))
 
     //    var preprocessStart = System.nanoTime()
     //    var response = Await.result(classificationActor.ask(com.likeorz.common.Tags(Seq("明日香", "EVA", "景品", "傲娇么么哒", "其实是晒钱包的！", "小恶魔")))(10.second).map(_.asInstanceOf[Int]), 20.seconds)

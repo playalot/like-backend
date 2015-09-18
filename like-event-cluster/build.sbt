@@ -5,7 +5,7 @@ name := """like-event-cluster"""
 
 version := "1.0.0"
 
-//resolvers += Resolver.mavenLocal
+val akkaVersion = "2.3.14"
 
 libraryDependencies ++= Seq(
   "com.typesafe"      %  "config"         % "1.3.0",
@@ -18,14 +18,14 @@ libraryDependencies ++= Seq(
   "org.apache.spark"  %% "spark-mllib"    % "1.5.0",
   "org.mongodb"       %% "casbah"         % "2.8.2",
   "com.typesafe.play" %% "play-ws"        % "2.4.3",
-  "com.typesafe.akka" %% "akka-actor"     % "2.3.13",
-  "com.typesafe.akka" %% "akka-remote"    % "2.3.13",
-  "com.typesafe.akka" %% "akka-slf4j"     % "2.3.13",
-  "com.typesafe.akka" %% "akka-contrib"   % "2.3.13",
-  "com.typesafe.akka" %% "akka-cluster"   % "2.3.13",
+  "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
+  "com.typesafe.akka" %% "akka-remote"    % akkaVersion,
+  "com.typesafe.akka" %% "akka-slf4j"     % akkaVersion,
+  "com.typesafe.akka" %% "akka-contrib"   % akkaVersion,
+  "com.typesafe.akka" %% "akka-cluster"   % akkaVersion,
   "com.typesafe.akka" %% "akka-http-core-experimental"  % "1.0",
   "com.typesafe.akka" %% "akka-stream-experimental"     % "1.0",
-  "com.typesafe.akka" %% "akka-testkit"   % "2.3.13"  % "test",
+  "com.typesafe.akka" %% "akka-testkit"   % akkaVersion  % "test",
   "org.scalatest"     %% "scalatest"      % "2.2.5"   % "test"
 )
 

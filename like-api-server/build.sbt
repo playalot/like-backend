@@ -11,13 +11,14 @@ resolvers += "nlpcn-mvn-repo" at "http://maven.nlpcn.org/"
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 val kamonVersion = "0.5.1"
+val akkaVersion = "2.3.14"
 
 libraryDependencies ++= Seq(
   ws,
   cache,
   filters,
   "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.4.1",
-  "com.typesafe.akka"         %% "akka-remote"      % "2.3.13",
+  "com.typesafe.akka"         %% "akka-remote"      % akkaVersion,
   "com.github.nscala-time"    %% "nscala-time"      % "2.2.0",
   "com.typesafe.play"         %% "play-mailer"      % "3.0.1",
   "net.ceedubs"               %% "ficus"            % "1.1.2",

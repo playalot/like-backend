@@ -8,8 +8,6 @@ version := "1.0.0"
 libraryDependencies ++= Seq(
   "org.apache.lucene"         %  "lucene-analyzers-common" % "5.3.0",
   "redis.clients"             %  "jedis"            % "2.7.3",
-  "org.nlpcn"                 %  "nlp-lang"         % "0.3",
-  "org.ansj"                  %  "ansj_seg"         % "2.0.8" classifier "min",
   "joda-time"                 %  "joda-time"        % "2.8.2",
   "org.joda"                  %  "joda-convert"     % "1.7",
   "mysql"                     %  "mysql-connector-java" % "5.1.36",

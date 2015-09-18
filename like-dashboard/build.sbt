@@ -17,7 +17,6 @@ libraryDependencies ++= Seq(
   filters,
   ws,
   "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.4.1",
-  "com.typesafe.akka"         %% "akka-remote"      % "2.3.13",
   "com.adrianhurt"            %% "play-bootstrap3"  % "0.4.4-P24",
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
   "net.ceedubs"               %% "ficus"            % "1.1.2",

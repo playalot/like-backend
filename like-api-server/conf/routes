@@ -91,6 +91,7 @@ GET     /v1/search/topsearch/:name                  controllers.SearchController
 
 #Notification
 GET     /v1/notification                            controllers.NotificationController.getNotifications(ts: Option[Long] ?= None)
+GET     /v2/notification                            controllers.NotificationController.getNotificationsV2(ts: Option[Long] ?= None)
 GET     /v1/notification/count                      controllers.NotificationController.notificationCount
 
 #Info

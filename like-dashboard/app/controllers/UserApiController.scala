@@ -128,4 +128,22 @@ class UserApiController @Inject() (
     }
   }
 
+  def getActiveUsers(duration: Long) = SecuredAction {
+    val userJson = userService.getActiveUserIds(duration).sortBy(-_._2).map {
+      case (userId, timestamp) =>
+        val user = userService.getUserInfoFromCache(userId)
+        Json.obj(
+          "id" -> userId,
+          "nickname" -> user.nickname,
+          "avatar" -> QiniuUtil.resizeImage(user.avatar, 50),
+          "likes" -> user.likes,
+          "lastSeen" -> timestamp
+        )
+    }
+    Ok(Json.obj(
+      "users" -> userJson,
+      "total" -> userJson.length
+    ))
+  }
+
 }

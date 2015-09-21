@@ -5,13 +5,12 @@ import javax.inject.Inject
 import akka.actor.{ ActorLogging, Actor }
 import com.likeorz.event.LikeEvent
 import com.likeorz.models.TimelineFeed
-import com.likeorz.services.TagService
+import com.likeorz.services.{ MongoDBService, TagService }
 import com.likeorz.utils.{ GlobalConstants, KeyUtils, RedisCacheClient }
-import play.api.libs.json.Json
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class MarkEventSubscriber @Inject() (tagService: TagService) extends Actor with ActorLogging {
+class MarkEventSubscriber @Inject() (tagService: TagService, mongoDBService: MongoDBService) extends Actor with ActorLogging {
 
   implicit val blockingContext = new ExecutionContext {
 
@@ -29,12 +28,12 @@ class MarkEventSubscriber @Inject() (tagService: TagService) extends Actor with 
         val postId = event.targetEntityId.get.toLong
         val userId = event.entityId.toLong
         val tagName = (event.properties \ "tag").as[String]
+        val timestamp = System.currentTimeMillis() / 1000
 
         // Send feed to tag marker
-        if (RedisCacheClient.sadd(KeyUtils.timelineIds(userId), Seq(postId.toString)) > 0) {
-          // Add feed to timeline
-          val myPostFeed = TimelineFeed(postId, TimelineFeed.TypeBasedOnTag, tag = Some(tagName))
-          RedisCacheClient.zadd(KeyUtils.timeline(userId), System.currentTimeMillis() / 1000, Json.toJson(myPostFeed).toString())
+        if (!mongoDBService.postInTimelineForUser(postId, userId)) {
+          val markFeed = TimelineFeed(postId, TimelineFeed.TypeBasedOnTag, tag = Some(tagName), ts = timestamp)
+          mongoDBService.insertTimelineFeedForUser(markFeed, userId)
         }
 
         tagService.getTagByName(tagName).flatMap {
@@ -43,9 +42,12 @@ class MarkEventSubscriber @Inject() (tagService: TagService) extends Actor with 
               tagService.getUserIdsForTag(tag.id.get).map { userIds =>
                 log.debug("subscribers[" + tag.name + "]: " + userIds.take(10).mkString("", ",", s"...(${userIds.size})"))
                 userIds.foreach { uId =>
-                  if (RedisCacheClient.sadd(KeyUtils.timelineIds(uId), Seq(postId.toString)) > 0) {
-                    val myPostFeed = TimelineFeed(postId, TimelineFeed.TypeBasedOnTag, tag = Some(tag.name))
-                    RedisCacheClient.zadd(KeyUtils.timeline(uId), System.currentTimeMillis() / 1000, Json.toJson(myPostFeed).toString())
+                  // Check if it is a active user
+                  if (RedisCacheClient.zscore(KeyUtils.activeUsers, uId.toString).isDefined) {
+                    if (!mongoDBService.postInTimelineForUser(postId, uId)) {
+                      val markFeed = TimelineFeed(postId, TimelineFeed.TypeBasedOnTag, tag = Some(tag.name), ts = timestamp)
+                      mongoDBService.insertTimelineFeedForUser(markFeed, uId)
+                    }
                   }
                 }
               }

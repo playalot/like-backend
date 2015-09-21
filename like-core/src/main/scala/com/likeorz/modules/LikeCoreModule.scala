@@ -10,6 +10,9 @@ import play.api.libs.concurrent.AkkaGuiceSupport
 class LikeCoreModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
   override def configure(): Unit = {
+    // Other stores
+    bind[MongoDBService]
+    bind[RedisService]
 
     // DB services
     bind[TagService].to[TagServiceImpl]
@@ -17,7 +20,6 @@ class LikeCoreModule extends AbstractModule with ScalaModule with AkkaGuiceSuppo
     bind[UserService].to[UserServiceImpl]
     bind[MarkService].to[MarkServiceImpl]
     bind[InfoService].to[InfoServiceImpl]
-    bind[RedisService].to[RedisServiceImpl]
     bind[PromoteService].to[PromoteServiceImpl]
     bind[NotificationService].to[NotificationServiceImpl]
 

@@ -1,13 +1,25 @@
 package com.likeorz.actors
 
-import akka.actor.{ ActorLogging, Actor }
-import com.likeorz.event.LikeEvent
+import javax.inject.Inject
 
-class EventLogSubscriber extends Actor with ActorLogging {
+import akka.actor.{ ActorLogging, Actor }
+import com.likeorz.event.{ LikeEventType, LikeEvent }
+import com.likeorz.services.MongoDBService
+
+class EventLogSubscriber @Inject() (mongoDBService: MongoDBService) extends Actor with ActorLogging {
 
   override def receive: Receive = {
-    case event: LikeEvent => log.debug("log this event " + event)
-    case _                => log.error("Invalid message")
+    case event: LikeEvent =>
+      if (event.eventType == LikeEventType.publish || event.eventType == LikeEventType.mark || event.eventType == LikeEventType.like) {
+        log.debug("log this event " + event)
+        try {
+          mongoDBService.insertEvent(event)
+          ()
+        } catch {
+          case e: Throwable => e.printStackTrace()
+        }
+      }
+    case _ => log.error("Invalid message")
   }
 
 }

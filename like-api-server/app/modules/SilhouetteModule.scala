@@ -40,7 +40,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator(32))
     bind[EventBus].toInstance(EventBus())
     bind[Clock].toInstance(Clock())
-    bindActor[EventProducerActor]("event-producer-actor")
     bindActor[ClassificationActor]("classification-actor")
     bindActor[PushNewLikesActor]("push-likes-actor")
     bindActor[PushNotificationActor]("push-notification-actor")

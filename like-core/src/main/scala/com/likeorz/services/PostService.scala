@@ -4,10 +4,6 @@ import com.likeorz.models._
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 5/25/15
- */
 trait PostService {
 
   def insert(post: Post): Future[Post]
@@ -55,6 +51,12 @@ trait PostService {
   def getPersonalizedPostsForUser(userId: Long, ratio: Double, pageSize: Int, timestamp: Option[Long]): Seq[Long]
 
   def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
+
+  def getMyPostTimelineFeeds(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[TimelineFeed]]
+
+  def getEditorPickTimelineFeeds(pageSize: Int, timestamp: Option[Long]): Future[Seq[TimelineFeed]]
+
+  def getBasedOnTagTimelineFeeds(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[TimelineFeed]]
 
   def getUserTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]]
 

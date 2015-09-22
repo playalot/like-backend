@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import com.likeorz.models._
 import com.likeorz.dao._
-import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
+import com.likeorz.utils.{ FutureUtils, RedisCacheClient, KeyUtils }
 import org.joda.time.DateTime
 import org.nlpcn.commons.lang.jianfan.JianFan
 import play.api.Logger
@@ -102,7 +102,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     } else {
       sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id where m.tag_id in (SELECT id FROM tag WHERE tag LIKE '%#${jian}%' OR tag like '%#${fan}%') order by p.created desc limit $offset,$pageSize""".as[Long]
     }
-    timedFuture("search tag: " + name) {
+    FutureUtils.timedFuture("search tag: " + name) {
       db.run(query).flatMap { postIds =>
         val q = (for {
           post <- posts if post.id inSet postIds
@@ -166,7 +166,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def getMarksForPost(postId: Long, page: Int = 0, userId: Option[Long] = None): Future[(Seq[(Long, String, Long, Long, String, String, Long)], Set[Long], Map[Long, Int], Seq[(Comment, UserInfo, Option[UserInfo])])] = {
     // Get top 10 marks for the post from cache
-    timedFuture("get marks for post: " + postId) {
+    FutureUtils.timedFuture("get marks for post: " + postId) {
       val cachedMarks = RedisCacheClient.zrevrangeByScoreWithScores("post_mark:" + postId).map(v => (v._1.toLong, v._2.toInt)).toMap
       Logger.debug("Cached marks: " + cachedMarks)
 
@@ -339,27 +339,86 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getTaggedPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
-    db.run(userTags.filter(t => t.userId === userId && t.subscribe === true).map(_.tagId).result).flatMap { tagIds =>
-      if (tagIds.nonEmpty) {
-        val tIds = Random.shuffle(tagIds).take(500).mkString(", ")
-        val query = if (timestamp.isDefined) {
-          val ts = timestamp.get
-          sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit ${pageSize * pageSize}""".as[(Long, Long)]
+    FutureUtils.timedFuture("getTaggedPosts") {
+      db.run(userTags.filter(t => t.userId === userId && t.subscribe === true).map(_.tagId).result).flatMap { tagIds =>
+        if (tagIds.nonEmpty) {
+          val tIds = Random.shuffle(tagIds).take(500).mkString(", ")
+          val query = if (timestamp.isDefined) {
+            val ts = timestamp.get
+            sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE p.created < $ts AND m.tag_id IN (#${tIds}) order by p.created desc limit ${pageSize * 2}""".as[(Long, Long)]
+          } else {
+            sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id IN (#${tIds}) order by p.created desc limit ${pageSize * 2}""".as[(Long, Long)]
+          }
+          db.run(query).map { results =>
+            results.groupBy(_._2).map(_._2.head._1).toSeq.sortBy(pid => pid).reverse.take(pageSize)
+          }
         } else {
-          sql"""SELECT DISTINCT p.id, p.user_id FROM post p INNER JOIN mark m ON p.id=m.post_id WHERE m.tag_id IN (#${tIds}) order by p.created desc limit ${pageSize * pageSize}""".as[(Long, Long)]
+          Future.successful(Seq())
         }
-        db.run(query).map { results =>
-          results.groupBy(_._2).map(_._2.head._1).toSeq.sortBy(pid => pid).reverse.take(pageSize)
-        }
+      }
+    }
+  }
+
+  override def getMyPostTimelineFeeds(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[TimelineFeed]] = {
+    FutureUtils.timedFuture("getMyPostTimelineFeeds") {
+      val results = if (timestamp.isDefined) {
+        db.run(posts.filter(p => p.userId === userId && p.created < timestamp.get).sortBy(_.created.desc).map(p => (p.id, p.created)).take(pageSize).result)
       } else {
-        Future.successful(Seq())
+        db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).map(p => (p.id, p.created)).take(pageSize).result)
+      }
+      results.map { rows =>
+        rows.map(row => TimelineFeed(row._1, TimelineFeed.TypeMyPost, ts = row._2))
+      }
+    }
+  }
+
+  override def getEditorPickTimelineFeeds(pageSize: Int, timestamp: Option[Long]): Future[Seq[TimelineFeed]] = {
+    FutureUtils.timedFuture("getEditorPickTimelineFeeds") {
+      val results = if (timestamp.isDefined) {
+        val query = sql"""SELECT post_id, created FROM recommend WHERE created < ${timestamp.get} ORDER BY created DESC LIMIT $pageSize""".as[(Long, Long)]
+        db.run(query)
+      } else {
+        val query = sql"""SELECT post_id, created FROM recommend ORDER BY created DESC LIMIT $pageSize""".as[(Long, Long)]
+        db.run(query)
+      }
+      results.map { rows =>
+        rows.map(row => TimelineFeed(row._1, TimelineFeed.TypeEditorPick, ts = row._2))
+      }
+    }
+  }
+
+  override def getBasedOnTagTimelineFeeds(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[TimelineFeed]] = {
+    FutureUtils.timedFuture("getBasedOnTagTimelineFeeds") {
+      db.run(userTags.filter(t => t.userId === userId && t.subscribe === true).map(_.tagId).result).flatMap { tagIds =>
+
+        val randomTagIds = Random.shuffle(tagIds).take(500).mkString(",")
+
+        if (randomTagIds.nonEmpty) {
+          val query = if (timestamp.isDefined) {
+            sql"""SELECT post_id, user_id, tag, created FROM mark WHERE created < ${timestamp.get} AND tag_id IN (#${randomTagIds}) order by created desc limit ${pageSize * 4}""".as[(Long, Long, String, Long)]
+          } else {
+            sql"""SELECT post_id, user_id, tag, created FROM mark WHERE tag_id IN (#${randomTagIds}) order by created desc limit ${pageSize * 4}""".as[(Long, Long, String, Long)]
+          }
+          db.run(query).map { results =>
+            results
+              .groupBy(_._2).map(_._2.head).toSeq
+              .sortBy(x => x._1)
+              .reverse
+              .take(pageSize)
+              .map(row => TimelineFeed(row._1, TimelineFeed.TypeBasedOnTag, Some(row._3), ts = row._4))
+          }
+        } else {
+          Future.successful(Seq())
+        }
       }
     }
   }
 
   override def getUserTags(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Set[String]] = {
-    val tagsQuery = sql"""select tag from tag where id in (select tag_id from user_tags where user_id=$userId and subscribe=true)""".as[String]
-    db.run(tagsQuery).map(_.toSet)
+    FutureUtils.timedFuture("getUserTags") {
+      val tagsQuery = sql"""select tag from tag where id in (select tag_id from user_tags where user_id=$userId and subscribe=true)""".as[String]
+      db.run(tagsQuery).map(_.toSet)
+    }
   }
 
   override def getRecentPosts(pageSize: Int, timestamp: Option[Long], filter: Option[String]): Future[Seq[Long]] = {

@@ -3,8 +3,7 @@ package com.likeorz.services
 import com.google.inject.Inject
 import com.likeorz.dao._
 import com.likeorz.models._
-import com.likeorz.utils.{ KeyUtils, RedisCacheClient }
-import play.api.Logger
+import com.likeorz.utils.{ FutureUtils, KeyUtils, RedisCacheClient }
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
@@ -153,7 +152,7 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getCommentsForMark(markId: Long): Future[Seq[(Comment, UserInfo, Option[UserInfo])]] = {
-    timedFuture("retrieve comments for mark: " + markId) {
+    FutureUtils.timedFuture("retrieve comments for mark: " + markId) {
       for {
         commentList <- db.run(comments.filter(_.markId === markId).sortBy(_.created).result)
         uids <- Future.successful {

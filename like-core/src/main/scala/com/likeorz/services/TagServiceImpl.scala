@@ -169,4 +169,8 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
+  override def getRecommendTags: Future[Seq[String]] = {
+    db.run(sql"""SELECT tag FROM recommend_tags""".as[String])
+  }
+
 }

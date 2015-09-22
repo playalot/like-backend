@@ -46,4 +46,6 @@ trait TagService {
 
   def getTagWithImage(tagName: String): Future[Option[(Tag, Option[String])]]
 
+  def getRecommendTags: Future[Seq[String]]
+
 }

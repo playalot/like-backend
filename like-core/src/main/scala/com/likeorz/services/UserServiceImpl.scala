@@ -318,13 +318,19 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
     val query = if (filter.length > 0) {
       (for {
         user <- users if user.nickname like s"%$filter%"
-      } yield user).sortBy(_.id.desc).drop(pageSize * page).take(pageSize)
+      } yield user).sortBy(_.likes.desc).drop(pageSize * page).take(pageSize)
     } else {
       (for {
         user <- users
-      } yield user).sortBy(_.id.desc).drop(pageSize * page).take(pageSize)
+      } yield user).sortBy(_.likes.desc).drop(pageSize * page).take(pageSize)
     }
     db.run(query.result)
+  }
+
+  override def getActiveUserIds(duration: Long): Seq[(Long, Long)] = {
+    RedisCacheClient.zrevrangeByScoreWithScores(KeyUtils.activeUsers, Long.MaxValue, System.currentTimeMillis() / 1000 - duration).map {
+      case (uid, timestamp) => uid.toLong -> timestamp.toLong
+    }.toSeq
   }
 
 }

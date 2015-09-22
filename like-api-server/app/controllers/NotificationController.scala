@@ -90,7 +90,7 @@ class NotificationController @Inject() (
           b += Json.obj(
             "type" -> notification.`type`,
             "user" -> Json.obj(
-              "user_id" -> user.id.toString,
+              "user_id" -> user.id,
               "nickname" -> user.nickname,
               "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
               "likes" -> user.likes
@@ -101,6 +101,7 @@ class NotificationController @Inject() (
           if (notification.`type` == "LIKE"
             && b.nonEmpty
             && (b.last \ "type").as[String].contains("LIKE")
+            && notification.fromUserId == (b.last \ "user" \ "user_id").as[Long]
             && notification.postId.get == (b.last \ "post" \ "post_id").as[Long]) {
 
             val mergedJson = b.last.deepMerge(Json.obj(
@@ -112,7 +113,7 @@ class NotificationController @Inject() (
             b += Json.obj(
               "type" -> notification.`type`,
               "user" -> Json.obj(
-                "user_id" -> user.id.toString,
+                "user_id" -> user.id,
                 "nickname" -> user.nickname,
                 "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
                 "likes" -> user.likes
@@ -121,7 +122,7 @@ class NotificationController @Inject() (
                 "post_id" -> postAndUser._1.id.get,
                 "content" -> QiniuUtil.getPhoto(postAndUser._1.content, "small"),
                 "user" -> Json.obj(
-                  "user_id" -> postAndUser._2.id.toString,
+                  "user_id" -> postAndUser._2.id,
                   "nickname" -> postAndUser._2.nickname,
                   "avatar" -> QiniuUtil.getAvatar(postAndUser._2.avatar, "small"),
                   "likes" -> postAndUser._2.likes

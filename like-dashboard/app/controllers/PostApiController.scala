@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
+import com.likeorz.event.{ LikeEventType, LikeEvent }
 import com.mohiva.play.silhouette.api.{ Silhouette, Environment }
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
@@ -20,6 +21,7 @@ import scala.concurrent.Future
 class PostApiController @Inject() (
     val messagesApi: MessagesApi,
     val env: Environment[Admin, CookieAuthenticator],
+    eventBusService: EventBusService,
     adminService: AdminService,
     dashboardService: DashboardService,
     userService: UserService,
@@ -87,7 +89,10 @@ class PostApiController @Inject() (
   }
 
   def recommendPost(postId: Long, status: Boolean) = SecuredAction.async {
-    dashboardService.recommendPost(postId, status).map(_ => Ok)
+    dashboardService.recommendPost(postId, status).map { rs =>
+      eventBusService.publish(LikeEvent(None, LikeEventType.recommendToAll, "post", postId.toString))
+      Ok
+    }
   }
 
   def invisiblePost(postId: Long, status: Boolean) = SecuredAction.async {

@@ -19,6 +19,7 @@
     "bootstrap": "*",
     "font-awesome": "*",
     "odometer": "0.4.7",
-    "redmaterials": "0.0.1"
+    "redmaterials": "0.0.1",
+    "moment": "~2.10.6"
   }
 }

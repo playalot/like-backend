@@ -1,22 +1,47 @@
+<!--
+  ~ Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
+  -->
+<!-- The default logback configuration that Play uses if no other configuration is provided -->
 <configuration>
-    
+
   <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%coloredLevel - %logger - %message%n%xException</pattern>
+      <charset>UTF-8</charset>
+      <pattern>%-5coloredLevel %d{HH:mm:ss} %cyan(%logger{15}): %msg%n%xException</pattern>
     </encoder>
   </appender>
 
-  <!--
-    The logger name is typically the Java/Scala package name.
-    This configures the log level to log at for a package and its children packages.
-  -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${application.home}/logs/like-api-server.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${application.home}/logs/like-api-server.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>50MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <maxHistory>356</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <charset>UTF-8</charset>
+      <pattern>[%level] %date from %logger in %thread %n%message%n%xException%n</pattern>
+    </encoder>
+  </appender>
+
   <logger name="play" level="INFO" />
   <logger name="application" level="DEBUG" />
+  <logger name="com.mohiva" level="INFO" />
+  <logger name="like-api-server" level="DEBUG" />
+  <logger name="com.likeorz" level="DEBUG" />
+
+  <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
+  <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
+  <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
+  <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
+  <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" />
 
   <root level="ERROR">
     <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
   </root>
-
 </configuration>

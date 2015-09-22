@@ -65,12 +65,12 @@ class DashboardServiceImpl @Inject() (protected val dbConfigProvider: DatabaseCo
     }
   }
 
-  override def recommendPost(postId: Long, status: Boolean): Future[Unit] = {
+  override def recommendPost(postId: Long, status: Boolean): Future[Int] = {
     if (status) {
-      db.run(recommends.filter(_.postId === postId).delete).map(_ => ())
+      db.run(recommends.filter(_.postId === postId).delete)
     } else {
       val recommend = Recommend(None, postId)
-      db.run(recommends returning recommends.map(_.id) += recommend).map(_ => ())
+      db.run(recommends += recommend)
     }
   }
 

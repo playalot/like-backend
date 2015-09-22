@@ -2,7 +2,6 @@ package modules
 
 import com.google.inject.{ AbstractModule, Provides }
 import models.{ AdminPasswordInfoDAO, Admin }
-import com.likeorz.services._
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.services._
 import com.mohiva.play.silhouette.api.util._
@@ -28,13 +27,6 @@ class ServiceModule extends AbstractModule with ScalaModule {
   override def configure() {
     bind[AdminService].to[AdminServiceImpl]
     bind[DashboardService].to[DashboardServiceImpl]
-    bind[TagService].to[TagServiceImpl]
-    bind[PostService].to[PostServiceImpl]
-    bind[UserService].to[UserServiceImpl]
-    bind[MarkService].to[MarkServiceImpl]
-    bind[InfoService].to[InfoServiceImpl]
-    bind[PromoteService].to[PromoteServiceImpl]
-    bind[NotificationService].to[NotificationServiceImpl]
     bind[DelegableAuthInfoDAO[PasswordInfo]].to[AdminPasswordInfoDAO]
     bind[CacheLayer].to[PlayCacheLayer]
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator())

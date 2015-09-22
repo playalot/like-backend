@@ -15,7 +15,7 @@ trait DashboardService {
 
   def blockPost(postId: Long, status: Boolean): Future[Boolean]
 
-  def recommendPost(postId: Long, status: Boolean): Future[Unit]
+  def recommendPost(postId: Long, status: Boolean): Future[Int]
 
   def isPostRecommended(postId: Long): Future[Boolean]
 

@@ -4,6 +4,7 @@ import akka.routing.RoundRobinPool
 import com.google.inject.AbstractModule
 import com.likeorz.actors._
 import com.likeorz.services._
+import com.likeorz.services.store.{ RedisService, MongoDBService }
 import net.codingwell.scalaguice.ScalaModule
 import play.api.libs.concurrent.AkkaGuiceSupport
 
@@ -24,7 +25,7 @@ class LikeCoreModule extends AbstractModule with ScalaModule with AkkaGuiceSuppo
     bind[NotificationService].to[NotificationServiceImpl]
 
     // Event bus service and actors
-    bind[EventBusService].to[EventBusServiceImpl]
+    bind[EventBusService]
     bindActor[EventLogSubscriber]("event-log-subscriber", RoundRobinPool(5).props)
     bindActor[PublishEventSubscriber]("publish-event-subscriber", RoundRobinPool(5).props)
     bindActor[MarkEventSubscriber]("mark-event-subscriber", RoundRobinPool(5).props)

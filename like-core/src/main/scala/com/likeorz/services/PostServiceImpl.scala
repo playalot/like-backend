@@ -91,6 +91,14 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  def getPostsByIdsSimple(ids: Seq[Long]): Future[Seq[Post]] = {
+    if (ids.isEmpty) {
+      Future.successful(Seq[Post]())
+    } else {
+      db.run(posts.filter(_.id inSet ids).result)
+    }
+  }
+
   override def searchByTag(page: Int = 0, pageSize: Int = 18, name: String = "%"): Future[Seq[Post]] = {
     val offset = pageSize * page
 

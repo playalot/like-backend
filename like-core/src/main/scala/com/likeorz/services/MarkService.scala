@@ -22,7 +22,7 @@ trait MarkService {
 
   def like(mark: Mark, postAuthorId: Long, userId: Long): Future[Unit]
 
-  def unlike(mark: Mark, postAuthor: Long, userId: Long): Future[Unit]
+  def unlike(mark: Mark, postAuthor: Long, userId: Long): Future[Int]
 
   def getLikes(markId: Long): Future[Seq[(Like, UserInfo)]]
 

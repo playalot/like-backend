@@ -98,14 +98,16 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def unlike(mark: Mark, postAuthor: Long, userId: Long): Future[Unit] = {
+  override def unlike(mark: Mark, postAuthor: Long, userId: Long): Future[Int] = {
     db.run(likes.filter(l => l.markId === mark.id.get && l.userId === userId).delete).map { result =>
       if (result > 0) {
+        var l = 0
         RedisCacheClient.zincrby(KeyUtils.postMark(mark.postId), -1, mark.identify)
         if (RedisCacheClient.zscore(KeyUtils.postMark(mark.postId), mark.identify).getOrElse(-1.0) <= 0) {
           RedisCacheClient.zrem(KeyUtils.postMark(mark.postId), mark.identify)
           RedisCacheClient.zincrby(KeyUtils.tagUsage, -1, mark.tagId.toString)
           db.run(marks.filter(_.id === mark.id).delete)
+          l = 1
         }
         // Decreate user info cache
         RedisCacheClient.hincrBy(KeyUtils.user(postAuthor), "likes", -1)
@@ -114,7 +116,9 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
           RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -1)
           RedisCacheClient.zincrby(KeyUtils.newLikes, -1, mark.userId.toString)
         }
-        ()
+        l
+      } else {
+        0
       }
     }
   }

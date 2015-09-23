@@ -18,6 +18,8 @@ trait PostService {
 
   def getPostsByIds(ids: Seq[Long]): Future[Seq[(Post, Seq[(Long, String, Int)])]]
 
+  def getPostsByIdsSimple(ids: Seq[Long]): Future[Seq[Post]]
+
   def searchByTag(page: Int = 0, pageSize: Int = 20, name: String): Future[Seq[Post]]
 
   def searchByTagAndTimestamp(name: String = "%", pageSize: Int = 18, timestamp: Option[Long]): Future[Seq[Post]]

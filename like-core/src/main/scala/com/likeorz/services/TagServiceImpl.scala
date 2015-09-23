@@ -140,11 +140,11 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   }
 
   override def getUserSubscribeTagIds(userId: Long): Future[Seq[Long]] = {
-    db.run(userTags.filter(_.userId === userId).map(_.tagId).result)
+    db.run(userTags.filter(ut => ut.userId === userId && ut.subscribe === true).map(_.tagId).result)
   }
 
   override def getUserSubscribeTag(userId: Long, tagId: Long): Future[Option[UserTag]] = {
-    db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).result.headOption)
+    db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId && t.subscribe === true).result.headOption)
   }
 
   override def getTagByName(tagName: String): Future[Option[Tg]] = {
@@ -155,14 +155,13 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     db.run(tags.filter(_.id === id).result.headOption)
   }
 
-  override def getUserIdsForTag(tagId: Long): Future[Seq[Long]] = {
-    db.run(userTags.filter(_.tagId === tagId).map(_.userId).result)
+  override def getSubscriberIdsForTag(tagId: Long): Future[Seq[Long]] = {
+    db.run(userTags.filter(ut => ut.tagId === tagId && ut.subscribe === true).map(_.userId).result)
   }
 
   override def getTagWithImage(tagName: String): Future[Option[(Tg, Option[String])]] = {
     db.run(tags.filter(_.name === tagName).result.headOption).flatMap {
       case Some(tag) =>
-
         val query = sql"""select p.content from post p inner join mark m on p.id=m.post_id where m.post_id in (select r.post_id from post p inner join recommend r on p.id=r.post_id) and m.tag_id=${tag.id.get} ORDER BY p.created desc limit 1""".as[String]
         db.run(query).map(url => Some(tag, url.headOption))
       case None => Future.successful(None)

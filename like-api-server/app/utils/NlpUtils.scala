@@ -9,7 +9,7 @@ object NlpUtils {
 
   val illegalWords = Play.current.configuration.getStringList("tag.illegal-words").get.toList
 
-  def isContainSensitiveWord(word: String): Boolean = {
+  def containSensitiveWord(word: String): Boolean = {
     if (illegalWords.exists(w => word.contains(w))) {
       true
     } else {

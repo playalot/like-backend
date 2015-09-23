@@ -32,6 +32,7 @@ object LikeMLApp {
         case "Update-UserDBLikes" => RebuildCacheJob.updateDBUserLikes()
         case "RebuildTagUsage"    => RebuildIntervalCountJob.rebuildTagUsageCountCache()
         case "IncrementalUpdate"  => RebuildIntervalCountJob.incrementalUpdateTagUsageCount()
+        case "SyncPost"           => SyncPostToMongoDB.SyncPostToMongoDB()
         case "All" =>
           KMeansOnTags.run(180)
           UserCategories.run(180)

@@ -17,7 +17,7 @@ GET
 |参数|必选|类型及范围|说明|
 |--------|-------|-------|
 |LIKE-SESSION-TOKEN|false|string|Header中带用户授权|
-|ts|true|String|分页|
+|ts|option|long|分页|
 
 ######请求示例
 ```
@@ -37,6 +37,8 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
                 "post_id": 7593,
                 "type": "PHOTO",
                 "content": "http://cdn.likeorz.com/67043fc620684b22ad9aec901f697d3c_1434212994_w_1280_h_1707_187.jpg?imageView2/1/w/620/h/620",
+                "preview": "http://cdn.likeorz.com/67043fc620684b22ad9aec901f697d3c_1434212994_w_1280_h_1707_187.jpg?imageView2/1/w/620/h/620",
+                "raw_image": "http://cdn.likeorz.com/67043fc620684b22ad9aec901f697d3c_1434212994_w_1280_h_1707_187.jpg?imageView2/p/85",
                 "created": 1434212995,
                 "user":{
                     "user_id": 715,
@@ -63,6 +65,8 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
                 "post_id": 7596,
                 "type": "PHOTO",
                 "content": "http://cdn.likeorz.com/fec36feac2e14c3eaf20ece48da4dfcc_1434214517_w_640_h_427_97.jpg?imageView2/1/w/620/h/620",
+                "preview": "http://cdn.likeorz.com/67043fc620684b22ad9aec901f697d3c_1434212994_w_1280_h_1707_187.jpg?imageView2/1/w/620/h/620",
+                "raw_image": "http://cdn.likeorz.com/67043fc620684b22ad9aec901f697d3c_1434212994_w_1280_h_1707_187.jpg?imageView2/p/85",
                 "created": 1434214522,
                 "user":{
                     "user_id": 715,
@@ -86,7 +90,7 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
                 ]
             }
         ],
-        "next": "1434626024"
+        "next": 1434626024
     }
 }
 
@@ -108,5 +112,5 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
 |mark_id|int|标签ID|
 |tag|string|标签名|
 |likes|int|点赞数|
-|is_liked|int|当前访问用户是否赞过|
-|next|String|下一页timestamp组合|
+|is_liked|bool|当前访问用户是否赞过|
+|next|long|下一页timestamp|

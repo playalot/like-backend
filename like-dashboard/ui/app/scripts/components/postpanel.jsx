@@ -14,6 +14,9 @@ var PostPanel = React.createClass({
   getDefaultProps: function() {
     return { showUser: true };
   },
+  getInitialState: function() {
+    return { showMarks: true };
+  },
   deletePost: function() {
     if (confirm('Delete this post?')) {
       PostActions.deletePost(this.props.post.id);
@@ -34,6 +37,9 @@ var PostPanel = React.createClass({
       PostActions.deleteMark(this.props.post.id, mid);
     }
   },
+  toggleShowMarks: function() {
+    this.setState({ showMarks: !this.state.showMarks});
+  },
   nothing: function() {
     console.log('nothing happened');
   },
@@ -43,6 +49,14 @@ var PostPanel = React.createClass({
         <li key={'p_'+this.props.post.id+'_m_'+mark.markId} className="post-mark-li" onClick={ this.deleteMark.bind(this, mark.markId) } >{mark.tag}</li>
       );
     }.bind(this));
+
+    var markPanel = '';
+    if (this.state.showMarks === true) {
+      markPanel = (<div className="thumb-pane">
+          <ul className="marks">{ marks }</ul>
+      </div>)
+    }
+
     var recommendClass = 'post-caption-btn btn btn-default btn-sm';
     if (this.props.post.isRecommended === true) {
       recommendClass = 'post-caption-btn btn btn-warning btn-sm';
@@ -72,13 +86,11 @@ var PostPanel = React.createClass({
             {panelHeading}
             <div className="post-image">
               <img src={ this.props.post.content } onClick={this.props.open}/>
-              <div className="thumb-pane">
-                <ul className="marks">{ marks }</ul>
-              </div>
+              { markPanel }
               <div className="post-caption">
                 <ButtonToolbar className="pull-left">
                   <OverlayTrigger overlay={tooltip} placement='top' delayShow={100} delayHide={100}>
-                    <span onClick={ this.nothing } className="post-caption-btn btn btn-default btn-sm"><span className="glyphicon glyphicon-info-sign"></span></span>
+                    <span onClick={ this.toggleShowMarks } className="post-caption-btn btn btn-default btn-sm"><span className="glyphicon glyphicon-info-sign"></span></span>
                   </OverlayTrigger>
                 </ButtonToolbar>
                 <ButtonToolbar className="pull-right">

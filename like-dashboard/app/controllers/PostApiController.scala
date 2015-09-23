@@ -3,6 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import com.likeorz.event.{ LikeEventType, LikeEvent }
+import com.likeorz.services.store.MongoDBService
 import com.mohiva.play.silhouette.api.{ Silhouette, Environment }
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
@@ -22,6 +23,7 @@ class PostApiController @Inject() (
     val messagesApi: MessagesApi,
     val env: Environment[Admin, CookieAuthenticator],
     eventBusService: EventBusService,
+    mongoDBService: MongoDBService,
     adminService: AdminService,
     dashboardService: DashboardService,
     userService: UserService,
@@ -34,7 +36,7 @@ class PostApiController @Inject() (
 
   def fetchPostList(timestamp: Option[Long], filter: Option[String]) = SecuredAction.async { implicit request =>
     // Use phone screen width for output photo size
-    val screenWidth = 300
+    val screenWidth = 600
     val pageSize = 48
 
     postService.getRecentPosts(pageSize, timestamp, filter).flatMap { ids =>
@@ -65,7 +67,7 @@ class PostApiController @Inject() (
                 Json.obj(
                   "id" -> post.id.get,
                   "type" -> post.`type`,
-                  "content" -> QiniuUtil.resizeImage(post.content, screenWidth),
+                  "content" -> QiniuUtil.squareImage(post.content, screenWidth),
                   "created" -> post.created,
                   "isRecommended" -> isRecommended,
                   "isBlocked" -> isBlocked,
@@ -108,8 +110,14 @@ class PostApiController @Inject() (
   }
 
   def deleteMark(markId: Long) = SecuredAction.async {
-    markService.deleteMark(markId).map { _ =>
-      Ok("success.deleteMark")
+    markService.getMark(markId).flatMap {
+      case Some(mark) =>
+        markService.deleteMark(markId).map { _ =>
+          mongoDBService.deleteMarkForPost(markId, mark.postId)
+          eventBusService.publish(LikeEvent(None, LikeEventType.removeMark, "user", "", Some("post"), Some(mark.postId.toString), properties = Json.obj("tag" -> mark.tagName.get)))
+          Ok("success.deleteMark")
+        }
+      case None => Future.successful(Ok("success.deleteMark"))
     }
   }
 
@@ -121,6 +129,7 @@ class PostApiController @Inject() (
           n <- notificationService.deleteAllNotificationForPost(postId)
           r <- postService.recordDelete(post.content)
         } yield {
+          mongoDBService.deletePostMarks(postId: Long)
           Ok("success.deletePost")
         }
       case None => Future.successful(NotFound)

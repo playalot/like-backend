@@ -7,8 +7,11 @@ object LikeEventType {
   val publish = "publish"
   val mark = "mark"
   val like = "like"
-  val recommendToAll = "recommend-to-all"
-  val recommendToGroup = "recommend-to-Group"
+  val search = "search"
+  val imageview = "imageview"
+  val recommendToAll = "recommendToAll"
+  val recommendToGroup = "recommendToGroup"
+  val removeMark = "removeMark"
 }
 
 case class LikeEvent(
@@ -24,6 +27,7 @@ case class LikeEvent(
   override def toString: String = {
     s"Event(id=$eventId,eType=$entityType,eId=$entityId,tType=$targetEntityType,tId=$targetEntityId,p=$properties,t=$eventTime)"
   }
+
 }
 
 object LikeEvent {

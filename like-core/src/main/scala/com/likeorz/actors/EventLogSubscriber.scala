@@ -4,13 +4,15 @@ import javax.inject.Inject
 
 import akka.actor.{ ActorLogging, Actor }
 import com.likeorz.event.{ LikeEventType, LikeEvent }
-import com.likeorz.services.MongoDBService
+import com.likeorz.services.store.MongoDBService
 
 class EventLogSubscriber @Inject() (mongoDBService: MongoDBService) extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case event: LikeEvent =>
-      if (event.eventType == LikeEventType.publish || event.eventType == LikeEventType.mark || event.eventType == LikeEventType.like) {
+      if (event.eventType != LikeEventType.recommendToAll
+        && event.eventType != LikeEventType.recommendToGroup
+        && event.eventType != LikeEventType.removeMark) {
         log.debug("log this event " + event)
         try {
           mongoDBService.insertEvent(event)

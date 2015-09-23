@@ -3,10 +3,11 @@ package com.likeorz.actors
 import javax.inject.Inject
 
 import akka.actor.{ ActorLogging, Actor }
-import com.likeorz.event.LikeEvent
+import com.likeorz.event.{ LikeEventType, LikeEvent }
 import com.likeorz.models.TimelineFeed
-import com.likeorz.services.{ MongoDBService, TagService }
-import com.likeorz.utils.{ GlobalConstants, KeyUtils, RedisCacheClient }
+import com.likeorz.services.TagService
+import com.likeorz.services.store.MongoDBService
+import com.likeorz.utils.{ FutureUtils, GlobalConstants, KeyUtils, RedisCacheClient }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -20,9 +21,8 @@ class MarkEventSubscriber @Inject() (tagService: TagService, mongoDBService: Mon
   }
 
   override def receive: Receive = {
-    case event: LikeEvent =>
-
-      timedFuture("process mark event") {
+    case event: LikeEvent if event.eventType == LikeEventType.mark =>
+      FutureUtils.timedFuture("process mark event") {
         log.debug("add mark to post " + event)
 
         val postId = event.targetEntityId.get.toLong
@@ -39,7 +39,7 @@ class MarkEventSubscriber @Inject() (tagService: TagService, mongoDBService: Mon
         tagService.getTagByName(tagName).flatMap {
           case Some(tag) =>
             if (tag.usage > GlobalConstants.MinTagUsage) {
-              tagService.getUserIdsForTag(tag.id.get).map { userIds =>
+              tagService.getSubscriberIdsForTag(tag.id.get).map { userIds =>
                 log.debug("subscribers[" + tag.name + "]: " + userIds.take(10).mkString("", ",", s"...(${userIds.size})"))
                 userIds.foreach { uId =>
                   // Check if it is a active user
@@ -57,7 +57,25 @@ class MarkEventSubscriber @Inject() (tagService: TagService, mongoDBService: Mon
           case None => Future.successful(())
         }
       }
+    case event: LikeEvent if event.eventType == LikeEventType.removeMark =>
+      FutureUtils.timedFuture("process remove mark event") {
+        log.debug("remove mark from post " + event)
 
+        val postId = event.targetEntityId.get.toLong
+        val tagName = (event.properties \ "tag").as[String]
+
+        tagService.getTagByName(tagName).flatMap {
+          case Some(tag) =>
+            tagService.getSubscriberIdsForTag(tag.id.get).map { userIds =>
+              log.debug("subscribers[" + tag.name + "]: " + userIds.take(10).mkString("", ",", s"...(${userIds.size})"))
+              userIds.foreach { uId =>
+                // Check if it is a active user
+                mongoDBService.removeTimelineFeedForUserWhenMarkRemoved(uId, postId, tagName)
+              }
+            }
+          case None => Future.successful(())
+        }
+      }
     case _ => log.error("Invalid message")
   }
 

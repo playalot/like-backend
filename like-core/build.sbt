@@ -12,13 +12,14 @@ libraryDependencies ++= Seq(
   "mysql"                     %  "mysql-connector-java" % "5.1.36",
   "org.nlpcn"                 %  "nlp-lang"         % "1.0.2",
   "redis.clients"             %  "jedis"            % "2.7.3",
+  "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.4.2",
   "org.mongodb"               %% "casbah"           % "2.8.2",
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
   "org.scalaz"                %% "scalaz-core"      % "7.1.4",
   "com.typesafe.play"         %% "play-slick"       % "1.0.1",
   "com.typesafe.play"         %% "play-slick-evolutions"     % "1.0.1",
-  "com.mohiva"                %% "play-silhouette"           % "3.0.3",
-  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.3"    % "test"
+  "com.mohiva"                %% "play-silhouette"           % "3.0.4",
+  "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.4"    % "test"
 )
 
 //********************************************************

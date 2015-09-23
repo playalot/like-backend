@@ -1,12 +1,13 @@
 package controllers
 
 import javax.inject.Inject
-
-import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
+import com.likeorz.models.TimelineFeed
+import com.likeorz.services.store.{ MongoDBService, RedisService }
+import com.likeorz.utils.{ FutureUtils, RedisCacheClient, KeyUtils }
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
-import com.likeorz.services.{ RedisService, UserService, PostService, MarkService }
+import com.likeorz.services.{ TagService, UserService, PostService, MarkService }
 import utils.{ HelperUtils, QiniuUtil }
 
 import scala.concurrent.Future
@@ -14,11 +15,15 @@ import scala.concurrent.Future
 class FeedController @Inject() (
     val messagesApi: MessagesApi,
     userService: UserService,
+    tagService: TagService,
     markService: MarkService,
     postService: PostService,
-    redisService: RedisService) extends BaseController {
+    redisService: RedisService,
+    mongoDBService: MongoDBService) extends BaseController {
 
-  // Get home feeds, ordered by created
+  val reasonMap = Map(TimelineFeed.TypeMyPost -> -1, TimelineFeed.TypeBasedOnTag -> 1, TimelineFeed.TypeEditorPick -> 2)
+
+  // Get home feeds, ordered by created (backup solution when v3 not working)
   def getHomeFeedsV2(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
     val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
@@ -48,17 +53,10 @@ class FeedController @Inject() (
       RedisCacheClient.srandmember(KeyUtils.postPromote).map(_.toLong)
     else List[Long]()
 
-    //    var start = System.currentTimeMillis()
     postService.getUserTags(request.userId.getOrElse(-1L), taggedPageSize, timestamp).flatMap { reasonTags =>
-      //      var elapsed = (System.currentTimeMillis() - start)
-      //      println(s"Preprocessing postsTags time: $elapsed millsec")
-      futureIds.flatMap { results =>
-        //        elapsed = (System.currentTimeMillis() - start)
-        //        println(s"Preprocessing futureIds time: $elapsed millsec")
-        //        results.foreach(println)
+      FutureUtils.timedFuture("futureIds") { futureIds }.flatMap { results =>
 
         val showIds = results.flatten.distinct.sortWith(_ > _).take(pageSize)
-        //        println(showIds)
         val pointers = results.map(_.sortWith(_ > _).headOption.getOrElse(-1L)).toArray
         if (showIds.isEmpty) {
           Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
@@ -80,8 +78,6 @@ class FeedController @Inject() (
 
           // Get posts from given ids
           postService.getPostsByIds(showIds ++ ads).flatMap { list =>
-            // elapsed = (System.currentTimeMillis() - start)
-            // println(s"Preprocessing time: $elapsed millsec")
             // Handle empty results
             if (list.isEmpty) {
               Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
@@ -157,14 +153,13 @@ class FeedController @Inject() (
               }
             }
           }
-
         }
-
       }
     }
   }
 
   // Get home feeds, ordered by created
+  @deprecated("Old home feeds api", "v1.1.0")
   def getHomeFeedsV1(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
     val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
@@ -193,16 +188,9 @@ class FeedController @Inject() (
       RedisCacheClient.srandmember(KeyUtils.postPromote).map(_.toLong)
     else List[Long]()
 
-    //    var start = System.currentTimeMillis()
     postService.getUserTags(request.userId.getOrElse(-1L), taggedPageSize, timestamp).flatMap { reasonTags =>
-      //      var elapsed = (System.currentTimeMillis() - start)
-      //      println(s"Preprocessing postsTags time: $elapsed millsec")
       futureIds.flatMap { results =>
-        //        elapsed = (System.currentTimeMillis() - start)
-        //        println(s"Preprocessing futureIds time: $elapsed millsec")
-        //        results.foreach(println)
         val showIds = results.flatten.distinct.sortWith(_ > _).take(pageSize)
-        //        println(showIds)
         val pointers = results.map(_.sortWith(_ > _).headOption.getOrElse(-1L)).toArray
         if (showIds.isEmpty) {
           Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
@@ -224,8 +212,6 @@ class FeedController @Inject() (
 
           // Get posts from given ids
           postService.getPostsByIds(showIds ++ ads).flatMap { list =>
-            // elapsed = (System.currentTimeMillis() - start)
-            // println(s"Preprocessing time: $elapsed millsec")
             // Handle empty results
             if (list.isEmpty) {
               Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
@@ -257,15 +243,6 @@ class FeedController @Inject() (
                   // Editor pick (Ads belong to editor pick)
                   reason = 2
                 }
-                //                else if (results.length >= 4 && results(3).contains(post.id.get)) {
-                //                  // You maybe like
-                //                  reason = 3
-                //                }
-                //                else if (results.length >= 2 && results(1).contains(post.id.get)) {
-                //                  // Following
-                //                  reason = 4
-                //                }
-                // println(s"post[${post.id.get}][${post.content}}] $reason $reasonTag")
                 val markIds = row._2.map(_._1)
                 for {
                   userInfo <- userService.getUserInfo(post.userId)
@@ -301,14 +278,13 @@ class FeedController @Inject() (
               }
             }
           }
-
         }
-
       }
     }
   }
 
-  def getFriendsFeeds(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
+  // Get following feeds
+  def getFollowingFeeds(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     if (request.userId.isDefined) {
       // Use phone screen width for output photo size
       val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
@@ -317,52 +293,162 @@ class FeedController @Inject() (
         if (ids.isEmpty) {
           Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
         } else {
-          postService.getPostsByIds(ids).flatMap { list =>
-            if (list.isEmpty) {
-              Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
+          postService.getPostsByIdsSimple(ids).map(_.sortBy(-_.created)).map { posts =>
+            if (posts.isEmpty) {
+              success(Messages("success.found"), Json.obj("posts" -> Json.arr()))
             } else {
-              val sortedList = list.sortBy(-_._1.created)
-              val futures = sortedList.map { row =>
-                val post = row._1
-                val markIds = row._2.map(_._1)
+              // Get marks for posts from mongodb
+              val marksMap = mongoDBService.getPostMarksByIds(posts.map(_.id.get))
 
-                for {
-                  userInfo <- userService.getUserInfo(post.userId)
-                  likedMarks <- markService.checkLikes(request.userId.getOrElse(-1L), markIds)
-                } yield {
-                  val marksJson = row._2.sortBy(-_._3).map { fields =>
-                    Json.obj(
-                      "mark_id" -> fields._1,
-                      "tag" -> fields._2,
-                      "likes" -> fields._3,
-                      "is_liked" -> likedMarks.contains(fields._1)
-                    )
-                  }
+              val postsJson = posts.map { post =>
+                val marks = marksMap.getOrElse(post.id.get, Seq())
+                val userInfo = userService.getUserInfoFromCache(post.userId)
+                val marksJson = marks.map { mark =>
                   Json.obj(
-                    "post_id" -> post.id.get,
-                    "type" -> post.`type`,
-                    "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
-                    "created" -> post.created,
-                    "user" -> Json.obj(
-                      "user_id" -> post.userId,
-                      "nickname" -> userInfo.nickname,
-                      "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
-                      "likes" -> userInfo.likes
-                    ),
-                    "marks" -> Json.toJson(marksJson)
+                    "mark_id" -> mark.markId,
+                    "tag" -> mark.tag,
+                    "likes" -> mark.likes.size,
+                    "is_liked" -> {
+                      if (request.userId.isDefined) mark.likes.contains(request.userId.get) else false
+                    }
                   )
                 }
+                Json.obj(
+                  "post_id" -> post.id.get,
+                  "type" -> post.`type`,
+                  "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                  "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                  "raw_image" -> QiniuUtil.getRaw(post.content),
+                  "created" -> post.created,
+                  "user" -> Json.obj(
+                    "user_id" -> post.userId,
+                    "nickname" -> userInfo.nickname,
+                    "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
+                    "likes" -> userInfo.likes
+                  ),
+                  "marks" -> Json.toJson(marksJson)
+                )
               }
-              Future.sequence(futures).map { posts =>
-                success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts), "next" -> sortedList.last._1.created))
-              }
+              success(Messages("success.found"), Json.obj("posts" -> Json.toJson(postsJson), "next" -> posts.last.created))
             }
           }
         }
-
       }
     } else {
       Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
     }
   }
+
+  // Get home feeds from timeline first and then from db
+  def getHomeFeedsV3(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
+    FutureUtils.timedFuture("getHomeFeedsV3") {
+      // Use phone screen width for output photo size
+      val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
+      val pageSize = 10
+
+      val timelineFeeds = if (request.userId.isDefined) {
+        // Update user last seen
+        redisService.updateActiveUser(request.userId.get)
+        // Get feeds ids from mongodb timeline
+        mongoDBService.getFeedsFromTimelineForUser(request.userId.get, pageSize, timestamp).map(feed => feed.postId -> feed)
+      } else Seq()
+
+      val futureFeeds = if (timelineFeeds.size < 5) {
+        FutureUtils.timedFuture("getFeedsFromDB") {
+          getFeedsFromDB(request.userId, pageSize, timestamp)
+        }
+      } else {
+        Future.successful((timelineFeeds.toMap, timelineFeeds.map(_._2.ts).min))
+      }
+
+      futureFeeds.flatMap { results =>
+        val (feedsMap, nextTimestamp) = results
+        FutureUtils.timedFuture("getPostsByIds") {
+          postService.getPostsByIdsSimple(feedsMap.keySet.toSeq)
+        } map { posts =>
+          if (posts.isEmpty) {
+            success(Messages("success.found"), Json.obj("posts" -> Json.arr()))
+          } else {
+
+            val userBlacklist = RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong)
+
+            // Filter bad posts and author who is in blacklist
+            val filteredPosts = posts.filter(p => p.score.getOrElse(0) >= 0 && !userBlacklist.contains(p.userId))
+
+            // Get marks for posts from mongodb
+            val marksMap = mongoDBService.getPostMarksByIds(filteredPosts.map(_.id.get))
+
+            val postsJson = filteredPosts.map { p =>
+              (p, feedsMap(p.id.get), marksMap.getOrElse(p.id.get, Seq()))
+            }.sortBy(_._2.ts).reverse.map { row =>
+              val post = row._1
+              val feed = row._2
+              val marks = row._3
+              val userInfo = userService.getUserInfoFromCache(post.userId)
+
+              val marksJson = marks.map { mark =>
+                Json.obj(
+                  "mark_id" -> mark.markId,
+                  "tag" -> mark.tag,
+                  "likes" -> mark.likes.size,
+                  "is_liked" -> {
+                    if (request.userId.isDefined) mark.likes.contains(request.userId.get) else false
+                  }
+                )
+              }
+              Json.obj(
+                "post_id" -> post.id.get,
+                "type" -> post.`type`,
+                "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                "raw_image" -> QiniuUtil.getRaw(post.content),
+                "created" -> post.created,
+                "reason" -> reasonMap(feed.reason),
+                "reason_tag" -> feed.tag,
+                "user" -> Json.obj(
+                  "user_id" -> post.userId,
+                  "nickname" -> userInfo.nickname,
+                  "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
+                  "likes" -> userInfo.likes
+                ),
+                "marks" -> Json.toJson(marksJson)
+              )
+            }
+            success(Messages("success.found"), Json.obj("posts" -> Json.toJson(postsJson), "next" -> nextTimestamp))
+          }
+        }
+      }
+    }
+  }
+
+  private def getFeedsFromDB(userId: Option[Long], pageSize: Int, timestamp: Option[Long]): Future[(Map[Long, TimelineFeed], Long)] = {
+    for {
+      editorFeeds <- postService.getEditorPickTimelineFeeds(pageSize, timestamp)
+      myPostFeeds <- if (userId.isDefined) postService.getMyPostTimelineFeeds(userId.get, pageSize, timestamp) else Future.successful(Seq())
+      taggedFeeds <- if (userId.isDefined) postService.getBasedOnTagTimelineFeeds(userId.get, pageSize, timestamp) else Future.successful(Seq())
+      //      tagIds <- if (userId.isDefined) tagService.getUserSubscribeTagIds(userId.get) else Future.successful(Seq())
+    } yield {
+      //      val t0 = System.currentTimeMillis()
+      //      val taggedFeeds = mongoDBService.findPostsByTagIds(scala.util.Random.shuffle(tagIds).take(100), pageSize, timestamp)
+      //      println("ts: " + (System.currentTimeMillis() - t0))
+      val orderedFeeds = if (userId.isDefined) {
+        if (taggedFeeds.nonEmpty && taggedFeeds.last.ts > editorFeeds.head.ts && taggedFeeds.last.ts > myPostFeeds.headOption.map(_.ts).getOrElse(-1L)) {
+          taggedFeeds
+        } else {
+          (editorFeeds ++ myPostFeeds ++ taggedFeeds)
+            .groupBy(_.postId) // deduplicate by post id
+            .map(_._2.sortBy(_.ts).reverse.head).toSeq
+            .sortBy(_.ts).reverse
+            .take(pageSize)
+        }
+      } else {
+        editorFeeds
+      }
+
+      val nextTimestamp = orderedFeeds.last.ts
+      val feedsMap = orderedFeeds.map(feed => feed.postId -> feed).toMap
+      (feedsMap, nextTimestamp)
+    }
+  }
+
 }

@@ -29,9 +29,10 @@ POST    /v1/welcome/preference                      controllers.UserController.c
 
 # Feed
 GET     /v1/homefeeds                               controllers.FeedController.getHomeFeedsV1(ts: Option[Long] ?= None)
-GET     /v1/friendfeeds                             controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
-GET     /v1/homeFeeds                               controllers.FeedController.getHomeFeedsV2(ts: Option[Long] ?= None)
-GET     /v1/followingFeeds                          controllers.FeedController.getFriendsFeeds(ts: Option[Long] ?= None)
+GET     /v1/friendfeeds                             controllers.FeedController.getFollowingFeeds(ts: Option[Long] ?= None)
+GET     /v1/homeFeeds                               controllers.FeedController.getHomeFeedsV3(ts: Option[Long] ?= None)
+GET     /v3/homeFeeds                               controllers.FeedController.getHomeFeedsV3(ts: Option[Long] ?= None)
+GET     /v1/followingFeeds                          controllers.FeedController.getFollowingFeeds(ts: Option[Long] ?= None)
 
 
 # User

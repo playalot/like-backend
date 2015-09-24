@@ -2,7 +2,7 @@ package com.likeorz.services
 
 import javax.inject.Inject
 
-import com.likeorz.models.{ Tag => Tg, UserTag, TagGroup, User }
+import com.likeorz.models.{ Tag => Tg, UserTag, TagGroup, User, UserInfo }
 import com.likeorz.dao._
 import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
 import play.api.Configuration
@@ -16,8 +16,8 @@ import scala.collection.JavaConversions._
 
 class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider, configuration: Configuration) extends TagService
     with TagsComponent with MarksComponent
-    with UsersComponent with TagGroupsComponent
-    with UserTagsComponent
+    with UsersComponent with UserInfoComponent
+    with UserTagsComponent with TagGroupsComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -65,7 +65,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
-  override def hotUsersForTag(tag: String, num: Int): Future[Seq[User]] = {
+  override def hotUsersForTag(tag: String, num: Int): Future[Seq[UserInfo]] = {
     val futureIds = RedisCacheClient.hget(KeyUtils.hotTagsWithUsers, tag) match {
       case Some(ids) => Future.successful(ids.split(",").filter(_.length > 0).map(_.toLong).toSeq)
       case None =>
@@ -74,7 +74,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     }
     futureIds.flatMap { pool =>
       val userIds = Random.shuffle(pool).take(num)
-      db.run(users.filter(_.id inSet userIds).result)
+      db.run(userinfo.filter(_.id inSet userIds).result)
     }
   }
 

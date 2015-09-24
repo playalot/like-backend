@@ -48,7 +48,9 @@ trait PostService {
 
   def getFollowingPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
-  def getPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
+  def getPostIdsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
+
+  def getPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Post]]
 
   def getPersonalizedPostsForUser(userId: Long, ratio: Double, pageSize: Int, timestamp: Option[Long]): Seq[Long]
 
@@ -66,7 +68,7 @@ trait PostService {
 
   def getRecentPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
-  def getFavoritePostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[(Seq[Long], Option[Long])]
+  def getFavoritePostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Map[Long, Long]]
 
   def recordDelete(photo: String): Future[Unit]
 

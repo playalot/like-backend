@@ -1,27 +1,28 @@
 package controllers
 
-import javax.inject.{ Named, Inject }
+import javax.inject.Inject
 
-import akka.actor.ActorRef
-import com.likeorz.event.LikeEvent
+import com.likeorz.event.{ LikeEventType, LikeEvent }
 import com.likeorz.models.Entity
+import com.likeorz.services.store.MongoDBService
 import play.api.cache.Cached
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.libs.concurrent.Execution.Implicits._
-import com.likeorz.services.{ UserService, PromoteService, PostService, TagService }
+import com.likeorz.services._
 import utils.QiniuUtil
 
 import scala.concurrent.Future
 import scala.util.Random
 
 class SearchController @Inject() (
-    @Named("event-producer-actor") eventProducerActor: ActorRef,
     val messagesApi: MessagesApi,
     tagService: TagService,
     postService: PostService,
     userService: UserService,
+    eventBusService: EventBusService,
+    mongoDBService: MongoDBService,
     cached: Cached,
     promoteService: PromoteService) extends BaseController {
 
@@ -40,6 +41,7 @@ class SearchController @Inject() (
       })
       val tagJson = Json.toJson(tags.map(tag => Json.obj(
         "mark_id" -> tag.identify,
+        "tag_id" -> tag.id.get,
         "tag" -> tag.name,
         "likes" -> 0
       )))
@@ -64,30 +66,12 @@ class SearchController @Inject() (
 
   def searchTag(name: String, page: Int) = UserAwareAction.async { implicit request =>
     if (request.userId.isDefined && page == 0)
-      eventProducerActor ! LikeEvent(None, "search", "user", request.userId.get.toString, properties = Json.obj("query" -> name))
-    postService.searchByTag(page = page, name = name).map { results =>
-      val posts = results.map { post =>
-        val user = userService.getUserInfoFromCache(post.userId)
-        Json.obj(
-          "post_id" -> post.id,
-          "type" -> post.`type`.toString,
-          "content" -> QiniuUtil.getPhoto(post.content, "medium"),
-          "created" -> post.created,
-          "user" -> Json.obj(
-            "user_id" -> post.userId,
-            "nickname" -> user.nickname,
-            "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
-            "likes" -> user.likes
-          )
-        )
-      }
-      success(Messages("success.found"), Json.toJson(posts))
+      eventBusService.publish(LikeEvent(None, "search", "user", request.userId.get.toString, properties = Json.obj("query" -> name)))
+    tagService.getTagByName(name).map {
+      case Some(tag) =>
+        if (tag.group >= 0 && tag.usage >= 10) tagService.subscribeTag(request.userId.get, tag.id.get)
+      case None =>
     }
-  }
-
-  def searchTagV2(name: String, page: Int) = UserAwareAction.async { implicit request =>
-    if (request.userId.isDefined && page == 0)
-      eventProducerActor ! LikeEvent(None, "search", "user", request.userId.get.toString, properties = Json.obj("query" -> name))
     for {
       entityOpt <- promoteService.getEntitybyName(name)
       results <- postService.searchByTag(page = page, name = name)
@@ -125,11 +109,12 @@ class SearchController @Inject() (
     }
   }
 
-  def explore(tag: String, ts: Option[Long]) = cached(_ => "explore:" + tag + ":" + ts.getOrElse(""), duration = 600) {
+  def explore(tag: String, ts: Option[Long]) = cached(_ => "explore:" + tag + ":" + ts.getOrElse(""), duration = 300) {
     UserAwareAction.async { implicit request =>
+      val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
       for {
         hotUsers <- if (ts.isEmpty) tagService.hotUsersForTag(tag, 15) else Future.successful(Seq())
-        results <- postService.searchByTagAndTimestamp(tag, 30, ts)
+        posts <- postService.searchByTagAndTimestamp(tag, 30, ts)
       } yield {
         val hotUsersJson = Json.toJson(hotUsers.map { user =>
           Json.obj(
@@ -139,30 +124,48 @@ class SearchController @Inject() (
             "likes" -> user.likes
           )
         })
-        val posts = results.map { post =>
+        // Get marks for posts from mongodb
+        val marksMap = mongoDBService.getPostMarksByIds(posts.map(_.id.get))
+
+        val postsJson = posts.map { post =>
           val user = userService.getUserInfoFromCache(post.userId)
+          val marks = marksMap.getOrElse(post.id.get, Seq())
+          val marksJson = marks.map { mark =>
+            Json.obj(
+              "mark_id" -> mark.markId,
+              "tag" -> mark.tag,
+              "likes" -> mark.likes.size,
+              "is_liked" -> {
+                if (request.userId.isDefined) mark.likes.contains(request.userId.get) else false
+              }
+            )
+          }
           Json.obj(
             "post_id" -> post.id,
             "type" -> post.`type`.toString,
             "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+            "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+            "raw_image" -> QiniuUtil.getRaw(post.content),
             "created" -> post.created,
             "user" -> Json.obj(
               "user_id" -> post.userId,
               "nickname" -> user.nickname,
               "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
               "likes" -> user.likes
-            )
+            ),
+            "marks" -> Json.toJson(marksJson)
           )
         }
         success(Messages("success.found"), Json.obj(
           "hot_users" -> hotUsersJson,
-          "posts" -> Json.toJson(posts),
-          "next" -> results.lastOption.map(_.created)
+          "posts" -> Json.toJson(postsJson),
+          "next" -> posts.lastOption.map(_.created)
         ))
       }
     }
   }
 
+  @deprecated("unsed", "v1.1.1")
   def hotUsers = UserAwareAction.async {
     for {
       hotUsers <- postService.get30DayHotUsers(3)
@@ -191,6 +194,7 @@ class SearchController @Inject() (
     }
   }
 
+  @deprecated("unsed", "v1.1.1")
   def hotTagsAndUsers = UserAwareAction.async {
     for {
       entities <- promoteService.getPromoteEntities(2)
@@ -210,7 +214,6 @@ class SearchController @Inject() (
           "likes" -> user.likes
         )
       })
-
       success(Messages("success.found"), Json.obj(
         "hot_tags" -> hotTagsJson,
         "hot_users" -> hotUsersJson

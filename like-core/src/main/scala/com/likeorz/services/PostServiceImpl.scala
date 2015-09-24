@@ -325,7 +325,6 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       val query = sql"""SELECT r.post_id FROM recommend r INNER JOIN post p ON r.post_id=p.id ORDER BY p.created DESC LIMIT $pageSize""".as[Long]
       db.run(query)
     }
-
   }
 
   override def getFollowingPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
@@ -338,11 +337,19 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+  override def getPostIdsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
     if (timestamp.isDefined) {
       db.run(posts.filter(p => p.userId === userId && p.created < timestamp.get).sortBy(_.created.desc).map(_.id).take(pageSize).result)
     } else {
       db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).map(_.id).take(pageSize).result)
+    }
+  }
+
+  override def getPostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Post]] = {
+    if (timestamp.isDefined) {
+      db.run(posts.filter(p => p.userId === userId && p.created < timestamp.get).sortBy(_.created.desc).take(pageSize).result)
+    } else {
+      db.run(posts.filter(_.userId === userId).sortBy(_.created.desc).take(pageSize).result)
     }
   }
 
@@ -460,11 +467,11 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def getFavoritePostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[(Seq[Long], Option[Long])] = {
+  override def getFavoritePostsForUser(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Map[Long, Long]] = {
     if (timestamp.isDefined) {
-      db.run(favorites.filter(fav => fav.created < timestamp.get && fav.userId === userId).sortBy(_.created.desc).take(pageSize).result).map(rs => (rs.map(_.postId), rs.lastOption.map(_.created)))
+      db.run(favorites.filter(fav => fav.created < timestamp.get && fav.userId === userId).sortBy(_.created.desc).take(pageSize).result).map(_.map(fav => (fav.postId, fav.created)).toMap)
     } else {
-      db.run(favorites.filter(_.userId === userId).sortBy(_.created.desc).take(pageSize).result).map(rs => (rs.map(_.postId), rs.lastOption.map(_.created)))
+      db.run(favorites.filter(_.userId === userId).sortBy(_.created.desc).take(pageSize).result).map(_.map(fav => (fav.postId, fav.created)).toMap)
     }
   }
 

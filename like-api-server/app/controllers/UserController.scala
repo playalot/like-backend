@@ -4,6 +4,8 @@ import javax.inject.Inject
 
 import com.likeorz.models.{ UserTag, Notification }
 import com.likeorz.push.JPushNotification
+import com.likeorz.services.store.MongoDBService
+import com.likeorz.utils.GlobalConstants
 import play.api.Play
 import play.api.cache.Cached
 import play.api.i18n.{ Messages, MessagesApi }
@@ -25,6 +27,7 @@ class UserController @Inject() (
     tagService: TagService,
     markService: MarkService,
     postService: PostService,
+    mongoDBService: MongoDBService,
     notificationService: NotificationService,
     pushService: PushService) extends BaseController {
 
@@ -46,17 +49,17 @@ class UserController @Inject() (
             "user_id" -> id.toString,
             "nickname" -> user.nickname,
             "avatar" -> QiniuUtil.getAvatar(user.avatar, "large"),
-            "origin_avatar" -> QiniuUtil.getAvatar(user.avatar, "origin"),
+            "origin_avatar" -> QiniuUtil.getRaw(user.avatar),
             "cover" -> QiniuUtil.getSizedImage(user.cover, getScreenWidth),
             "likes" -> countLikes,
             "is_following" -> isFollowing,
-            // Todo
+            // Todo change after v1.1.1
             "count" -> Json.obj(
               "post" -> countPosts,
-              "posts" -> countPosts,
               "follow" -> countFollowing,
-              "following" -> countFollowing,
               "fan" -> countFollowers,
+              "posts" -> countPosts,
+              "following" -> countFollowing,
               "followers" -> countFollowers,
               "favorites" -> countFavorite
             )
@@ -118,7 +121,8 @@ class UserController @Inject() (
     }
   }
 
-  def getPostsForUser(id: Long, page: Int) = UserAwareAction.async { implicit request =>
+  @deprecated("Use timestamp anchor", "v1.1.1")
+  def getPostsForUserV1(id: Long, page: Int) = UserAwareAction.async { implicit request =>
     userService.findById(id).flatMap {
       case Some(user) =>
         postService.getPostsByUserId(id, page, 21).flatMap { list =>
@@ -152,49 +156,93 @@ class UserController @Inject() (
     }
   }
 
-  def getFavoritePostsForUser(ts: Option[Long]) = SecuredAction.async { implicit request =>
-    postService.getFavoritePostsForUser(request.userId, 21, ts).flatMap { results =>
-      val ids = results._1
-      postService.getPostsByIds(ids).flatMap { list =>
-        if (list.isEmpty) {
-          Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
-        } else {
-          val sortedList = list.sortBy(-_._1.created)
-          val futures = sortedList.map { row =>
-            val post = row._1
-            val markIds = row._2.map(_._1)
+  def getPostsForUserV2(id: Long, ts: Option[Long]) = UserAwareAction.async { implicit request =>
+    val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
+    userService.findById(id).flatMap {
+      case Some(user) =>
+        postService.getPostsForUser(id, GlobalConstants.GridPageSize, ts).map { posts =>
+          if (posts.isEmpty) {
+            success(Messages("success.found"), Json.obj("posts" -> Json.arr()))
+          } else {
+            // Get marks for posts from mongodb
+            val marksMap = mongoDBService.getPostMarksByIds(posts.map(_.id.get))
 
-            for {
-              userInfo <- userService.getUserInfo(post.userId)
-              likedMarks <- markService.checkLikes(request.userId, markIds)
-            } yield {
-              val marksJson = row._2.sortBy(-_._3).map { fields =>
+            val postsJson = posts.map { post =>
+              val marks = marksMap.getOrElse(post.id.get, Seq())
+              val marksJson = marks.map { mark =>
                 Json.obj(
-                  "mark_id" -> fields._1,
-                  "tag" -> fields._2,
-                  "likes" -> fields._3,
-                  "is_liked" -> likedMarks.contains(fields._1)
+                  "mark_id" -> mark.markId,
+                  "tag" -> mark.tag,
+                  "likes" -> mark.likes.size,
+                  "is_liked" -> {
+                    if (request.userId.isDefined) mark.likes.contains(request.userId.get) else false
+                  }
                 )
               }
               Json.obj(
                 "post_id" -> post.id.get,
                 "type" -> post.`type`,
                 "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+                "thumbnail" -> QiniuUtil.getPhoto(post.content, "medium"),
+                "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                "raw_image" -> QiniuUtil.getRaw(post.content),
                 "created" -> post.created,
-                "favorited" -> true,
                 "user" -> Json.obj(
                   "user_id" -> post.userId,
-                  "nickname" -> userInfo.nickname,
-                  "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
-                  "likes" -> userInfo.likes
+                  "nickname" -> user.nickname,
+                  "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+                  "likes" -> user.likes
                 ),
                 "marks" -> Json.toJson(marksJson)
               )
             }
+            success(Messages("success.found"), Json.obj("posts" -> Json.toJson(postsJson), "next" -> posts.last.created))
           }
-          Future.sequence(futures).map { posts =>
-            success(Messages("success.found"), Json.obj("posts" -> Json.toJson(posts), "next" -> results._2))
+        }
+      case None => Future.successful(error(4022, Messages("invalid.userId")))
+    }
+  }
+
+  def getFavoritePostsForUser(ts: Option[Long]) = SecuredAction.async { implicit request =>
+    val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
+    postService.getFavoritePostsForUser(request.userId, GlobalConstants.GridPageSize, ts).flatMap { results =>
+      postService.getPostsByIdsSimple(results.keySet.toSeq).map { posts =>
+        if (posts.isEmpty) {
+          success(Messages("success.found"), Json.obj("posts" -> Json.arr()))
+        } else {
+          // Get marks for posts from mongodb
+          val marksMap = mongoDBService.getPostMarksByIds(posts.map(_.id.get))
+
+          val postsJson = posts.sortBy(p => -results(p.id.get)).map { post =>
+            val marks = marksMap.getOrElse(post.id.get, Seq())
+            val userInfo = userService.getUserInfoFromCache(post.userId)
+            val marksJson = marks.map { mark =>
+              Json.obj(
+                "mark_id" -> mark.markId,
+                "tag" -> mark.tag,
+                "likes" -> mark.likes.size,
+                "is_liked" -> mark.likes.contains(request.userId)
+              )
+            }
+            Json.obj(
+              "post_id" -> post.id.get,
+              "type" -> post.`type`,
+              "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+              "thumbnail" -> QiniuUtil.getPhoto(post.content, "medium"),
+              "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+              "raw_image" -> QiniuUtil.getRaw(post.content),
+              "created" -> post.created,
+              "favorited" -> true,
+              "user" -> Json.obj(
+                "user_id" -> post.userId,
+                "nickname" -> userInfo.nickname,
+                "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
+                "likes" -> userInfo.likes
+              ),
+              "marks" -> Json.toJson(marksJson)
+            )
           }
+          success(Messages("success.found"), Json.obj("posts" -> Json.toJson(postsJson), "next" -> results.values.min))
         }
       }
     }
@@ -338,8 +386,12 @@ class UserController @Inject() (
   }
 
   def unSubscribeTag(tagId: Long) = SecuredAction.async { implicit request =>
-    tagService.unsubscribeTag(request.userId, tagId).map { rs =>
-      if (rs == 1) {
+    for {
+      tag <- tagService.getTagById(tagId)
+      rs <- tagService.unsubscribeTag(request.userId, tagId)
+    } yield {
+      if (rs == 1 && tag.isDefined) {
+        mongoDBService.removeTimelineFeedForUserWhenUnsubscribeTag(request.userId, tag.get.name)
         success(Messages("success.unSubscribeTag"))
       } else {
         error(4058, Messages("failed"))

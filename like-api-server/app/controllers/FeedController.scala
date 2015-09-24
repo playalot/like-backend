@@ -39,7 +39,7 @@ class FeedController @Inject() (
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
       val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
-      val followIds = postService.getPostsForUser(request.userId.get, followPageSize, timestamp)
+      val followIds = postService.getPostIdsForUser(request.userId.get, followPageSize, timestamp)
       val taggedIds = postService.getTaggedPosts(request.userId.get, taggedPageSize, timestamp)
       //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.4, pageSize, timestamp))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
@@ -54,7 +54,7 @@ class FeedController @Inject() (
     else List[Long]()
 
     postService.getUserTags(request.userId.getOrElse(-1L), taggedPageSize, timestamp).flatMap { reasonTags =>
-      FutureUtils.timedFuture("futureIds") { futureIds }.flatMap { results =>
+      futureIds.flatMap { results =>
 
         val showIds = results.flatten.distinct.sortWith(_ > _).take(pageSize)
         val pointers = results.map(_.sortWith(_ > _).headOption.getOrElse(-1L)).toArray
@@ -159,7 +159,7 @@ class FeedController @Inject() (
   }
 
   // Get home feeds, ordered by created
-  @deprecated("Old home feeds api", "v1.1.0")
+  @deprecated("Old home feeds api", "v1.1.1")
   def getHomeFeedsV1(timestamp: Option[Long] = None) = UserAwareAction.async { implicit request =>
     // Use phone screen width for output photo size
     val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
@@ -174,7 +174,7 @@ class FeedController @Inject() (
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
       val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
-      val followIds = postService.getPostsForUser(request.userId.get, followPageSize, timestamp)
+      val followIds = postService.getPostIdsForUser(request.userId.get, followPageSize, timestamp)
       val taggedIds = postService.getTaggedPosts(request.userId.get, taggedPageSize, timestamp)
       //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.4, pageSize, timestamp))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))

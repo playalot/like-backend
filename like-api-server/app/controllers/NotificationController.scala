@@ -18,6 +18,7 @@ class NotificationController @Inject() (
     }
   }
 
+  @deprecated("Old notification", "v1.1.1")
   def getNotifications(ts: Option[Long] = None) = SecuredAction.async { implicit request =>
 
     notificationService.getNotifications(request.userId, ts).map { results =>
@@ -84,10 +85,10 @@ class NotificationController @Inject() (
     notificationService.getNotifications(request.userId, ts).map { results =>
       val ts = results.lastOption.map(_._1.updated)
 
-      val combinedResults = results.foldLeft(scala.collection.mutable.MutableList[JsObject]()) { (b, a) =>
+      val combinedResults = results.foldLeft(scala.collection.mutable.MutableList[JsObject]()) { (jsonArr, a) =>
         val (notification, user, postOpt) = a
         if (notification.`type` == "FOLLOW") {
-          b += Json.obj(
+          jsonArr += Json.obj(
             "type" -> notification.`type`,
             "user" -> Json.obj(
               "user_id" -> user.id,
@@ -99,18 +100,18 @@ class NotificationController @Inject() (
           )
         } else {
           if (notification.`type` == "LIKE"
-            && b.nonEmpty
-            && (b.last \ "type").as[String].contains("LIKE")
-            && notification.fromUserId == (b.last \ "user" \ "user_id").as[Long]
-            && notification.postId.get == (b.last \ "post" \ "post_id").as[Long]) {
+            && jsonArr.nonEmpty
+            && (jsonArr.last \ "type").as[String].contains("LIKE")
+            && notification.fromUserId == (jsonArr.last \ "user" \ "user_id").as[Long]
+            && notification.postId.get == (jsonArr.last \ "post" \ "post_id").as[Long]) {
 
-            val mergedJson = b.last.deepMerge(Json.obj(
-              "tags" -> (b.last \ "tags").as[List[String]].+:(notification.tagName.get)
+            val mergedJson = jsonArr.last.deepMerge(Json.obj(
+              "tags" -> (jsonArr.last \ "tags").as[List[String]].+:(notification.tagName.get)
             ))
-            b.update(b.length - 1, mergedJson)
+            jsonArr.update(jsonArr.length - 1, mergedJson)
 
           } else {
-            b += Json.obj(
+            jsonArr += Json.obj(
               "type" -> notification.`type`,
               "user" -> Json.obj(
                 "user_id" -> user.id,
@@ -133,9 +134,8 @@ class NotificationController @Inject() (
             )
           }
         }
-        b
+        jsonArr
       }
-
       success(Messages("success.found"), Json.obj(
         "notifications" -> Json.toJson(combinedResults),
         "ts" -> ts

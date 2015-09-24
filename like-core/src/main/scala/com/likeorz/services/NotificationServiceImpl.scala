@@ -57,7 +57,7 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
 
   }
 
-  override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 15): Future[Seq[(Notification, UserInfo, Option[(Post, UserInfo)])]] = {
+  override def getNotifications(userId: Long, timestamp: Option[Long] = None, pageSize: Int = 30): Future[Seq[(Notification, UserInfo, Option[(Post, UserInfo)])]] = {
 
     val q = if (timestamp.isDefined) {
       (for {
@@ -74,11 +74,9 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
     }
 
     RedisCacheClient.zadd("user_notifies", System.currentTimeMillis / 1000, userId.toString)
-    //    var s = System.nanoTime()
-    //    println(s)
+
     db.run(q.result).flatMap { notificationAndUser =>
-      //      var e = (System.nanoTime() - s) / 1e9
-      //      println("time:" + e)
+
       val postIds = notificationAndUser.flatMap(_._1.postId).toSet
 
       if (postIds.nonEmpty) {
@@ -86,10 +84,8 @@ class NotificationServiceImpl @Inject() (protected val dbConfigProvider: Databas
           post <- posts if post.id inSet postIds
           user <- userinfo if post.userId === user.id
         } yield (post, user)
-        //        s = System.nanoTime()
+
         db.run(queryPost.result).map { postAndUser =>
-          //          e = (System.nanoTime() - s) / 1e9
-          //          println("time:" + e)
           val postMap = postAndUser.map(x => x._1.id -> x).toMap
           notificationAndUser.map {
             case (notification, user) =>

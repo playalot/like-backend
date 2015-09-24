@@ -1,14 +1,18 @@
 var Reflux = require('reflux');
 var $ = require('jquery');
+var StatsActions = require('../actions/statsactions');
 
 var StatsStore = Reflux.createStore({
-    stats: {},
-    sound: new Audio('/tick.wav'),
+    listenables: [StatsActions],
+
     init: function() {
-      this.onUpdateStats();
+      this.stats = {};
+      this.sound = new Audio('/tick.wav');
     },
     getInitialState: function() {
-      return this.stats;
+      if (!this.stats.user) {
+        this.onUpdateStats();
+      }
     },
     repeatSound: function(times) {
       if (times > 0) {

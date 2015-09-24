@@ -1,13 +1,14 @@
 var Reflux = require('reflux');
-var $ = require('jquery');
 var React = require('react');
 var Odometer = require('../widgets/odometer');
 var StatsStore = require('../stores/statsstore');
+var StatsActions = require('../actions/statsactions');
 
 var Home = React.createClass({
   mixins: [Reflux.connect(StatsStore, 'stats')],
   render: function() {
-    return (
+    if (this.state.stats) {
+      return (
       <div className="site-index">
         <div className="jumbotron">
             <h1>Like</h1>
@@ -53,8 +54,11 @@ var Home = React.createClass({
                 <h3 className="text-muted"><Odometer value={ this.state.stats.comment } /></h3>
             </div>
         </div>
-    </div>
-    );
+      </div>
+      );
+    } else {
+      return (<div className="site-index"></div>);
+    }
   }
 });
 

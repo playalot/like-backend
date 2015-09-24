@@ -5,18 +5,16 @@ var TagActions = require('../actions/tagactions');
 
 var TagStore = Reflux.createStore({
     listenables: [TagActions],
-    data: {
-      groups: [],
-      tags: [],
-      page: 0,
-    },
+
     init: function() {
-      this.onFetchTagGroups();
-      this.onFetchTags();
+      this.data = { groups: [], tags: [], page: 0 };
     },
     getInitialState: function() {
-      return this.data;
-    },
+  		if (this.data.groups.length === 0) {
+        TagActions.fetchTagGroups();
+        TagActions.fetchTags();
+      }
+  	},
     onFetchTagGroups: function() {
       $.ajax({
           url: '/api/tag/groups',

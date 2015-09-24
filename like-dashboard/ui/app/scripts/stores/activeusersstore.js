@@ -1,17 +1,18 @@
 var Reflux = require('reflux');
 var $ = require('jquery');
+var ActiveUsersAction = require('../actions/activeuseractions');
 
 var ActiveUsersStore = Reflux.createStore({
-    data: {
-      userlist: [],
-      total: 0
-    },
+    listenables: [ActiveUsersAction],
+
     init: function() {
-      this.onFetchActiveUsers();
+      this.data = { userlist: [], total: 0 };
     },
     getInitialState: function() {
-      return this.data;
-    },
+  		if (this.data.userlist.length === 0) {
+        this.onFetchActiveUsers();
+      }
+  	},
     onFetchActiveUsers: function() {
       $.ajax({
           url: '/api/users/active',

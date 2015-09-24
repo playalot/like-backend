@@ -5,13 +5,15 @@ var BrandActions = require('../actions/brandactions');
 
 var BrandStore = Reflux.createStore({
     listenables: [BrandActions],
-    brandlist: [],
-    page: 0,
 
     init: function() {
-      this.onFetchBrandList();
+      this.brandlist = [];
+      this.page = 0;
     },
     getInitialState: function() {
+      if (this.brandlist.length === 0) {
+        this.onFetchBrandList();
+      }
       return this.brandlist;
     },
     onFetchBrandList: function() {

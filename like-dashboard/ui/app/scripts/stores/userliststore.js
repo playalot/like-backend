@@ -4,16 +4,18 @@ var UserActions = require('../actions/useractions');
 
 var UserListStore = Reflux.createStore({
     listenables: [UserActions],
-    userlist: [],
-    page: 0,
-    filter: '',
 
     init: function() {
-      this.onFetchUserList();
+      this.userlist = [];
+      this.page = 0;
+      this.filter = '';
     },
     getInitialState: function() {
+  		if (this.userlist.length === 0) {
+        this.onFetchUserList();
+      }
       return this.userlist;
-    },
+  	},
     updateParams: function(v) {
       if (this.filter !== v) {
           this.page = 0;

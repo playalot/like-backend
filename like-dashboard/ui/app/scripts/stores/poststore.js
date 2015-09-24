@@ -5,14 +5,16 @@ var PostActions = require('../actions/postactions');
 
 var PostListStore = Reflux.createStore({
     listenables: [PostActions],
-    postlist: [],
-    filter: '',
-    timestamp: '',
 
     init: function() {
-      this.onFetchPostList();
+      this.postlist = [];
+      this.filter = '';
+      this.timestamp = '';
     },
     getInitialState: function() {
+      if (this.postlist.length === 0) {
+        this.onFetchPostList();
+      }
       return this.postlist;
     },
     updateParams: function(v) {

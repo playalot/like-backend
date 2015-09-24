@@ -31,7 +31,6 @@ POST    /v1/welcome/preference                      controllers.UserController.c
 GET     /v1/homefeeds                               controllers.FeedController.getHomeFeedsV1(ts: Option[Long] ?= None)
 GET     /v1/friendfeeds                             controllers.FeedController.getFollowingFeeds(ts: Option[Long] ?= None)
 GET     /v1/homeFeeds                               controllers.FeedController.getHomeFeedsV3(ts: Option[Long] ?= None)
-GET     /v3/homeFeeds                               controllers.FeedController.getHomeFeedsV3(ts: Option[Long] ?= None)
 GET     /v1/followingFeeds                          controllers.FeedController.getFollowingFeeds(ts: Option[Long] ?= None)
 
 
@@ -41,7 +40,8 @@ PUT     /v1/user/nickname                           controllers.UserController.u
 PUT     /v1/user/avatar                             controllers.UserController.updateAvatar()
 PUT     /v1/user/cover                              controllers.UserController.updateCover()
 GET     /v1/user/suggest                            controllers.UserController.suggestTags()
-GET     /v1/user/$id<[0-9]+>/posts/$pg<[0-9]+>      controllers.UserController.getPostsForUser(id: Long, pg: Int)
+GET     /v1/user/$id<[0-9]+>/posts/$pg<[0-9]+>      controllers.UserController.getPostsForUserV1(id: Long, pg: Int)
+GET     /v1/user/$id<[0-9]+>/posts                  controllers.UserController.getPostsForUserV2(id: Long, ts: Option[Long] ?= None)
 GET     /v1/user/favorites                          controllers.UserController.getFavoritePostsForUser(ts: Option[Long] ?= None)
 GET     /v1/user/$id<[0-9]+>/follows/$pg<[0-9]+>    controllers.UserController.getFollowing(id: Long, pg: Int)
 GET     /v1/user/$id<[0-9]+>/fans/$pg<[0-9]+>       controllers.UserController.getFollowers(id: Long, pg: Int)
@@ -83,8 +83,7 @@ DELETE  /v1/tag/:id/subscribe                       controllers.UserController.u
 
 # Search
 GET     /v1/tag/hot                                 controllers.SearchController.hotTags
-GET     /v1/tag/search/:tag/:pg                     controllers.SearchController.searchTag(tag: String, pg: Int)
-GET     /v1/search/tag/:tag/:pg                     controllers.SearchController.searchTagV2(tag: String, pg: Int)
+GET     /v1/search/tag/:tag/:pg                     controllers.SearchController.searchTag(tag: String, pg: Int)
 GET     /v1/explore/hot/user                        controllers.SearchController.hotUsers
 GET     /v1/explore/hot                             controllers.SearchController.hotTagsAndUsers
 GET     /v1/explore/tag/:tag                        controllers.SearchController.explore(tag: String, ts: Option[Long] ?= None)

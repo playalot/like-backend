@@ -4,20 +4,21 @@ import javax.inject.{ Named, Inject }
 
 import akka.actor.ActorRef
 import com.likeorz.push.JPushNotification
+import com.likeorz.services.store.MongoDBService
+import com.likeorz.utils.{ FutureUtils, GlobalConstants }
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import play.api.libs.concurrent.Execution.Implicits._
-import com.likeorz.event.LikeEvent
-import com.likeorz.models.{ Notification, Post, Report }
+import com.likeorz.event.{ LikeEventType, LikeEvent }
+import com.likeorz.models._
 import com.likeorz.services._
 import services.PushService
-import utils.{ HelperUtils, NlpUtils, QiniuUtil }
+import utils.{ NlpUtils, QiniuUtil }
 
 import scala.concurrent.Future
 
 class PostController @Inject() (
-    @Named("event-producer-actor") eventProducerActor: ActorRef,
     @Named("classification-actor") classificationActor: ActorRef,
     val messagesApi: MessagesApi,
     tagService: TagService,
@@ -26,6 +27,7 @@ class PostController @Inject() (
     postService: PostService,
     notificationService: NotificationService,
     pushService: PushService,
+    mongoDBService: MongoDBService,
     eventBusService: EventBusService) extends BaseController {
 
   case class PostCommand(content: String, `type`: Option[String], tags: Seq[String], place: Option[String], location: Option[Seq[Double]])
@@ -58,33 +60,38 @@ class PostController @Inject() (
         Future.successful(error(4012, Messages("invalid.postJson")))
       },
       postCommand => {
+
         postService.insert(Post(None, postCommand.content, postCommand.`type`.getOrElse("PHOTO"),
           request.userId, System.currentTimeMillis / 1000, System.currentTimeMillis / 1000,
           postCommand.place, postCommand.location.map(_.take(2).mkString(" ")))).flatMap { post =>
 
-          // log event to remote mongodb
-          eventProducerActor ! LikeEvent(None, "publish", "user", request.userId.toString, Some("post"), Some(post.identify),
-            properties = Json.obj("tags" -> Json.toJson(postCommand.tags), "img" -> postCommand.content))
-//          eventBusService.publish(LikeEvent(None, "publish", "user", request.userId.toString, Some("post"), Some(post.identify),
-//            properties = Json.obj("tags" -> Json.toJson(postCommand.tags), "img" -> postCommand.content)))
-          // only allow post contain one category
-          val uniqueCategory = postCommand.tags.find(tag => categories.contains(tag))
-          val futures = (postCommand.tags.diff(categories) ++ uniqueCategory)
-            .filter(t => t.length <= 13 && t.length >= 1)
-            .map(tag => postService.addMark(post.id.get, request.userId, tag, request.userId).map(mark => (tag, mark)))
+          // Only allow post contain one recommended tags. For example, only allow one of `高达` and `音乐`
+          tagService.getRecommendTags.flatMap { recommendTags =>
+            val filteredTags = postCommand.tags.diff(recommendTags) ++ postCommand.tags.find(tag => recommendTags.contains(tag))
+              .filter(t => t.length <= GlobalConstants.MaxTagLength && t.length >= GlobalConstants.MinTagLength)
 
-          for {
-            author <- userService.getUserInfo(request.userId)
-            results <- Future.sequence(futures)
-          } yield {
-            val marksJson = results.map { tagAndMark =>
+            // Publish event to event bus
+            eventBusService.publish(LikeEvent(None, LikeEventType.publish, "user", request.userId.toString, Some("post"), Some(post.identify),
+              properties = Json.obj("tags" -> Json.toJson(filteredTags), "img" -> postCommand.content)))
+
+            FutureUtils.seqFutures(filteredTags) { tag =>
+              postService.addMark(post.id.get, request.userId, tag, request.userId)
+            }
+          } map { marks =>
+            // Insert post with marks into mongodb
+            mongoDBService.insertPostMarks(PostMarks(post.id.get, post.created,
+              marks.map(m => MarkDetail(m.id.get, request.userId, m.tagId, m.tagName.get, Seq(request.userId)))
+            ))
+            // Map marks to json objects list
+            marks.map(mark =>
               Json.obj(
-                "mark_id" -> tagAndMark._2.id.get,
-                "tag" -> tagAndMark._1,
+                "mark_id" -> mark.id.get,
+                "tag" -> mark.tagName,
                 "likes" -> 1,
                 "is_liked" -> 1
-              )
-            }
+              ))
+          } map { marksJson =>
+            val author = userService.getUserInfoFromCache(request.userId)
             success(Messages("success.publish"), Json.obj(
               "post_id" -> post.id.get,
               "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
@@ -153,6 +160,8 @@ class PostController @Inject() (
             n <- notificationService.deleteAllNotificationForPost(id)
             r <- postService.recordDelete(post.content)
           } yield {
+            // Remove post marks from mongodb
+            mongoDBService.deletePostMarks(id)
             success(Messages("success.deletePost"))
           }
         }
@@ -172,8 +181,8 @@ class PostController @Inject() (
           val comments = result._4.groupBy(_._1.markId)
 
           // log event
-          eventProducerActor ! LikeEvent(None, "view", "user", request.userId.toString, Some("post"), Some(id.toString),
-            properties = Json.obj("tags" -> Json.toJson(result._1.map(_._2))))
+          eventBusService.publish(LikeEvent(None, LikeEventType.imageview, "user", request.userId.toString, Some("post"), Some(id.toString),
+            properties = Json.obj("tags" -> Json.toJson(result._1.map(_._2)))))
 
           // Generate json for each mark
           val marksJson = result._1.sortBy(m => -scores(m._1)).map { mark =>
@@ -236,19 +245,21 @@ class PostController @Inject() (
             Future.successful(error(4025, Messages("invalid.tagMaxLength")))
           else if (tag.length < 1)
             Future.successful(error(4025, Messages("invalid.tagMinLength")))
-          else if (NlpUtils.isContainSensitiveWord(tag)) {
+          else if (NlpUtils.containSensitiveWord(tag)) {
             Future.successful(error(4025, Messages("invalid.tagIllegal")))
           } else
             postService.getPostById(postId).flatMap {
               case Some(post) =>
-                // log event
-                eventProducerActor ! LikeEvent(None, "mark", "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag))
-//                eventBusService.publish(LikeEvent(None, "mark", "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag)))
+                // mark event
+                eventBusService.publish(LikeEvent(None, LikeEventType.mark, "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag)))
                 for {
                   nickname <- userService.getNickname(request.userId)
                   mark <- postService.addMark(postId, post.userId, tag, request.userId)
                   update <- postService.updatePostTimestamp(postId)
                 } yield {
+                  // Insert mark into mongodb
+                  mongoDBService.insertMarkForPost(postId, MarkDetail(mark.id.get, request.userId, mark.tagId, tag, Seq(request.userId)))
+
                   if (request.userId != post.userId) {
                     val notifyMarkUser = Notification(None, "MARK", post.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
                     for {

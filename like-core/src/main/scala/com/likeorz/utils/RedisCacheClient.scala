@@ -23,6 +23,12 @@ object RedisCacheClient {
     }
   }
 
+  def zrange(key: String, start: Long, end: Long): Set[String] = {
+    withJedisClient { client =>
+      client.zrange(key, start, end).toSet
+    }
+  }
+
   def zrevrangeByScoreWithScores(key: String, max: Double, min: Double, offset: Int, limit: Int): Set[(String, Double)] = {
     withJedisClient[Set[(String, Double)]] { client =>
       client.zrevrangeByScoreWithScores(key, max, min, offset, limit).map(x => (x.getElement, x.getScore)).toSet
@@ -191,7 +197,7 @@ object RedisCacheClient {
     }
   }
 
-  private def withJedisClient[T](f: Jedis => T): T = {
+  def withJedisClient[T](f: Jedis => T): T = {
     val jedis = jedisPool.getResource
     try {
       f(jedis)

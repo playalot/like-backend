@@ -10,8 +10,9 @@ import com.fasterxml.jackson.databind.{ ObjectWriter, ObjectMapper }
 import com.likeorz.actors.{ EventLogSubscriber, PublishEventSubscriber, MarkEventSubscriber, RecommendToAllEventSubscriber }
 import com.likeorz.common.{ PushUnreadLikes, ClassifyPost, ApiServerRemoteCount }
 import com.likeorz.event.{ LikeEventType, LikeEventBus, LikeEvent }
-import com.likeorz.models.{ TimelineFeed, User, Notification }
+import com.likeorz.models.{ MarkDetail, PostMarks, User, Notification }
 import com.likeorz.push.JPushNotification
+import com.likeorz.services.store.MongoDBService
 import com.likeorz.utils.RedisCacheClient
 import play.api._
 import play.api.i18n.{ Lang, Messages, MessagesApi }
@@ -28,7 +29,6 @@ import scala.concurrent.duration._
 
 class Application @Inject() (
     system: ActorSystem,
-    @Named("event-producer-actor") eventProducerActor: ActorRef,
     @Named("classification-actor") classificationActor: ActorRef,
     val messagesApi: MessagesApi,
     userService: UserService,
@@ -37,6 +37,7 @@ class Application @Inject() (
     postService: PostService,
     tagService: TagService,
     eventBusService: EventBusService,
+    mongoDBService: MongoDBService,
     notificationService: NotificationService) extends BaseController {
 
   def index = Action { implicit request =>
@@ -47,6 +48,17 @@ class Application @Inject() (
 
     Logger.debug(Messages("invalid.mobileCode"))
 
+    //    mongoDBService.findPostsByTagIds(Seq(1334, 672, 59), 10, None)
+    //    mongoDBService.removeTimelineFeedForUserWhenUnsubscribeTag(187, "高达")
+    //    mongoDBService.insertPostMarks(PostMarks(1234, 1234, Seq(MarkDetail(111, 222, 123, "t1", Seq(111, 112)))))
+    //    mongoDBService.insertMarkForPost(1234, MarkDetail(112, 222, 124, "t2", Seq(111, 112)))
+    //    mongoDBService.findPostsByTags(Seq(123)).foreach(println)
+    //    mongoDBService.findPostsByTags(Seq(124)).foreach(println)
+    //    mongoDBService.findPostsByTags(Seq(126)).foreach(println)
+    //    mongoDBService.deletePostMarks(1234)
+    //    mongoDBService.likeMark(111, 1234, 555)
+    //    mongoDBService.deleteMarkForPost(111, 1234)
+    //    mongoDBService.unlikeMark(111, 1234, 555)
     //    eventBusService.publish(LikeEvent(None, "publish", "user", "1234", Some("post"), Some("1234"), properties = Json.obj("tags" -> Json.toJson(Seq("111", "222", "333")), "img" -> "123123.jpg")))
 
     //    var preprocessStart = System.nanoTime()
@@ -62,6 +74,11 @@ class Application @Inject() (
     //    preprocessElapsed = (System.nanoTime() - preprocessStart) / 1e9
     //    println(response + ":" + preprocessElapsed + "ms")
     //    eventProducerActor ! "PING"
+    //    mongoDBService.getFeedsFromTimelineForUser(715, 5, Some(1442838550)).foreach(println)
+    //    mongoDBService.insertTimelineFeedForUser(TimelineFeed(1234, TimelineFeed.TypeEditorPick), 715)
+    //    println(mongoDBService.postInTimelineForUser(1234, 715))
+    //    println(mongoDBService.postInTimelineForUser(1235, 715))
+    //    println(mongoDBService.postInTimelineForUser(1235, 716))
 
     //    val remotePushActor = system.actorSelection(s"akka.tcp://LikeClusterSystem@127.0.0.1:2552/user/EventActor")
 
@@ -150,21 +167,12 @@ class Application @Inject() (
   }
 
   def test = SecuredAction { implicit request =>
-    //    markService.rebuildMarkCache()
-    //    markService.rebuildUserLikesCache()
-    //    markService.rebuildUserCountsCache()
     Ok("UserId: " + request.userId)
   }
 
   def status = UserAwareAction { implicit request =>
-    val remotes = try {
-      Await.result(eventProducerActor.ask(ApiServerRemoteCount)(1.second).map(_.asInstanceOf[Int]), 2.seconds)
-    } catch {
-      case _: Throwable => 0
-    }
     Ok(Json.obj(
-      "version" -> "1.2.0",
-      "nf-event-actor" -> remotes
+      "version" -> "1.2.0"
     ))
   }
 

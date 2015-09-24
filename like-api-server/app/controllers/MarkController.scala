@@ -1,32 +1,36 @@
 package controllers
 
-import javax.inject.{ Named, Inject }
+import javax.inject.Inject
 
-import akka.actor.ActorRef
-import com.likeorz.event.LikeEvent
+import com.likeorz.event.{ LikeEventType, LikeEvent }
 import com.likeorz.models.Notification
+import com.likeorz.services.store.MongoDBService
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Action
-import com.likeorz.services.{ UserService, NotificationService, MarkService }
+import com.likeorz.services.{ EventBusService, UserService, NotificationService, MarkService }
 import utils.QiniuUtil
 
 import scala.concurrent.Future
 
 class MarkController @Inject() (
-    @Named("event-producer-actor") eventProducerActor: ActorRef,
     val messagesApi: MessagesApi,
     markService: MarkService,
     userService: UserService,
+    eventBusService: EventBusService,
+    mongoDBService: MongoDBService,
     notificationService: NotificationService) extends BaseController {
 
   def like(markId: Long) = (SecuredAction andThen BannedUserCheckAction).async { implicit request =>
     markService.getMarkWithPostAuthor(markId).flatMap {
       case Some((mark, postAuthor)) =>
         // log event
-        eventProducerActor ! LikeEvent(None, "like", "user", request.userId.toString, Some("mark"), Some(markId.toString), properties = Json.obj("tag" -> mark.tagName))
+        eventBusService.publish(LikeEvent(None, "like", "user", request.userId.toString, Some("mark"), Some(markId.toString), properties = Json.obj("tag" -> mark.tagName)))
         markService.like(mark, postAuthor, request.userId).map { _ =>
+          // Add like to mongodb
+          mongoDBService.likeMark(markId, mark.postId, request.userId)
+
           if (mark.userId != request.userId) {
             val notifyMarkUser = Notification(None, "LIKE", mark.userId, request.userId, System.currentTimeMillis / 1000, mark.tagName, Some(mark.postId))
             notificationService.insert(notifyMarkUser)
@@ -45,7 +49,14 @@ class MarkController @Inject() (
   def unlike(markId: Long) = SecuredAction.async { implicit request =>
     markService.getMarkWithPostAuthor(markId).flatMap {
       case Some((mark, postAuthor)) =>
-        markService.unlike(mark, postAuthor, request.userId).map { _ =>
+        markService.unlike(mark, postAuthor, request.userId).map { rs =>
+          // Remove like from mongodb
+          if (rs == 1) {
+            mongoDBService.deleteMarkForPost(markId, mark.postId)
+          } else {
+            mongoDBService.unlikeMark(markId, mark.postId, request.userId)
+          }
+
           notificationService.deleteLikeNotification(request.userId, mark.postId, mark.tagName.getOrElse(""))
           success(Messages("success.unLike"))
         }
@@ -107,6 +118,10 @@ class MarkController @Inject() (
       case Some((mark, post)) =>
         if (request.userId == mark.userId || request.userId == post.userId) {
           markService.deleteMark(markId).map { _ =>
+            // Remove mark from mongodb
+            mongoDBService.deleteMarkForPost(markId, post.id.get)
+            // Remove related post from timeline
+            eventBusService.publish(LikeEvent(None, LikeEventType.removeMark, "user", request.userId.toString, Some("post"), Some(post.identify), properties = Json.obj("tag" -> mark.tagName.get)))
             success(Messages("success.deleteMark"))
           }
         } else {

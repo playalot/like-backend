@@ -12,6 +12,7 @@ import com.likeorz.common.{ ApiServerRemoteMembers, ApiServerRemoteCount, JoinAp
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+@deprecated("Use EventLogSubscriber", "v1.1.1")
 @Singleton
 class EventProducerActor @Inject() (configuration: Configuration) extends Actor with ActorLogging {
 

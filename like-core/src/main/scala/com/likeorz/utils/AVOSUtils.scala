@@ -8,7 +8,7 @@ import play.api.{ Logger, Play }
 
 import scala.concurrent.Future
 
-@deprecated
+@deprecated("JPush replace Avos", "v1.1.1")
 object AVOSUtils {
 
   val AVOSCloudApplicationId = Play.current.configuration.getString("avoscloud.appId").get

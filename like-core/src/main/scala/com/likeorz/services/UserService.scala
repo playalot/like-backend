@@ -23,14 +23,6 @@ trait UserService {
 
   def updateMobile(userId: Long, mobilePhoneNumber: String, zone: Int): Future[Unit]
 
-  def countFollowers(id: Long): Future[Long]
-
-  def getFollowers(userId: Long, page: Int): Future[Seq[(UserInfo, Boolean)]]
-
-  def countFollowings(id: Long): Future[Long]
-
-  def getFollowings(userId: Long, page: Int): Future[Seq[UserInfo]]
-
   def insert(user: User): Future[User]
 
   def upsert(loginInfo: LoginInfo, user: User): Future[User]
@@ -55,9 +47,9 @@ trait UserService {
 
   def nicknameExists(nickname: String): Future[Boolean]
 
-  def follow(fromId: Long, toId: Long): Future[Int]
+  def countFollowers(id: Long): Future[Long]
 
-  def unFollow(fromId: Long, toId: Long): Future[Int]
+  def countFollowing(id: Long): Future[Long]
 
   def block(fromId: Long, toId: Long): Future[Int]
 

@@ -503,6 +503,14 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
+  override def getReports(pageSize: Int, timestamp: Option[Long]): Future[Seq[Report]] = {
+    if (timestamp.isDefined) {
+      db.run(reports.filter(_.created < timestamp).take(pageSize).result)
+    } else {
+      db.run(reports.take(pageSize).result)
+    }
+  }
+
   override def get30DayHotUsers(num: Int): Future[Seq[User]] = {
     val cachedUsers = RedisCacheClient.srandmember(KeyUtils.hotUsers, 15)
     if (cachedUsers.isEmpty) {

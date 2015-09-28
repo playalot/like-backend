@@ -39,7 +39,7 @@ class UserController @Inject() (
       case Some(user) =>
         for {
           countFollowers <- userService.countFollowers(id)
-          countFollowing <- userService.countFollowings(id)
+          countFollowing <- userService.countFollowing(id)
           countPosts <- postService.countPostsForUser(id)
           countFavorite <- if (request.userId.isDefined && request.userId.get == id) postService.countFavoriteForUser(id) else Future.successful(0L)
           countLikes <- markService.countLikesForUser(id)
@@ -258,77 +258,6 @@ class UserController @Inject() (
           Json.obj("tag" -> tag)
         }
         success(Messages("success.found"), Json.obj("suggests" -> Json.toJson(jsonArr), "recommends" -> Json.toJson(recoJson), "defaults" -> Json.toJson(recoJson)))
-    }
-  }
-
-  def getFollowing(id: Long, page: Int) = Action.async {
-    userService.getFollowings(id, page).map { list =>
-      val jsonArr = list.map { user =>
-        Json.obj(
-          "user_id" -> user.id.toString,
-          "nickname" -> user.nickname,
-          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
-          "likes" -> user.likes
-        )
-      }
-      success(Messages("success.found"), Json.obj("follows" -> Json.toJson(jsonArr)))
-    }
-  }
-
-  def getFollowers(id: Long, page: Int) = Action.async {
-    userService.getFollowers(id, page).map { list =>
-      val jsonArr = list.map { result =>
-        val (user, isFollowing) = result
-        Json.obj(
-          "user_id" -> user.id.toString,
-          "nickname" -> user.nickname,
-          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
-          "likes" -> user.likes,
-          "is_following" -> isFollowing
-        )
-      }
-      success(Messages("success.found"), Json.obj("fans" -> Json.toJson(jsonArr)))
-    }
-  }
-
-  def follow(id: Long) = (SecuredAction andThen BannedUserCheckAction).async { implicit request =>
-    if (id == request.userId) {
-      Future.successful(error(4017, Messages("failed.followYourself")))
-    } else {
-      userService.findById(id).flatMap {
-        case Some(user) =>
-          for {
-            nickname <- userService.getNickname(request.userId)
-            following <- userService.follow(request.userId, id)
-          } yield {
-            val notifyFollow = Notification(None, "FOLLOW", id, request.userId, System.currentTimeMillis / 1000, None, None)
-            for {
-              notify <- notificationService.insert(notifyFollow)
-              count <- notificationService.countForUser(id)
-            } yield {
-              // Send push notification
-              pushService.sendPushNotificationViaJPush(JPushNotification(List(id.toString), List(), Messages("notification.follow", nickname), count))
-              pushService.sendPushNotificationToUser(id, Messages("notification.follow", nickname), count)
-            }
-            success(Messages("success.follow"), Json.obj("is_following" -> following))
-          }
-        case None => Future.successful(error(4022, Messages("invalid.userId")))
-      }
-    }
-  }
-
-  def unFollow(id: Long) = SecuredAction.async { implicit request =>
-    if (id == request.userId) {
-      Future.successful(error(4018, Messages("failed.unFollowYourself")))
-    } else {
-      userService.findById(id).flatMap {
-        case Some(user) =>
-          userService.unFollow(request.userId, id).map { following =>
-            success(Messages("success.unFollow"), Json.obj("is_following" -> 0))
-          }
-        case None =>
-          Future.successful(error(4022, Messages("invalid.userId")))
-      }
     }
   }
 

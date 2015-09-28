@@ -4,7 +4,7 @@ object GlobalConstants {
 
   val GridPageSize = 30
 
-  val MinTagUsage = 5
+  val MinTagUsage = 10
 
   val MinTagLength = 1
   val MaxTagLength = 13

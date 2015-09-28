@@ -72,6 +72,8 @@ trait PostService {
 
   def recordDelete(photo: String): Future[Unit]
 
+  def getReports(pageSize: Int, timestamp: Option[Long]): Future[Seq[Report]]
+
   def get30DayHotUsers(num: Int): Future[Seq[User]]
 
   def get7DayHotUsers(num: Int): Future[Seq[User]]

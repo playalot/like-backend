@@ -48,7 +48,7 @@ class UserApiController @Inject() (
       case Some(user) =>
         for {
           countFollowers <- userService.countFollowers(id)
-          countFriends <- userService.countFollowings(id)
+          countFriends <- userService.countFollowing(id)
           countPosts <- postService.countPostsForUser(id)
           countLikes <- markService.countLikesForUser(id)
         } yield {

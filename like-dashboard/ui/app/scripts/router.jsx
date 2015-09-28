@@ -11,6 +11,8 @@ var UserList = require('./components/userlist');
 var ActiveUsers = require('./components/activeusers');
 var UserDetail = require('./components/userdetail');
 var TagGroup = require('./components/taggroup');
+var JudgePosts = require('./components/judgeposts');
+var Feedback = require('./components/feedback');
 var BrandList = require('./components/brandlist');
 var BrandForm = require('./components/brandform');
 
@@ -21,6 +23,8 @@ var routes = (
 		<Route name="userdetail" path="/user/:userId" handler={UserDetail} />
 		<Route name="activeusers" path="/activeusers" handler={ActiveUsers} />
 		<Route name="taggroup" path="/tags" handler={TagGroup} />
+		<Route name="feedback" path="/feedback" handler={Feedback} />
+		<Route name="judgeposts" path="/judge" handler={JudgePosts} />
 		<Route name="brandlist" path="/brands" handler={BrandList} />
 		<Route name="brandform" path="/brandform" handler={BrandForm} />
 		<Route name="home" path="/home" handler={Home} />

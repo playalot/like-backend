@@ -143,4 +143,18 @@ class PostApiController @Inject() (
     }
   }
 
+  def judgePost(postId: Long, judge: Long) = SecuredAction.async {
+    println(postId)
+    println(judge)
+    dashboardService.judgePost(postId, judge == 1).map(_ => Ok)
+  }
+
+  def getNotJudgedPosts(startId: Option[Long]) = SecuredAction.async {
+    dashboardService.getNotJudgedPosts(startId).map { results =>
+      Ok(Json.toJson(
+        results.map(rs => Json.obj("id" -> rs._1, "image" -> QiniuUtil.resizeImage(rs._2, 600, true)))
+      ))
+    }
+  }
+
 }

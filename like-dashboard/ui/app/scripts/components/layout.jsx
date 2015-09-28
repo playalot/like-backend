@@ -41,7 +41,9 @@ var Layout = React.createClass({
                   <ul id="w2" className="dropdown-menu">
                     <li><NavItemLink to="activeusers">Active Users</NavItemLink></li>
                     <li><NavItemLink to="taggroup">Tags</NavItemLink></li>
-                    <li><a href="http://monitor.likeorz.com" target="_blank">Monitor</a></li> 
+                    <li><NavItemLink to="judgeposts">Judge Posts</NavItemLink></li>
+                    <li><NavItemLink to="feedback">Feedback</NavItemLink></li>
+                    <li><a href="http://monitor.likeorz.com" target="_blank">Monitor</a></li>
                   </ul>
                 </li>
                 <li className="dropdown">

@@ -85,12 +85,14 @@ class BrandApiController @Inject() (
       case Some(entity) =>
         val key = if (entity.avatar == "") {
           val key = "entity_" + id + "_" + (System.currentTimeMillis() / 1000) + ".jpg"
-          val res = QiniuUploadManager.put(file.file, key, QiniuAuth.uploadToken(DefaultBucket))
+          val data = scala.io.Source.fromFile(file.file).map(_.toByte).toArray
+          val res = QiniuUploadManager.put(data, key, QiniuAuth.uploadToken(DefaultBucket))
           promoteService.updateEntity(entity.copy(avatar = key))
           key
         } else {
           val key = entity.avatar
-          val res = QiniuUploadManager.put(file.file, key, QiniuAuth.uploadToken(DefaultBucket, entity.avatar))
+          val data = scala.io.Source.fromFile(file.file).map(_.toByte).toArray
+          val res = QiniuUploadManager.put(data, key, QiniuAuth.uploadToken(DefaultBucket, entity.avatar))
           Logger.info(res.bodyString())
           key
         }

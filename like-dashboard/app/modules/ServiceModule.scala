@@ -16,7 +16,7 @@ import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Configuration
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ DashboardServiceImpl, DashboardService, AdminServiceImpl, AdminService }
+import services.{ DashboardService, AdminServiceImpl, AdminService }
 
 /**
  * Created by Guan Guan
@@ -25,8 +25,8 @@ import services.{ DashboardServiceImpl, DashboardService, AdminServiceImpl, Admi
 class ServiceModule extends AbstractModule with ScalaModule {
 
   override def configure() {
+    bind[DashboardService]
     bind[AdminService].to[AdminServiceImpl]
-    bind[DashboardService].to[DashboardServiceImpl]
     bind[DelegableAuthInfoDAO[PasswordInfo]].to[AdminPasswordInfoDAO]
     bind[CacheLayer].to[PlayCacheLayer]
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator())

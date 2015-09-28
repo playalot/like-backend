@@ -8,7 +8,8 @@ object QiniuUtil {
     if (isParsedFilename) {
       val parts = filename.split("_")
       if (parts.size >= 6) {
-        if (parts(3).toDouble < targetSize) {
+        val min = scala.math.min(parts(3).toInt, parts(5).toInt)
+        if (min < targetSize) {
           s"$CDN/$filename?imageView2/0/q/90"
         } else {
           s"$CDN/$filename?imageView2/0/w/$targetSize/q/90"

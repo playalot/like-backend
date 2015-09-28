@@ -183,7 +183,7 @@ class UserController @Inject() (
                 "post_id" -> post.id.get,
                 "type" -> post.`type`,
                 "content" -> QiniuUtil.getPhoto(post.content, "medium"),
-                "thumbnail" -> QiniuUtil.getPhoto(post.content, "medium"),
+                "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
                 "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
                 "raw_image" -> QiniuUtil.getRaw(post.content),
                 "created" -> post.created,
@@ -228,7 +228,7 @@ class UserController @Inject() (
               "post_id" -> post.id.get,
               "type" -> post.`type`,
               "content" -> QiniuUtil.getPhoto(post.content, "medium"),
-              "thumbnail" -> QiniuUtil.getPhoto(post.content, "medium"),
+              "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
               "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
               "raw_image" -> QiniuUtil.getRaw(post.content),
               "created" -> post.created,
@@ -346,7 +346,7 @@ class UserController @Inject() (
 
     tagService.getTagByName(tagName).flatMap {
       case Some(tag) =>
-        if (tag.group > 0) {
+        if (tag.group >= 0 && tag.usage > GlobalConstants.MinTagUsage) {
           tagService.getUserTag(request.userId.getOrElse(-1L), tag.id.get).map {
             case Some(userTag) =>
               success(Messages("success.found"), Json.obj(

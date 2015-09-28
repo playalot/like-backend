@@ -1,12 +1,10 @@
 package controllers
 
-import java.io.StringWriter
 import javax.inject.{ Named, Inject }
 
 import akka.actor.{ Props, ActorRef, ActorPath, ActorSystem }
 import akka.pattern.ask
 import akka.util.Timeout
-import com.fasterxml.jackson.databind.{ ObjectWriter, ObjectMapper }
 import com.likeorz.actors.{ EventLogSubscriber, PublishEventSubscriber, MarkEventSubscriber, RecommendToAllEventSubscriber }
 import com.likeorz.common.{ PushUnreadLikes, ClassifyPost, ApiServerRemoteCount }
 import com.likeorz.event.{ LikeEventType, LikeEventBus, LikeEvent }
@@ -128,41 +126,6 @@ class Application @Inject() (
     //    RedisCacheClient.sAdd("test_seen", "4", "5", "6")
     //    println(RedisCacheClient.sMembers("test_seen"))
 
-    //    for (i <- 1 to 100000) {
-    //      userService.insert(User(None, None, None, "", "user_" + i, "default_avatar.jpg", "default_cover.jpg"))
-    //    }
-
-    //    userService.countFollowers(715).map(println)
-    //    userService.countFollowings(715).map(println)
-    //    userService.countFollowers(71500).map(println)
-    //
-
-    //    val t0 = System.currentTimeMillis()
-    //
-    //    val f1 = (1 to 100000).map(i => userService.getNickname(i))
-    //    println("Pre:" + (System.currentTimeMillis() - t0))
-    //    Future.successful(System.currentTimeMillis()).flatMap { t1 =>
-    //      Future.sequence(f1).map { rs =>
-    //        rs
-    //        val elapsedMs1 = (System.currentTimeMillis() - t1)
-    //        println("F1: " + elapsedMs1 + "ms")
-    //
-    //      }
-    //    }
-
-    //    val t2 = System.currentTimeMillis()
-    //    for (i <- 1 to 100) (Await.result(Future.sequence(f2), 30.seconds))
-    //    val elapsedMs2 = (System.currentTimeMillis() - t2)
-    //    println("F2: " + elapsedMs2 + "ms")
-
-    //    userService.findByMobile("18910438864").map { user =>
-    //      userService.insert(user.get.copy(id = None, mobile = (user.get.mobile.toLong + 3).toString)).map(println)
-    //      userService.count().map(println)
-    //    }
-
-    //    markService.rebuildMarkCache()
-    //    markService.exportPostWithTags()
-    //    markService.exportLikes()
     Ok(Json.obj("status" -> "1.2.0"))
   }
 

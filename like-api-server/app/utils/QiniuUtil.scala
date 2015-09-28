@@ -6,6 +6,8 @@ import play.api.Play
 
 object QiniuUtil {
 
+  val ThumbnailSize = 320
+
   val CDN = Play.current.configuration.getString("qiniu.cdn").get
 
   val AvatarSize = Map(
@@ -66,6 +68,10 @@ object QiniuUtil {
 
   def getSizedImage(filename: String, screenSize: Int): String = {
     s"$CDN/${resizeImage(filename, screenSize, isParsedFilename = true)}"
+  }
+
+  def getThumbnailImage(filename: String): String = {
+    s"$CDN/$filename?imageView2/0/w/$ThumbnailSize/h/$ThumbnailSize/q/85"
   }
 
 }

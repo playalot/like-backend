@@ -64,9 +64,10 @@ class SearchController @Inject() (
     }
   }
 
+  @deprecated("replaced by v2", "v1.1.1")
   def searchTag(name: String, page: Int) = UserAwareAction.async { implicit request =>
     if (request.userId.isDefined && page == 0)
-      eventBusService.publish(LikeEvent(None, "search", "user", request.userId.get.toString, properties = Json.obj("query" -> name)))
+      eventBusService.publish(LikeEvent(None, LikeEventType.search, "user", request.userId.get.toString, properties = Json.obj("query" -> name)))
     tagService.getTagByName(name).map {
       case Some(tag) =>
         if (tag.group >= 0 && tag.usage >= 10) tagService.subscribeTag(request.userId.get, tag.id.get)
@@ -109,6 +110,59 @@ class SearchController @Inject() (
     }
   }
 
+  def searchTagV2(tag: String, ts: Option[Long]) = UserAwareAction.async { implicit request =>
+    val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
+    if (request.userId.isDefined && ts.isEmpty)
+      eventBusService.publish(LikeEvent(None, LikeEventType.search, "user", request.userId.get.toString, properties = Json.obj("query" -> tag)))
+    tagService.getTagByName(tag).map {
+      case Some(tag) =>
+        if (tag.group >= 0 && tag.usage >= 10) tagService.subscribeTag(request.userId.get, tag.id.get)
+      case None =>
+    }
+    for {
+      entityOpt <- promoteService.getEntitybyName(tag)
+      posts <- postService.searchByTagAndTimestamp(tag, 30, ts)
+    } yield {
+      // Get marks for posts from mongodb
+      val marksMap = mongoDBService.getPostMarksByIds(posts.map(_.id.get))
+
+      val postsJson = posts.map { post =>
+        val user = userService.getUserInfoFromCache(post.userId)
+        val marks = marksMap.getOrElse(post.id.get, Seq())
+        val marksJson = marks.map { mark =>
+          Json.obj(
+            "mark_id" -> mark.markId,
+            "tag" -> mark.tag,
+            "likes" -> mark.likes.size,
+            "is_liked" -> {
+              if (request.userId.isDefined) mark.likes.contains(request.userId.get) else false
+            }
+          )
+        }
+        Json.obj(
+          "post_id" -> post.id,
+          "type" -> post.`type`.toString,
+          "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+          "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
+          "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+          "raw_image" -> QiniuUtil.getRaw(post.content),
+          "created" -> post.created,
+          "user" -> Json.obj(
+            "user_id" -> post.userId,
+            "nickname" -> user.nickname,
+            "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+            "likes" -> user.likes
+          ),
+          "marks" -> Json.toJson(marksJson)
+        )
+      }
+      success(Messages("success.found"), Json.obj(
+        "posts" -> Json.toJson(postsJson),
+        "next" -> posts.lastOption.map(_.created)
+      ))
+    }
+  }
+
   def explore(tag: String, ts: Option[Long]) = cached(_ => "explore:" + tag + ":" + ts.getOrElse(""), duration = 300) {
     UserAwareAction.async { implicit request =>
       val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
@@ -144,6 +198,7 @@ class SearchController @Inject() (
             "post_id" -> post.id,
             "type" -> post.`type`.toString,
             "content" -> QiniuUtil.getPhoto(post.content, "medium"),
+            "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
             "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
             "raw_image" -> QiniuUtil.getRaw(post.content),
             "created" -> post.created,

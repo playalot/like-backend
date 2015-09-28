@@ -277,12 +277,14 @@ class UserController @Inject() (
 
   def getFollowers(id: Long, page: Int) = Action.async {
     userService.getFollowers(id, page).map { list =>
-      val jsonArr = list.map { user =>
+      val jsonArr = list.map { result =>
+        val (user, isFollowing) = result
         Json.obj(
           "user_id" -> user.id.toString,
           "nickname" -> user.nickname,
           "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
-          "likes" -> user.likes
+          "likes" -> user.likes,
+          "is_following" -> isFollowing
         )
       }
       success(Messages("success.found"), Json.obj("fans" -> Json.toJson(jsonArr)))

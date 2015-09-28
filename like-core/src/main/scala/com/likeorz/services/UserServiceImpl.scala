@@ -120,12 +120,12 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
     }
   }
 
-  override def getFollowers(userId: Long, page: Int): Future[Seq[UserInfo]] = {
+  override def getFollowers(userId: Long, page: Int): Future[Seq[(UserInfo, Boolean)]] = {
     val query = (for {
       follow <- follows if follow.toId === userId
       user <- userinfo if follow.fromId === user.id
     } yield (follow, user)).sortBy(_._1.created.desc).drop(page * 20).take(20)
-    db.run(query.map(_._2).result)
+    db.run(query.map(rs => (rs._2, rs._1.both)).result)
   }
 
   override def countFollowings(id: Long): Future[Long] = {

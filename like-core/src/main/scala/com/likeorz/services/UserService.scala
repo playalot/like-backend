@@ -5,10 +5,6 @@ import com.mohiva.play.silhouette.api.LoginInfo
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 5/22/15
- */
 trait UserService {
 
   def findById(id: Long): Future[Option[User]]
@@ -29,7 +25,7 @@ trait UserService {
 
   def countFollowers(id: Long): Future[Long]
 
-  def getFollowers(userId: Long, page: Int): Future[Seq[UserInfo]]
+  def getFollowers(userId: Long, page: Int): Future[Seq[(UserInfo, Boolean)]]
 
   def countFollowings(id: Long): Future[Long]
 

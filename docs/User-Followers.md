@@ -38,13 +38,15 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
                 "user_id": "173", 
                 "nickname": "akaaa", 
                 "avatar": "http://storage.likeorz.com/avatar_173_1426760459.jpg", 
-                "likes": "229" 
+                "likes": "229",
+                "is_following": true
             }, 
             {
                 "user_id": "53", 
                 "nickname": "Ranger °", 
                 "avatar": "http://storage.likeorz.com/avatar_53_1426382398.jpg", 
-                "likes": "263" 
+                "likes": "263",
+                "is_following": false
             }, 
         ]
     }
@@ -58,3 +60,4 @@ curl -X GET -H "LIKE-SESSION-TOKEN: c5509917fcc2b870e5b4eabd4de7cd39"  http://ap
 |nickname|string|昵称|
 |avatar|string|头像|
 |likes|int|点赞数|
+|is_following|bool|互相关注|

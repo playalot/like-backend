@@ -67,12 +67,14 @@ class SearchController @Inject() (
 
   @deprecated("replaced by v2", "v1.1.1")
   def searchTag(name: String, page: Int) = UserAwareAction.async { implicit request =>
-    if (request.userId.isDefined && page == 0)
+    if (request.userId.isDefined && page == 0) {
       eventBusService.publish(LikeEvent(None, LikeEventType.search, "user", request.userId.get.toString, properties = Json.obj("query" -> name)))
-    tagService.getTagByName(name).map {
-      case Some(tag) =>
-        if (tag.group >= 0 && tag.usage >= 10) tagService.subscribeTag(request.userId.get, tag.id.get)
-      case None =>
+      // Subscribe tag when user search
+      tagService.getTagByName(name).map {
+        case Some(tag) =>
+          if (tag.group >= 0 && tag.usage >= 10) tagService.subscribeTag(request.userId.get, tag.id.get)
+        case None =>
+      }
     }
     for {
       entityOpt <- promoteService.getEntitybyName(name)
@@ -113,16 +115,18 @@ class SearchController @Inject() (
 
   def searchTagV2(tag: String, ts: Option[Long]) = UserAwareAction.async { implicit request =>
     val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
-    if (request.userId.isDefined && ts.isEmpty)
+    if (request.userId.isDefined && ts.isEmpty) {
       eventBusService.publish(LikeEvent(None, LikeEventType.search, "user", request.userId.get.toString, properties = Json.obj("query" -> tag)))
-    tagService.getTagByName(tag).map {
-      case Some(tag) =>
-        if (tag.group >= 0 && tag.usage >= 10) tagService.subscribeTag(request.userId.get, tag.id.get)
-      case None =>
+      // Subscribe tag when user search
+      tagService.getTagByName(tag).map {
+        case Some(tag) =>
+          if (tag.group >= 0 && tag.usage >= 10) tagService.subscribeTag(request.userId.get, tag.id.get)
+        case None =>
+      }
     }
     for {
-      entityOpt <- promoteService.getEntitybyName(tag)
-      posts <- postService.searchByTagAndTimestamp(tag, 30, ts)
+      entityOpt <- if (ts.isEmpty) promoteService.getEntitybyName(tag) else Future.successful(None)
+      posts <- postService.searchByTagAndTimestamp(tag, GlobalConstants.GridPageSize, ts)
     } yield {
       // Get marks for posts from mongodb
       val marksMap = mongoDBService.getPostMarksByIds(posts.map(_.id.get))
@@ -155,10 +159,23 @@ class SearchController @Inject() (
           "marks" -> Json.toJson(marksJson)
         )
       }
-      success(Messages("success.found"), Json.obj(
-        "posts" -> Json.toJson(postsJson),
-        "next" -> posts.lastOption.map(_.created)
-      ))
+      if (entityOpt.isDefined) {
+        success(Messages("success.found"), Json.obj(
+          "info" -> Json.obj(
+            "id" -> entityOpt.get.id.get,
+            "name" -> entityOpt.get.name,
+            "description" -> entityOpt.get.description,
+            "avatar" -> QiniuUtil.getAvatar(entityOpt.get.avatar, "large")
+          ),
+          "posts" -> Json.toJson(postsJson),
+          "next" -> posts.lastOption.map(_.created)
+        ))
+      } else {
+        success(Messages("success.found"), Json.obj(
+          "posts" -> Json.toJson(postsJson),
+          "next" -> posts.lastOption.map(_.created)
+        ))
+      }
     }
   }
 
@@ -167,7 +184,7 @@ class SearchController @Inject() (
       val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
       for {
         hotUsers <- if (ts.isEmpty) tagService.hotUsersForTag(tag, 15) else Future.successful(Seq())
-        posts <- postService.searchByTagAndTimestamp(tag, 30, ts)
+        posts <- postService.searchByTagAndTimestamp(tag, GlobalConstants.GridPageSize, ts)
       } yield {
         val hotUsersJson = Json.toJson(hotUsers.map { user =>
           Json.obj(
@@ -249,6 +266,7 @@ class SearchController @Inject() (
                 "post_id" -> post.id.get,
                 "type" -> post.`type`,
                 "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
                 "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
                 "created" -> post.created,
                 "user" -> Json.obj(

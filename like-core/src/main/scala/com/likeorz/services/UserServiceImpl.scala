@@ -75,11 +75,11 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
   }
 
   override def countFollowing(id: Long): Future[Long] = {
-    RedisCacheClient.hget(KeyUtils.user(id), "followings") match {
+    RedisCacheClient.hget(KeyUtils.user(id), "following") match {
       case Some(number) => Future.successful(number.toLong)
       case None =>
         db.run(follows.filter(_.fromId === id).length.result).map { number =>
-          RedisCacheClient.hset(KeyUtils.user(id), "followings", number.toString)
+          RedisCacheClient.hset(KeyUtils.user(id), "following", number.toString)
           number
         }
     }
@@ -120,7 +120,7 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
         "cover" -> user.cover,
         "likes" -> "0",
         "posts" -> "0",
-        "followings" -> "0",
+        "following" -> "0",
         "followers" -> "0"))
       user.copy(id = Some(id))
     }

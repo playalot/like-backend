@@ -92,10 +92,12 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   def getPostsByIdsSimple(ids: Seq[Long]): Future[Seq[Post]] = {
-    if (ids.isEmpty) {
-      Future.successful(Seq[Post]())
-    } else {
-      db.run(posts.filter(_.id inSet ids).result)
+    FutureUtils.timedFuture("getPostsByIdsSimple:" + ids.size) {
+      if (ids.isEmpty) {
+        Future.successful(Seq[Post]())
+      } else {
+        db.run(posts.filter(_.id inSet ids).result)
+      }
     }
   }
 
@@ -120,7 +122,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def searchByTagAndTimestamp(name: String = "%", pageSize: Int = 18, timestamp: Option[Long]): Future[Seq[Post]] = {
+  override def searchByTagAndTimestamp(name: String = "%", pageSize: Int, timestamp: Option[Long]): Future[Seq[Post]] = {
 
     val jian = JianFan.f2j(name).toLowerCase
     val fan = JianFan.j2f(name).toLowerCase

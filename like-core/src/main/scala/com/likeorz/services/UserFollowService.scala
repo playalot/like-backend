@@ -45,7 +45,7 @@ class UserFollowService @Inject() (protected val dbConfigProvider: DatabaseConfi
               insert <- db.run(follows += Follow(None, fromId, toId, both = true))
             } yield {
               // Update cache
-              RedisCacheClient.hincrBy(KeyUtils.user(fromId), "followings", 1)
+              RedisCacheClient.hincrBy(KeyUtils.user(fromId), "following", 1)
               RedisCacheClient.hincrBy(KeyUtils.user(toId), "followers", 1)
               2
             }
@@ -54,7 +54,7 @@ class UserFollowService @Inject() (protected val dbConfigProvider: DatabaseConfi
               insert <- db.run(follows += Follow(None, fromId, toId, both = false))
             } yield {
               // Update cache
-              RedisCacheClient.hincrBy(KeyUtils.user(fromId), "followings", 1)
+              RedisCacheClient.hincrBy(KeyUtils.user(fromId), "following", 1)
               RedisCacheClient.hincrBy(KeyUtils.user(toId), "followers", 1)
               1
             }
@@ -68,7 +68,7 @@ class UserFollowService @Inject() (protected val dbConfigProvider: DatabaseConfi
       updateFollower <- db.run(updateQuery.update(false))
       remove <- db.run(follows.filter(f => f.fromId === fromId && f.toId === toId).delete)
     } yield {
-      RedisCacheClient.hincrBy(KeyUtils.user(fromId), "followings", -1)
+      RedisCacheClient.hincrBy(KeyUtils.user(fromId), "following", -1)
       RedisCacheClient.hincrBy(KeyUtils.user(toId), "followers", -1)
       remove
     }

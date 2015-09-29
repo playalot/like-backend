@@ -14,9 +14,9 @@
   </appender>
 
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${application.home}/logs/like-api-server.log</file>
+    <file>${application.home}/logs/like-dashboard.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${application.home}/logs/like-api-server.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <fileNamePattern>${application.home}/logs/like-dashboard.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
         <maxFileSize>50MB</maxFileSize>
       </timeBasedFileNamingAndTriggeringPolicy>

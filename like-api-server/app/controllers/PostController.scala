@@ -116,6 +116,7 @@ class PostController @Inject() (
 
   /** Get Post summary and author info */
   def getPost(id: Long) = UserAwareAction.async { implicit request =>
+    val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
     postService.getPostById(id).flatMap {
       case Some(post) =>
         for {
@@ -131,6 +132,8 @@ class PostController @Inject() (
             "post_id" -> id,
             "type" -> post.`type`,
             "content" -> QiniuUtil.getSizedImage(post.content, 960),
+            "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+            "raw_image" -> QiniuUtil.getRaw(post.content),
             "description" -> post.description,
             "created" -> post.created,
             "favorited" -> favorited,

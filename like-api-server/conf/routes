@@ -24,7 +24,7 @@ DELETE  /v1/account/link/:provider                  controllers.AuthController.u
 
 # Welcome
 GET     /v1/welcome/tags                            controllers.UserController.getRecommendTags
-POST    /v1/welcome/preference                      controllers.UserController.choosePreferTags
+POST    /v1/welcome/preference                      controllers.UserSettingController.choosePreferTags
 
 
 # Feed
@@ -36,15 +36,17 @@ GET     /v1/followingFeeds                          controllers.FeedController.g
 
 # User
 GET     /v1/user/$id<[0-9]+>                        controllers.UserController.getInfo(id: Long)
-PUT     /v1/user/nickname                           controllers.UserController.updateNickname()
-PUT     /v1/user/avatar                             controllers.UserController.updateAvatar()
-PUT     /v1/user/cover                              controllers.UserController.updateCover()
 GET     /v1/user/suggest                            controllers.UserController.suggestTags()
 GET     /v1/user/$id<[0-9]+>/posts/$pg<[0-9]+>      controllers.UserController.getPostsForUserV1(id: Long, pg: Int)
 GET     /v1/user/$id<[0-9]+>/posts                  controllers.UserController.getPostsForUserV2(id: Long, ts: Option[Long] ?= None)
 GET     /v1/user/favorites                          controllers.UserController.getFavoritePostsForUser(ts: Option[Long] ?= None)
 POST    /v1/user/$id<[0-9]+>/block                  controllers.UserController.block(id: Long)
 DELETE  /v1/user/$id<[0-9]+>/block                  controllers.UserController.unBlock(id: Long)
+
+# User Setting
+PUT     /v1/user/nickname                           controllers.UserSettingController.updateNickname()
+PUT     /v1/user/avatar                             controllers.UserSettingController.updateAvatar()
+PUT     /v1/user/cover                              controllers.UserSettingController.updateCover()
 
 # User Follow
 GET     /v1/user/$id<[0-9]+>/follows/$pg<[0-9]+>    controllers.UserFollowController.getFollowing(id: Long, pg: Int)

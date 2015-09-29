@@ -6,12 +6,10 @@ import com.likeorz.models.{ UserTag, Notification }
 import com.likeorz.push.JPushNotification
 import com.likeorz.services.store.MongoDBService
 import com.likeorz.utils.GlobalConstants
-import play.api.Play
 import play.api.cache.Cached
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
-import play.api.Play.current
 import play.api.mvc.Action
 import com.likeorz.services._
 import services.PushService
@@ -30,9 +28,6 @@ class UserController @Inject() (
     mongoDBService: MongoDBService,
     notificationService: NotificationService,
     pushService: PushService) extends BaseController {
-
-  val DEFAULT_AVATAR = Play.configuration.getString("default.avatar").get
-  val DEFAULT_COVER = Play.configuration.getString("default.cover").get
 
   def getInfo(id: Long) = UserAwareAction.async { implicit request =>
     userService.findById(id).flatMap {
@@ -66,58 +61,6 @@ class UserController @Inject() (
           ))
         }
       case None => Future.successful(error(4014, Messages("invalid.userId")))
-    }
-  }
-
-  def updateNickname() = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
-    (request.body \ "nickname").asOpt[String] match {
-      case Some(nickname) =>
-        userService.nicknameExists(nickname.trim).flatMap {
-          case true => Future.successful(error(4040, Messages("invalid.nicknameExist")))
-          case false =>
-            if (nickname.trim.length > 20) {
-              Future.successful(error(4040, Messages("invalid.nicknameLong")))
-            } else if (nickname.trim.length < 2) {
-              Future.successful(error(4040, Messages("invalid.nicknameShort")))
-            } else {
-              userService.updateNickname(request.userId, nickname.trim).map(_ => success(Messages("success.nickname")))
-            }
-        }
-      case None => Future.successful(error(4040, Messages("invalid.nickname")))
-    }
-  }
-
-  def updateAvatar() = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
-    (request.body \ "avatar").asOpt[String] match {
-      case Some(avatar) =>
-        for {
-          user <- userService.findById(request.userId)
-          result <- userService.updateAvatar(request.userId, avatar)
-        } yield {
-          if (user.get.avatar != DEFAULT_AVATAR) {
-            postService.recordDelete(user.get.avatar)
-          }
-          success(Messages("success.avatar"))
-        }
-      case None =>
-        Future.successful(error(4041, Messages("invalid.avatar")))
-    }
-  }
-
-  def updateCover() = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
-    (request.body \ "cover").asOpt[String] match {
-      case Some(avatar) =>
-        for {
-          user <- userService.findById(request.userId)
-          result <- userService.updateCover(request.userId, avatar)
-        } yield {
-          if (user.get.cover != DEFAULT_COVER) {
-            postService.recordDelete(user.get.cover)
-          }
-          success(Messages("success.cover"))
-        }
-      case None =>
-        Future.successful(error(4041, Messages("invalid.cover")))
     }
   }
 
@@ -185,7 +128,6 @@ class UserController @Inject() (
                 "content" -> QiniuUtil.getPhoto(post.content, "medium"),
                 "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
                 "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
-                "raw_image" -> QiniuUtil.getRaw(post.content),
                 "created" -> post.created,
                 "user" -> Json.obj(
                   "user_id" -> post.userId,
@@ -230,7 +172,6 @@ class UserController @Inject() (
               "content" -> QiniuUtil.getPhoto(post.content, "medium"),
               "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
               "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
-              "raw_image" -> QiniuUtil.getRaw(post.content),
               "created" -> post.created,
               "favorited" -> true,
               "user" -> Json.obj(
@@ -351,27 +292,6 @@ class UserController @Inject() (
         success(Messages("success.found"), Json.obj(
           "tags" -> Json.toJson(jsonArr)
         ))
-      }
-    }
-  }
-
-  def choosePreferTags = SecuredAction.async(parse.json) { implicit request =>
-    val groupIds = (request.body \ "groups").as[Seq[Long]]
-    val tagIds = (request.body \ "tags").as[Seq[Long]]
-
-    tagService.getGroupedTags.flatMap { results =>
-      val tags = results.filter(g => groupIds.contains(g._1.id.get))
-        .flatMap { pair =>
-          val topN = pair._2.length / 3
-          pair._2.sortBy(_.usage).reverse.take(topN)
-        }
-      val userTags = tags.map(tag => UserTag(request.userId, tag.id.get)).toSeq
-
-      for {
-        subscribedIds <- tagService.getUserSubscribeTagIds(request.userId)
-        result <- tagService.subscribeTags(userTags.filterNot(t => subscribedIds.contains(t.tagId)))
-      } yield {
-        success(Messages("success.found"))
       }
     }
   }

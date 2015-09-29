@@ -142,10 +142,8 @@ class SearchController @Inject() (
         Json.obj(
           "post_id" -> post.id,
           "type" -> post.`type`.toString,
-          "content" -> QiniuUtil.getPhoto(post.content, "medium"),
           "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
           "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
-          "raw_image" -> QiniuUtil.getRaw(post.content),
           "created" -> post.created,
           "user" -> Json.obj(
             "user_id" -> post.userId,

@@ -15,27 +15,11 @@ trait UserService {
 
   def findBySocial(providerId: String, providerKey: String): Future[Option[SocialAccount]]
 
-  def linkAccount(userId: Long, providerId: String, providerKey: String): Future[Boolean]
-
-  def unlinkAccount(userId: Long, providerId: String): Future[Boolean]
-
   def listLinkedAccounts(userId: Long): Future[Map[String, String]]
-
-  def updateMobile(userId: Long, mobilePhoneNumber: String, zone: Int): Future[Unit]
 
   def insert(user: User): Future[User]
 
   def upsert(loginInfo: LoginInfo, user: User): Future[User]
-
-  def update(id: Long, user: User): Future[User]
-
-  def updateRefreshToken(id: Long, token: String): Future[Boolean]
-
-  def updateNickname(id: Long, nickname: String): Future[Boolean]
-
-  def updateAvatar(id: Long, avatar: String): Future[Boolean]
-
-  def updateCover(id: Long, cover: String): Future[Boolean]
 
   def syncDBLikesFromCache(userId: Long): Future[Unit]
 

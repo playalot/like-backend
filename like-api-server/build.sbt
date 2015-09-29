@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "com.github.nscala-time"    %% "nscala-time"      % "2.2.0",
   "com.typesafe.play"         %% "play-mailer"      % "3.0.1",
   "net.ceedubs"               %% "ficus"            % "1.1.2",
-  "com.github.cb372"          %% "scalacache-memcached" % "0.6.4",
+  "com.github.cb372"          %% "scalacache-memcached" % "0.7.0",
   "io.kamon"                  %% "kamon-core"           % kamonVersion,
 //  "io.kamon"                  %% "kamon-akka"           % kamonVersion,
   "io.kamon"                  %% "kamon-play-24"        % kamonVersion,

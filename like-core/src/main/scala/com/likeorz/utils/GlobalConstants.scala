@@ -10,4 +10,8 @@ object GlobalConstants {
   val MaxTagLength = 13
 
   val CacheExpiresIn = 5184000 // 60 days
+
+  val DefaultCover = "default_cover.jpg"
+  val DefaultAvatar = "default_avatar.jpg"
+
 }

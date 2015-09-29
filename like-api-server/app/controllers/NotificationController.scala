@@ -82,6 +82,8 @@ class NotificationController @Inject() (
 
   def getNotificationsV2(ts: Option[Long] = None) = SecuredAction.async { implicit request =>
 
+    val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
+
     notificationService.getNotifications(request.userId, ts).map { results =>
       val ts = results.lastOption.map(_._1.updated)
 
@@ -119,16 +121,20 @@ class NotificationController @Inject() (
                 "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
                 "likes" -> user.likes
               ),
-              "post" -> postOpt.map(postAndUser => Json.obj(
-                "post_id" -> postAndUser._1.id.get,
-                "content" -> QiniuUtil.getPhoto(postAndUser._1.content, "small"),
-                "user" -> Json.obj(
-                  "user_id" -> postAndUser._2.id,
-                  "nickname" -> postAndUser._2.nickname,
-                  "avatar" -> QiniuUtil.getAvatar(postAndUser._2.avatar, "small"),
-                  "likes" -> postAndUser._2.likes
+              "post" -> postOpt.map { postAndUser =>
+                val (post, user) = postAndUser
+                Json.obj(
+                  "post_id" -> post.id.get,
+                  "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
+                  "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                  "user" -> Json.obj(
+                    "user_id" -> user.id,
+                    "nickname" -> user.nickname,
+                    "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+                    "likes" -> user.likes
+                  )
                 )
-              )),
+              },
               "tags" -> notification.tagName.toSeq,
               "timestamp" -> notification.updated
             )

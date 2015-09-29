@@ -18,6 +18,7 @@ class LikeCoreModule extends AbstractModule with ScalaModule with AkkaGuiceSuppo
     // DB services
     bind[InfoService]
     bind[UserFollowService]
+    bind[UserSettingService]
     bind[TagService].to[TagServiceImpl]
     bind[PostService].to[PostServiceImpl]
     bind[UserService].to[UserServiceImpl]

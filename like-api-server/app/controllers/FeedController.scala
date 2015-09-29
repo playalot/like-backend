@@ -318,7 +318,6 @@ class FeedController @Inject() (
                   "type" -> post.`type`,
                   "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
                   "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
-                  "raw_image" -> QiniuUtil.getRaw(post.content),
                   "created" -> post.created,
                   "user" -> Json.obj(
                     "user_id" -> post.userId,
@@ -401,7 +400,6 @@ class FeedController @Inject() (
                 "type" -> post.`type`,
                 "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
                 "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
-                "raw_image" -> QiniuUtil.getRaw(post.content),
                 "created" -> post.created,
                 "reason" -> reasonMap(feed.reason),
                 "reason_tag" -> feed.tag,

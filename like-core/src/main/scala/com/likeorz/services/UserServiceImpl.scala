@@ -50,6 +50,19 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
     }
   }
 
+  override def listLinkedAccounts(userId: Long): Future[Map[String, String]] = {
+    findById(userId).flatMap {
+      case Some(user) =>
+        db.run(socials.filter(_.userId === userId).result).map { accounts =>
+          if (user.mobile.isDefined && user.mobile.get.length > 0)
+            accounts.map(social => (social.provider, social.key)).toMap + ("mobile" -> ("86 " + user.mobile.get))
+          else
+            accounts.map(social => (social.provider, social.key)).toMap
+        }
+      case None => Future.successful(Map())
+    }
+  }
+
   override def countFollowers(id: Long): Future[Long] = {
     RedisCacheClient.hget(KeyUtils.user(id), "followers") match {
       case Some(number) => Future.successful(number.toLong)
@@ -74,38 +87,6 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
 
   override def findBySocial(providerId: String, providerKey: String): Future[Option[SocialAccount]] = {
     db.run(socials.filter(x => x.provider === providerId && x.key === providerKey).result.headOption)
-  }
-
-  override def linkAccount(userId: Long, providerId: String, providerKey: String): Future[Boolean] = {
-    db.run(socials += SocialAccount(providerId, providerKey, userId)).map(_ == 1)
-  }
-
-  override def unlinkAccount(userId: Long, providerId: String): Future[Boolean] = {
-    db.run(socials.filter(x => x.userId === userId && x.provider === providerId).delete).map(_ == 1)
-  }
-
-  override def listLinkedAccounts(userId: Long): Future[Map[String, String]] = {
-    findById(userId).flatMap {
-      case Some(user) =>
-        db.run(socials.filter(_.userId === userId).result).map { accounts =>
-          if (user.mobile.isDefined && user.mobile.get.length > 0)
-            accounts.map(social => (social.provider, social.key)).toMap + ("mobile" -> ("86 " + user.mobile.get))
-          else
-            accounts.map(social => (social.provider, social.key)).toMap
-        }
-      case None => Future.successful(Map())
-    }
-  }
-
-  override def updateMobile(userId: Long, mobilePhoneNumber: String, zone: Int): Future[Unit] = {
-    val key = s"$zone $mobilePhoneNumber"
-    db.run(socials.filter(u => u.provider === MobileProvider.ID && u.userId === userId).result.headOption).flatMap {
-      case Some(social) =>
-        db.run(socials.filter(u => u.provider === MobileProvider.ID && u.userId === userId).update(SocialAccount(MobileProvider.ID, key, userId))).map(_ => ())
-      case None =>
-        db.run(socials += SocialAccount(MobileProvider.ID, key, userId)).map(_ => ())
-    }
-    db.run(users.filter(_.id === userId).map(x => x.mobile).update(mobilePhoneNumber)).map(_ => ())
   }
 
   override def getNickname(userId: Long): Future[String] = {
@@ -157,42 +138,6 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
           u <- db.run(users returning users.map(_.id) += user).map(id => user.copy(id = Some(id)))
           s <- db.run(socials += SocialAccount(loginInfo.providerID, loginInfo.providerKey, u.id.get))
         } yield { u }
-    }
-  }
-
-  override def update(id: Long, user: User): Future[User] = {
-    val userToUpdate: User = user.copy(Some(id))
-    db.run(users.filter(_.id === id).update(userToUpdate)).map(_ => userToUpdate)
-  }
-
-  override def updateRefreshToken(id: Long, token: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => (x.refreshToken, x.updated)).update((token, GenerateUtils.currentSeconds()))).map(_ == 1)
-  }
-
-  override def updateNickname(id: Long, nickname: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => x.nickname).update(nickname)).map { rs =>
-      if (rs == 1) {
-        RedisCacheClient.hset(KeyUtils.user(id), "nickname", nickname)
-        true
-      } else { false }
-    }
-  }
-
-  override def updateAvatar(id: Long, avatar: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => x.avatar).update(avatar)).map { rs =>
-      if (rs == 1) {
-        RedisCacheClient.hset(KeyUtils.user(id), "avatar", avatar)
-        true
-      } else { false }
-    }
-  }
-
-  override def updateCover(id: Long, cover: String): Future[Boolean] = {
-    db.run(users.filter(_.id === id).map(x => x.cover).update(cover)).map { rs =>
-      if (rs == 1) {
-        RedisCacheClient.hset(KeyUtils.user(id), "cover", cover)
-        true
-      } else { false }
     }
   }
 

@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
-import com.likeorz.services.UserService
+import com.likeorz.services.{ UserSettingService, UserService }
 import com.likeorz.silhouettes.{ SmsCode, MobileProvider }
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.util.IDGenerator
@@ -26,6 +26,7 @@ import scala.concurrent.Future
 class AuthController @Inject() (
     val messagesApi: MessagesApi,
     userService: UserService,
+    userSettingService: UserSettingService,
     sessionTokenGenerator: IDGenerator,
     providerEnv: ProviderEnv,
     mobileProvider: MobileProvider) extends BaseController {
@@ -52,7 +53,7 @@ class AuthController @Inject() (
               sessionToken <- sessionTokenGenerator.generate
               value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
               refreshToken <- refreshTokenGenerator.generate
-              unit <- userService.updateRefreshToken(id, HashUtils.hashPassword(refreshToken))
+              unit <- userSettingService.updateRefreshToken(id, HashUtils.hashPassword(refreshToken))
             } yield {
               success(Messages("success.refreshToken"), Json.obj(
                 "user_id" -> user.identify,
@@ -123,7 +124,7 @@ class AuthController @Inject() (
                 // Create new refresh token
                 refreshToken <- refreshTokenGenerator.generate
                 // Refresh user's refresh token and updated time
-                unit <- userService.updateRefreshToken(user.id.get, HashUtils.hashPassword(refreshToken))
+                unit <- userSettingService.updateRefreshToken(user.id.get, HashUtils.hashPassword(refreshToken))
               } yield {
                 success(Messages("success.login"), Json.obj(
                   "user_id" -> user.identify,
@@ -143,7 +144,7 @@ class AuthController @Inject() (
                   GenerateUtils.currentSeconds(),
                   0, Some(HashUtils.hashPassword(refreshToken))
                 ))
-                link <- userService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone + " " + smsCode.mobilePhoneNumber)
+                link <- userSettingService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone + " " + smsCode.mobilePhoneNumber)
                 sessionToken <- sessionTokenGenerator.generate
                 value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
               } yield {
@@ -186,7 +187,7 @@ class AuthController @Inject() (
                 // Create new refresh token
                 refreshToken <- refreshTokenGenerator.generate
                 // Refresh user's refresh token and updated time
-                unit <- userService.updateRefreshToken(user.id.get, HashUtils.hashPassword(refreshToken))
+                unit <- userSettingService.updateRefreshToken(user.id.get, HashUtils.hashPassword(refreshToken))
               } yield {
                 success(Messages("success.login"), Json.obj(
                   "user_id" -> user.identify,
@@ -206,7 +207,7 @@ class AuthController @Inject() (
                   GenerateUtils.currentSeconds(),
                   0, Some(HashUtils.hashPassword(refreshToken))
                 ))
-                link <- userService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone + " " + smsCode.mobilePhoneNumber)
+                link <- userSettingService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone + " " + smsCode.mobilePhoneNumber)
                 sessionToken <- sessionTokenGenerator.generate
                 value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
               } yield {
@@ -245,7 +246,7 @@ class AuthController @Inject() (
               // Create new refresh token
               refreshToken <- refreshTokenGenerator.generate
               // Refresh user's refresh token and updated time
-              unit <- userService.updateRefreshToken(user.id.get, HashUtils.hashPassword(refreshToken))
+              unit <- userSettingService.updateRefreshToken(user.id.get, HashUtils.hashPassword(refreshToken))
             } yield {
               success(Messages("success.login"), Json.obj(
                 "user_id" -> user.identify,
@@ -265,7 +266,7 @@ class AuthController @Inject() (
                 GenerateUtils.currentSeconds(),
                 0, Some(HashUtils.hashPassword(refreshToken))
               ))
-              link <- userService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone + " " + smsCode.mobilePhoneNumber)
+              link <- userSettingService.linkAccount(user.id.get, MobileProvider.ID, smsCode.zone + " " + smsCode.mobilePhoneNumber)
               sessionToken <- sessionTokenGenerator.generate
               value <- MemcachedCacheClient.saveAsync[String](KeyUtils.session(sessionToken), user.identify, TOKEN_EXPIRY)
             } yield {
@@ -395,14 +396,14 @@ class AuthController @Inject() (
               case Some(p: WeiboProvider with WeiboProfileBuilder) =>
                 for {
                   profile <- p.retrieveProfile(authInfoWithId)
-                  link <- userService.linkAccount(request.userId, provider, profile.userId)
+                  link <- userSettingService.linkAccount(request.userId, provider, profile.userId)
                 } yield {
                   response
                 }
               case Some(p: WechatProvider with WechatProfileBuilder) =>
                 for {
                   profile <- p.retrieveProfile(authInfoWithId)
-                  link <- userService.linkAccount(request.userId, provider, profile.userId)
+                  link <- userSettingService.linkAccount(request.userId, provider, profile.userId)
                 } yield {
                   response
                 }
@@ -410,7 +411,7 @@ class AuthController @Inject() (
                 // Verify token
                 if (HashUtils.validateTimestampHash((request.body \ "token").asOpt[String].getOrElse(""))) {
                   for {
-                    link <- userService.linkAccount(request.userId, provider, id)
+                    link <- userSettingService.linkAccount(request.userId, provider, id)
                   } yield {
                     response
                   }
@@ -429,7 +430,7 @@ class AuthController @Inject() (
       if (accounts.size <= 1) {
         Future.successful(error(4055, Messages("failed.lastAccount")))
       } else {
-        userService.unlinkAccount(request.userId, provider).map {
+        userSettingService.unlinkAccount(request.userId, provider).map {
           case true  => success(Messages("success.unLink"))
           case false => error(4056, Messages("failed.unLink"))
         }
@@ -447,7 +448,7 @@ class AuthController @Inject() (
         case None =>
           mobileProvider.authenticateViaAvos(smsCode).flatMap { loginInfo =>
             for {
-              link <- userService.updateMobile(request.userId, smsCode.mobilePhoneNumber, smsCode.zone.toInt)
+              link <- userSettingService.updateMobile(request.userId, smsCode.mobilePhoneNumber, smsCode.zone.toInt)
             } yield {
               success(Messages("success.link"), Json.obj(
                 "user_id" -> request.userId.toString,
@@ -474,7 +475,7 @@ class AuthController @Inject() (
         case None =>
           mobileProvider.authenticateViaMobIOS(smsCode).flatMap { loginInfo =>
             for {
-              link <- userService.updateMobile(request.userId, smsCode.mobilePhoneNumber, smsCode.zone.toInt)
+              link <- userSettingService.updateMobile(request.userId, smsCode.mobilePhoneNumber, smsCode.zone.toInt)
             } yield {
               success(Messages("success.link"), Json.obj(
                 "user_id" -> request.userId.toString,

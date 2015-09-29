@@ -1,5 +1,6 @@
 var Reflux = require('reflux');
 var $ = require('jquery');
+var Router = require('react-router');
 var StatsActions = require('../actions/statsactions');
 
 var StatsStore = Reflux.createStore({
@@ -23,7 +24,7 @@ var StatsStore = Reflux.createStore({
       }
     },
     onUpdateStats: function() {
-      if (window.location.pathname === '/home') {
+      if (window.location.hash === '#/' || window.location.hash === '#/home') {
         $.get('/api/stats', function(data){
           var count = 0;
           if (this.stats.user) {

@@ -19,7 +19,7 @@ var Feedbacks = React.createClass({
   render: function() {
     if (this.state.feedbacklist) {
       return (
-        <div>
+        <div className="content">
           <div className="table-responsive">
             <table className="table table-striped">
               <thead><tr><th>#ID</th><th>User</th><th>Feedback</th><th style={{'min-width': '150px'}}>Created</th><th>Action</th></tr></thead>
@@ -31,7 +31,7 @@ var Feedbacks = React.createClass({
                       <td><a href={'/user/'+feedback.user.id}><img src={feedback.user.avatar} className="img-circle"/></a></td>
                       <td>{feedback.content}</td>
                       <td>{Moment.unix(feedback.created).fromNow()}</td>
-                      <td><ButtonToolbar><a className="btn btn-red btn-sm" onClick={this.deleteFeedback.bind(this, feedback.id)}>Delete</a></ButtonToolbar></td>
+                      <td><ButtonToolbar><a className="btn btn-danger btn-block btn-flat" onClick={this.deleteFeedback.bind(this, feedback.id)}>Delete</a></ButtonToolbar></td>
                     </tr>
                   );
                 }.bind(this))}

@@ -23,7 +23,7 @@ var Brands = React.createClass({
   render: function() {
     if (this.state.brandlist) {
       return (
-        <div>
+        <div className="content">
           <p>
             <a href="/brandform"><Button bsStyle='success'>Create new brand</Button></a>
           </p>

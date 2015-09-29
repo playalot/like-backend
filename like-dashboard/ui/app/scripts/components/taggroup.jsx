@@ -41,7 +41,7 @@ var TagGroup = React.createClass({
   render: function() {
     if (this.state.data) {
       return (
-        <div>
+        <div className="content">
           <Row>
             {this.state.data.groups.map(function(group) {
               return (

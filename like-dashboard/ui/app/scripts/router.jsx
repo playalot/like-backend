@@ -15,11 +15,13 @@ var JudgePosts = require('./components/judgeposts');
 var Feedback = require('./components/feedback');
 var BrandList = require('./components/brandlist');
 var BrandForm = require('./components/brandform');
+var Test = require('./components/test');
 
 var routes = (
 	<Route name="layout" path="/" handler={Layout}>
-		<Route name="postlist" path="/posts" handler={PostList} />
-		<Route name="userlist" path="/users" handler={UserList} />
+		<Route name="home" handler={Home} />
+		<Route name="postlist" handler={PostList} />
+		<Route name="userlist" handler={UserList} />
 		<Route name="userdetail" path="/user/:userId" handler={UserDetail} />
 		<Route name="activeusers" path="/activeusers" handler={ActiveUsers} />
 		<Route name="taggroup" path="/tags" handler={TagGroup} />
@@ -27,15 +29,14 @@ var routes = (
 		<Route name="judgeposts" path="/judge" handler={JudgePosts} />
 		<Route name="brandlist" path="/brands" handler={BrandList} />
 		<Route name="brandform" path="/brandform" handler={BrandForm} />
-		<Route name="home" path="/home" handler={Home} />
 		<Redirect from="/" to="home" />
 		<DefaultRoute handler={Home} />
 	</Route>
 );
 
 exports.start = function() {
-  Router.run(routes, Router.HistoryLocation, function (Handler) {
+  Router.run(routes, function (Handler) {
 		/*jslint browser:true */
-		React.render(<Handler />, document.getElementById('app'));
+		React.render(<Handler/>, document.getElementById('app'));
 	});
 };

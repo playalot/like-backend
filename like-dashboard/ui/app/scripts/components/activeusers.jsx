@@ -9,7 +9,7 @@ var ActiveUserList = React.createClass({
   render: function() {
     if (this.state.activeusers) {
       return (
-        <div>
+        <div className="content">
           <h5>Total {this.state.activeusers.total} users are active within the last 24 hours</h5>
           <div className="table-responsive">
             <table className="table table-striped">

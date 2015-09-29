@@ -171,7 +171,10 @@ module.exports = function (grunt) {
             expand: true,
             flatten: true,
             cwd: '<%= yeoman.app %>',
-            src: ['vendor/bootstrap/dist/fonts/*.*'],
+            src: [
+              'vendor/bootstrap/dist/fonts/*.*',
+              'vendor/font-awesome/fonts/*.*'
+            ],
             dest: '<%= yeoman.dist %>/fonts'
           }]
         }

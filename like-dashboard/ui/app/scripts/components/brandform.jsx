@@ -110,7 +110,7 @@ var BrandForm = React.createClass({
       text = this.state.file;
     }
     return (
-      <div>
+      <div className="content">
         <h1>Brand Form</h1>
         <form id="brandForm">
           <input type="hidden" name="id" valueLink={this.linkState('id')} />

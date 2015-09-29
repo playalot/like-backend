@@ -33,7 +33,7 @@ var UserDetail = React.createClass({
     console.log(this.state.userDetail);
     if (this.state.userDetail.userPostlist) {
       return (
-        <div>
+        <div className="content">
           <div className="page-header">
             <img src={this.state.userDetail.userInfo.avatar} width="100" height="100" className="img-circle img-corona" alt="user-avatar" />
       			<span className="user-profile">

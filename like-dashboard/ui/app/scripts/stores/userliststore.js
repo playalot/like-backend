@@ -14,7 +14,6 @@ var UserListStore = Reflux.createStore({
   		if (this.userlist.length === 0) {
         this.onFetchUserList();
       }
-      return this.userlist;
   	},
     updateParams: function(v) {
       if (this.filter !== v) {

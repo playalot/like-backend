@@ -32,11 +32,15 @@ var PostList = React.createClass({
   render: function() {
     if (this.state.postlist) {
       return (
-        <div>
+        <div className="content">
           <div className="page-header">
-            <form className="form-inline form-input-filter">
-              <Input type='text' placeholder='Search Tag' valueLink={this.linkState('filter')} />
-              <button className="btn btn-raised btn-primary" onClick={this.clickFilter}>Filter</button>
+            <form className="form-input-filter">
+              <div className="input-group">
+                <Input type='text' placeholder='Search by Tag' valueLink={this.linkState('filter')} />
+                <span className="input-group-btn">
+                  <button type="button" className="btn btn-info" onClick={this.clickFilter}>Filter</button>
+                </span>
+              </div>
             </form>
           </div>
           <Row>

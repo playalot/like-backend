@@ -17,7 +17,7 @@ var JudgePostList = React.createClass({
   render: function() {
     if (this.state.postlist) {
       return (
-        <div>
+        <div className="content">
           <Row>
             {this.state.postlist.map(function (post) {
               return (

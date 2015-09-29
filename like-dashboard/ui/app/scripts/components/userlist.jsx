@@ -22,11 +22,15 @@ var UserList = React.createClass({
   render: function() {
     if (this.state.userlist) {
       return (
-        <div>
+        <div className="content">
           <div className="page-header">
-            <form className="form-inline form-input-filter">
-              <Input type='text' placeholder='Search User' valueLink={this.linkState('filter')} />
-              <button className="btn btn-primary" onClick={this.clickFilter}>Filter</button>
+            <form className="form-input-filter">
+              <div className="input-group">
+                <Input type='text' placeholder='Search Username' valueLink={this.linkState('filter')} />
+                <span className="input-group-btn">
+                  <button type="button" className="btn btn-info" onClick={this.clickFilter}>Filter</button>
+                </span>
+              </div>
             </form>
           </div>
           <div className="table-responsive">

@@ -1,3 +1,10 @@
 ui/dist/*
 ui/node_modules/*
 ui/target/*
+ui/.tmp/*
+ui/app/vendor/*
+legacy-ui/dist/*
+legacy-ui/node_modules/*
+legacy-ui/target/*
+legacy-ui/.tmp/*
+legacy-ui/app/vendor/*

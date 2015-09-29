@@ -47,16 +47,6 @@ DELETE  /api/feedback/:id           controllers.FeedbackApiController.deleteFeed
 
 # Yeoman
 GET      /                          controllers.YeomanController.index
-GET      /home                      controllers.YeomanController.index
-GET      /posts                     controllers.YeomanController.index
-GET      /brands                    controllers.YeomanController.index
-GET      /brandform                 controllers.YeomanController.index
-GET      /users                     controllers.YeomanController.index
-GET      /tags                      controllers.YeomanController.index
-GET      /judge                     controllers.YeomanController.index
-GET      /feedback                  controllers.YeomanController.index
-GET      /activeusers               controllers.YeomanController.index
-GET      /user/$id<[0-9]+>          controllers.YeomanController.path(id: String)
 GET      /*file                     controllers.YeomanController.at(file)
 
 

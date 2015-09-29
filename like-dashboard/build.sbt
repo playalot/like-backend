@@ -17,8 +17,9 @@ libraryDependencies ++= Seq(
   filters,
   ws,
   "com.adrianhurt"            %% "play-bootstrap3"  % "0.4.4-P24",
-  "net.codingwell"            %% "scala-guice"      % "4.0.0",
   "net.ceedubs"               %% "ficus"            % "1.1.2",
+  "org.webjars"               %% "webjars-play"     % "2.4.0",
+  "org.webjars"               %  "bootstrap"        % "3.3.5",
   "org.scalatest"             %% "scalatest"        % "2.2.5" % "test",
   specs2                      %  Test
 )

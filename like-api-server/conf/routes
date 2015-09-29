@@ -94,6 +94,7 @@ GET     /v1/explore/hot/user                        controllers.SearchController
 GET     /v1/explore/hot                             controllers.SearchController.hotTagsAndUsers
 GET     /v1/explore/tag/:tag                        controllers.SearchController.explore(tag: String, ts: Option[Long] ?= None)
 GET     /v1/search/topsearch/:name                  controllers.SearchController.searchUsersAndTags(name: String)
+GET     /v1/explore/editorpick                      controllers.SearchController.getEditorPicks(ts: Option[Long] ?= None)
 
 #Notification
 GET     /v1/notification                            controllers.NotificationController.getNotifications(ts: Option[Long] ?= None)

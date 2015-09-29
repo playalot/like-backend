@@ -44,7 +44,7 @@ trait PostService {
 
   def report(report: Report): Future[Report]
 
-  def getRecommendedPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
+  def getEditorPickPostIds(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
   def getFollowingPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 

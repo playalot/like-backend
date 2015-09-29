@@ -5,6 +5,7 @@ import javax.inject.Inject
 import com.likeorz.event.{ LikeEventType, LikeEvent }
 import com.likeorz.models.Entity
 import com.likeorz.services.store.MongoDBService
+import com.likeorz.utils.GlobalConstants
 import play.api.cache.Cached
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
@@ -214,6 +215,54 @@ class SearchController @Inject() (
           "posts" -> Json.toJson(postsJson),
           "next" -> posts.lastOption.map(_.created)
         ))
+      }
+    }
+  }
+
+  def getEditorPicks(ts: Option[Long]) = UserAwareAction.async { implicit request =>
+    val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
+    postService.getEditorPickPostIds(GlobalConstants.GridPageSize, ts).flatMap { ids =>
+      if (ids.isEmpty) {
+        Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
+      } else {
+        postService.getPostsByIdsSimple(ids).map(_.sortBy(-_.created)).map { posts =>
+          if (posts.isEmpty) {
+            success(Messages("success.found"), Json.obj("posts" -> Json.arr()))
+          } else {
+            // Get marks for posts from mongodb
+            val marksMap = mongoDBService.getPostMarksByIds(posts.map(_.id.get))
+
+            val postsJson = posts.map { post =>
+              val marks = marksMap.getOrElse(post.id.get, Seq())
+              val userInfo = userService.getUserInfoFromCache(post.userId)
+              val marksJson = marks.map { mark =>
+                Json.obj(
+                  "mark_id" -> mark.markId,
+                  "tag" -> mark.tag,
+                  "likes" -> mark.likes.size,
+                  "is_liked" -> {
+                    if (request.userId.isDefined) mark.likes.contains(request.userId.get) else false
+                  }
+                )
+              }
+              Json.obj(
+                "post_id" -> post.id.get,
+                "type" -> post.`type`,
+                "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+                "created" -> post.created,
+                "user" -> Json.obj(
+                  "user_id" -> post.userId,
+                  "nickname" -> userInfo.nickname,
+                  "avatar" -> QiniuUtil.getAvatar(userInfo.avatar, "small"),
+                  "likes" -> userInfo.likes
+                ),
+                "marks" -> Json.toJson(marksJson)
+              )
+            }
+            success(Messages("success.found"), Json.obj("posts" -> Json.toJson(postsJson), "next" -> posts.last.created))
+          }
+        }
       }
     }
   }

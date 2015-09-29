@@ -85,7 +85,7 @@ class UserSettingController @Inject() (
       val userTags = tags.map(tag => UserTag(request.userId, tag.id.get)).toSeq
 
       for {
-        subscribedIds <- tagService.getUserSubscribeTagIds(request.userId)
+        subscribedIds <- tagService.getUserHistoryTagIds(request.userId)
         result <- tagService.subscribeTags(userTags.filterNot(t => subscribedIds.contains(t.tagId)))
       } yield {
         success(Messages("success.found"))

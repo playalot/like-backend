@@ -38,13 +38,13 @@ class FeedController @Inject() (
 
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
-      val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
+      val recommendIds = postService.getEditorPickPostIds(pageSize, timestamp)
       val followIds = postService.getPostIdsForUser(request.userId.get, followPageSize, timestamp)
       val taggedIds = postService.getTaggedPosts(request.userId.get, taggedPageSize, timestamp)
       //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.4, pageSize, timestamp))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
     } else {
-      val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
+      val recommendIds = postService.getEditorPickPostIds(pageSize, timestamp)
       Future.sequence(Seq(recommendIds))
     }
 
@@ -173,13 +173,13 @@ class FeedController @Inject() (
 
     // Get post ids from different data source
     val futureIds = if (request.userId.isDefined) {
-      val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
+      val recommendIds = postService.getEditorPickPostIds(pageSize, timestamp)
       val followIds = postService.getPostIdsForUser(request.userId.get, followPageSize, timestamp)
       val taggedIds = postService.getTaggedPosts(request.userId.get, taggedPageSize, timestamp)
       //      val categoryIds = Future.successful(postService.getPersonalizedPostsForUser(request.userId.get, 0.4, pageSize, timestamp))
       Future.sequence(Seq(recommendIds, followIds, taggedIds))
     } else {
-      val recommendIds = postService.getRecommendedPosts(pageSize, timestamp)
+      val recommendIds = postService.getEditorPickPostIds(pageSize, timestamp)
       Future.sequence(Seq(recommendIds))
     }
 

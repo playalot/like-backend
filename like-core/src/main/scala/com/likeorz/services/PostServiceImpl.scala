@@ -317,7 +317,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     db.run(favorites.filter(fav => fav.userId === userId && fav.postId === postId).take(1).result.headOption).map(x => x.isDefined)
   }
 
-  override def getRecommendedPosts(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
+  override def getEditorPickPostIds(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]] = {
     if (timestamp.isDefined) {
       val query = sql"""SELECT r.post_id FROM recommend r INNER JOIN post p ON r.post_id=p.id WHERE p.created < ${timestamp.get} ORDER BY p.created DESC LIMIT $pageSize""".as[Long]
       db.run(query)

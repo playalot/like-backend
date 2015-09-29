@@ -139,8 +139,8 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     db.run(userTags.filter(t => t.userId === userId && t.tagId === tagId).map(_.subscribe).update(false))
   }
 
-  override def getUserSubscribeTagIds(userId: Long): Future[Seq[Long]] = {
-    db.run(userTags.filter(ut => ut.userId === userId && ut.subscribe === true).map(_.tagId).result)
+  override def getUserHistoryTagIds(userId: Long): Future[Seq[Long]] = {
+    db.run(userTags.filter(ut => ut.userId === userId).map(_.tagId).result)
   }
 
   override def getUserSubscribeTag(userId: Long, tagId: Long): Future[Option[UserTag]] = {

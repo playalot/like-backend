@@ -21,16 +21,16 @@ var Test = require('./components/test');
 var routes = (
 	<Route name="layout" path="/" handler={Layout}>
 		<Route name="home" handler={Home} />
-		<Route name="postlist" handler={PostList} />
-		<Route name="userlist" handler={UserList} />
+		<Route name="post" handler={PostList} />
+		<Route name="user" handler={UserList} />
 		<Route name="userdetail" path="/user/:userId" handler={UserDetail} />
 		<Route name="activeusers" path="/activeusers" handler={ActiveUsers} />
 		<Route name="taggroup" path="/tags" handler={TagGroup} />
 		<Route name="feedback" handler={Feedback} />
 		<Route name="report" handler={Report} />
 		<Route name="judgeposts" path="/judge" handler={JudgePosts} />
-		<Route name="brandlist" path="/brands" handler={BrandList} />
-		<Route name="brandform" path="/brandform" handler={BrandForm} />
+		<Route name="brand" handler={BrandList} />
+		<Route name="brandedit" path="/brand/edit" handler={BrandForm} />
 		<Redirect from="/" to="home" />
 		<DefaultRoute handler={Home} />
 	</Route>

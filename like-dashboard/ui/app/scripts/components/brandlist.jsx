@@ -2,6 +2,7 @@ var React = require('react');
 var Reflux = require('reflux');
 var Row = require('react-bootstrap').Row;
 var Col = require('react-bootstrap').Col;
+var Link = require('react-router').Link;
 var Button = require('react-bootstrap').Button;
 var ButtonToolbar = require('react-bootstrap').ButtonToolbar;
 var BrandStore = require('../stores/brandstore');
@@ -25,12 +26,12 @@ var Brands = React.createClass({
       return (
         <div className="content">
           <p>
-            <a href="/brandform"><Button bsStyle='success'>Create new brand</Button></a>
+            <a href="/#/brand/edit"><Button bsStyle='success'>Create new brand</Button></a>
           </p>
             {this.state.brandlist.map(function (brand) {
-                var promoteBtn = <a className="btn btn-sm" onClick={this.togglePromoteBrand.bind(this, brand.id)}>Promote</a>;
+                var promoteBtn = <a className="btn btn-sm btn-default" onClick={this.togglePromoteBrand.bind(this, brand.id)}>Promote</a>;
                 if (brand.isPromoted) {
-                  promoteBtn = <a className="btn btn-sm btn-yellow" onClick={this.togglePromoteBrand.bind(this, brand.id)}>Promoted</a>;
+                  promoteBtn = <a className="btn btn-sm btn-warning" onClick={this.togglePromoteBrand.bind(this, brand.id)}>Promoted</a>;
                 }
                 return (
                   <Row key={'b_'+brand.id}>
@@ -39,9 +40,9 @@ var Brands = React.createClass({
                     <Col className="col" xs={4} sm={4} lg={4}><span>{brand.description}</span></Col>
                     <col xs={4} sm={4} lg={4}>
                       <ButtonToolbar>
-                        <a href={'/brandform?id='+brand.id} className="btn btn-cyan btn-sm">Edit</a>
+                        <a href={'/#/brand/edit?id='+brand.id} className="btn btn-info btn-sm">Edit</a>
                         {promoteBtn}
-                        <a className="btn btn-red btn-sm" onClick={this.deleteBrand.bind(this, brand.id)}>Delete</a>
+                        <a className="btn btn-danger btn-sm" onClick={this.deleteBrand.bind(this, brand.id)}>Delete</a>
                       </ButtonToolbar>
                     </col>
                   </Row>

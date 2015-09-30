@@ -1,9 +1,11 @@
 var React = require('react');
+var Link = require('react-router').Link;
 var Col = require('react-bootstrap').Col;
 var Tooltip = require('react-bootstrap').Tooltip;
 var ButtonToolbar = require('react-bootstrap').ButtonToolbar;
 var OverlayTrigger = require('react-bootstrap').OverlayTrigger;
 var PostActions = require('../actions/postactions');
+var Moment = require('moment');
 
 var PostPanel = React.createClass({
   propTypes: {
@@ -52,9 +54,11 @@ var PostPanel = React.createClass({
 
     var markPanel = '';
     if (this.state.showMarks === true) {
-      markPanel = (<div className="thumb-pane">
+      markPanel = (
+        <div className="thumb-pane">
           <ul className="marks">{ marks }</ul>
-      </div>)
+        </div>
+      );
     }
 
     var recommendClass = 'post-caption-btn btn btn-default btn-sm';
@@ -69,15 +73,15 @@ var PostPanel = React.createClass({
       var panelHeading = null;
       if (this.props.showUser === true) {
         panelHeading = (<div className="panel-heading post-heading">
-          <a href={ '/user/' + this.props.post.user.userId } className="media">
+          <Link to={'/user/'+this.props.post.user.userId} className="media">
             <span className="pull-left media-object thumb thumb-sm">
               <img img-src={'http://cdn.likeorz.com'} src={ this.props.post.user.avatar } alt="" className="img-circle" />
             </span>
             <div className="pull-left post-user-info">
               <span className="block">{ this.props.post.user.nickname }</span>
-              <small className="text-muted">{ this.props.post.user.likes }</small>
+              <small className="text-muted"><span  className="pull-left">{ this.props.post.user.likes }</span><span className="pull-right">{Moment.unix(this.props.post.created).fromNow()}</span></small>
             </div>
-          </a>
+          </Link>
         </div>);
       }
       return (

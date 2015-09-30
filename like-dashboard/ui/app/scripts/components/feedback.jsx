@@ -4,6 +4,7 @@ var Row = require('react-bootstrap').Row;
 var ButtonToolbar = require('react-bootstrap').ButtonToolbar;
 var FeedbackStore = require('../stores/feedbackstore');
 var FeedbackActions = require('../actions/feedbackactions');
+var Link = require('react-router').Link;
 var Moment = require('moment');
 
 var Feedbacks = React.createClass({
@@ -28,7 +29,7 @@ var Feedbacks = React.createClass({
                   return (
                     <tr key={'fb_'+feedback.id}>
                       <td>{feedback.id}</td>
-                      <td><a href={'/user/'+feedback.user.id}><img src={feedback.user.avatar} className="img-circle"/></a></td>
+                      <td><Link to={'/user/'+feedback.user.userId}><img src={feedback.user.avatar} className="img-circle"/></Link></td>
                       <td>{feedback.content}</td>
                       <td>{Moment.unix(feedback.created).fromNow()}</td>
                       <td><ButtonToolbar><a className="btn btn-danger btn-block btn-flat" onClick={this.deleteFeedback.bind(this, feedback.id)}>Delete</a></ButtonToolbar></td>

@@ -111,13 +111,13 @@ var Layout = React.createClass({
             <ul className="sidebar-menu">
               <li className="header">Menu</li>
               <li><NavItemLink to="home"><i className="fa fa-desktop"></i>Home</NavItemLink></li>
-              <li><NavItemLink to="postlist"><i className="fa fa-camera"></i>Posts</NavItemLink></li>
-              <li><NavItemLink to="userlist"><i className="fa fa-users"></i>Users</NavItemLink></li>
+              <li><NavItemLink to="post"><i className="fa fa-camera"></i>Posts</NavItemLink></li>
+              <li><NavItemLink to="user"><i className="fa fa-users"></i>Users</NavItemLink></li>
               <li><NavItemLink to="feedback"><i className="fa fa-coffee"></i>Feedback</NavItemLink></li>
               <li><NavItemLink to="report"><i className="fa fa-thumbs-o-down"></i>Report</NavItemLink></li>
               <li><a href="http://monitor.likeorz.com" target="_blank"><i className="fa fa-heartbeat"></i>Monitor</a></li>
               <li><NavItemLink to="taggroup"><i className="fa fa-tags"></i>Tags</NavItemLink></li>
-              <li><NavItemLink to="brandlist"><i className="fa fa-registered"></i>Partners</NavItemLink></li>
+              <li><NavItemLink to="brand"><i className="fa fa-registered"></i>Partners</NavItemLink></li>
               <li className="treeview">
                 <a href="#"><i className="fa fa-ellipsis-h"></i> <span>Other</span> <i className="fa fa-angle-left pull-right"></i></a>
                 <ul className="treeview-menu">

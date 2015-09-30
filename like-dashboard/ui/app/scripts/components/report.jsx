@@ -4,6 +4,7 @@ var Row = require('react-bootstrap').Row;
 var ButtonToolbar = require('react-bootstrap').ButtonToolbar;
 var ReportStore = require('../stores/reportstore');
 var ReportActions = require('../actions/reportactions');
+var Link = require('react-router').Link;
 var Moment = require('moment');
 
 var Reports = React.createClass({
@@ -42,7 +43,7 @@ var Reports = React.createClass({
                   return (
                     <tr key={'rp_'+report.id}>
                       <td>{report.id}</td>
-                      <td><a href={'/user/'+report.user.id}><img src={report.user.avatar} className="img-circle"/></a></td>
+                      <td><Link to={'/user/'+report.user.userId}><img src={report.user.avatar} className="img-circle"/></Link></td>
                       <td><img src={report.post.image} className="img-rounded" style={{maxHeight:'50px'}}/></td>
                       <td>{report.reason}</td>
                       <td>{Moment.unix(report.created).fromNow()}</td>

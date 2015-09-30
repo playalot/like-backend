@@ -10,21 +10,29 @@ import play.api.libs.concurrent.Execution.Implicits._
 
 import scala.concurrent.Future
 
-/**
- * Created by Guan Guan
- * Date: 6/19/15
- */
 class InfoController @Inject() (
     val messagesApi: MessagesApi,
     infoService: InfoService,
     userService: UserService) extends BaseController {
 
+  /** User feedback */
   def feedback = SecuredAction.async(parse.json) { implicit request =>
     (request.body \ "feedback").asOpt[String] match {
       case Some(fb) => infoService.addFeedback(Feedback(None, request.userId, fb)).map { _ =>
         success(Messages("success.feedback"))
       }
       case None => Future.successful(error(4027, Messages("invalid.feedback")))
+    }
+  }
+
+  /** Report abuse of a post */
+  def report(postId: Long) = (SecuredAction andThen BannedUserCheckAction).async { implicit request =>
+    val reason = request.body.asJson match {
+      case Some(json) => (json \ "reason").asOpt[String]
+      case None       => None
+    }
+    infoService.addReport(Report(None, request.userId, postId, reason = reason)).map { _ =>
+      success("success.report")
     }
   }
 

@@ -288,17 +288,6 @@ class PostController @Inject() (
     }
   }
 
-  /** Report abuse of a post */
-  def report(postId: Long) = (SecuredAction andThen BannedUserCheckAction).async { implicit request =>
-    val reason = request.body.asJson match {
-      case Some(json) => (json \ "reason").asOpt[String]
-      case None       => None
-    }
-    postService.report(Report(None, request.userId, postId, reason = reason)).map { _ =>
-      success("success.report")
-    }
-  }
-
   /** favorite a post */
   def favorite(postId: Long) = SecuredAction.async { implicit request =>
     postService.favorite(postId, request.userId).map { _ =>

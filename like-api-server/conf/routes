@@ -64,7 +64,6 @@ DELETE  /v1/post/$id<[0-9]+>                        controllers.PostController.d
 GET     /v1/post/$id<[0-9]+>                        controllers.PostController.getPost(id: Long)
 GET     /v1/post/$id<[0-9]+>/marks/$pg<[0-9]+>      controllers.PostController.getPostMarks(id: Long, pg: Int)
 POST    /v1/post/$id<[0-9]+>/mark                   controllers.PostController.addMark(id: Long)
-POST    /v1/post/$id<[0-9]+>/report                 controllers.PostController.report(id: Long)
 POST    /v1/post/$id<[0-9]+>/favorite               controllers.PostController.favorite(id: Long)
 DELETE  /v1/post/$id<[0-9]+>/favorite               controllers.PostController.unfavorite(id: Long)
 
@@ -103,4 +102,5 @@ GET     /v1/notification/count                      controllers.NotificationCont
 
 #Info
 POST    /v1/feedback                                controllers.InfoController.feedback
+POST    /v1/post/$id<[0-9]+>/report                 controllers.InfoController.report(id: Long)
 POST    /v1/installation                            controllers.InfoController.installation

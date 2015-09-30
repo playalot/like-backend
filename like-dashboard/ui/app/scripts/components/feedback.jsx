@@ -20,13 +20,13 @@ var Feedbacks = React.createClass({
     if (this.state.feedbacklist) {
       return (
         <div className="content">
-          <div className="table-responsive">
+          <div className="table-responsive no-padding">
             <table className="table table-striped">
-              <thead><tr><th>#ID</th><th>User</th><th>Feedback</th><th style={{'min-width': '150px'}}>Created</th><th>Action</th></tr></thead>
+              <thead><tr><th>#ID</th><th>User</th><th>Feedback</th><th style={{'minWidth': '150px'}}>Created</th><th>Action</th></tr></thead>
               <tbody>
                 {this.state.feedbacklist.map(function (feedback) {
                   return (
-                    <tr key={'u_'+feedback.id}>
+                    <tr key={'fb_'+feedback.id}>
                       <td>{feedback.id}</td>
                       <td><a href={'/user/'+feedback.user.id}><img src={feedback.user.avatar} className="img-circle"/></a></td>
                       <td>{feedback.content}</td>

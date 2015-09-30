@@ -42,8 +42,6 @@ trait PostService {
 
   def isFavorited(postId: Long, userId: Long): Future[Boolean]
 
-  def report(report: Report): Future[Report]
-
   def getEditorPickPostIds(pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]
 
   def getFollowingPosts(userId: Long, pageSize: Int, timestamp: Option[Long]): Future[Seq[Long]]

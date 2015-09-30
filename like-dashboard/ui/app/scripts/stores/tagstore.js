@@ -14,6 +14,7 @@ var TagStore = Reflux.createStore({
         TagActions.fetchTagGroups();
         TagActions.fetchTags();
       }
+      return this.data;
   	},
     onFetchTagGroups: function() {
       $.ajax({

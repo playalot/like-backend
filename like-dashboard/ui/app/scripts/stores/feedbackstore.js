@@ -14,6 +14,7 @@ var FeedbackStore = Reflux.createStore({
       if (this.feedbacklist.length === 0) {
         this.onFetchFeedbackList();
       }
+      return this.feedbacklist;
     },
     onFetchFeedbackList: function() {
       var sourceUrl = '/api/feedback/' + this.page;

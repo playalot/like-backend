@@ -232,6 +232,7 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       for {
         deleteFavorite <- db.run(favorites.filter(_.postId === postId).delete)
         deleteLikes <- db.run(likes.filter(_.markId inSet markIds).delete)
+        deleteReports <- db.run(reports.filter(_.postId === postId).delete)
         deleteComments <- db.run(comments.filter(_.postId === postId).delete)
         deleteMarks <- db.run(marks.filter(_.postId === postId).delete)
         deletePost <- db.run(posts.filter(_.id === postId).delete)
@@ -297,10 +298,6 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
 
   override def updatePostTimestamp(postId: Long): Future[Unit] = {
     db.run(posts.filter(_.id === postId).map(_.updated).update(System.currentTimeMillis() / 1000)).map(_ => ())
-  }
-
-  override def report(report: Report): Future[Report] = {
-    db.run(reports returning reports.map(_.id) += report).map(id => report.copy(id = Some(id)))
   }
 
   override def favorite(postId: Long, userId: Long): Future[Favorite] = {

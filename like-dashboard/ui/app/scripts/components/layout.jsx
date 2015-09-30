@@ -7,7 +7,7 @@ var NavItemLink = ReactRouterBootstrap.NavItemLink;
 
 var Layout = React.createClass({
   getInitialState: function() {
-    return { email: 'Liker' };
+    return { email: 'Liker', fakeusers: [], fakeuser: null };
   },
   componentDidMount:function() {
     $.get('/admin/email', function(data){
@@ -16,9 +16,40 @@ var Layout = React.createClass({
         this.setState({ email: data , username: username});
       }
     }.bind(this));
+    $.get('/api/admin/fakeusers', function(data){
+      if (this.isMounted()) {
+        this.setState({ fakeusers: data, fakeuser: data[0]});
+      }
+    }.bind(this));
+  },
+  selectFakeUser: function(fake) {
+    this.setState({fakeuser: fake});
   },
   render: function() {
-
+    var selectFakeUserDiv = (<a className="dropdown-toggle" data-toggle="dropdown">Select a fake user</a>);
+    if (this.state.fakeuser !== null) {
+      selectFakeUserDiv = (
+        <a className="dropdown-toggle" data-toggle="dropdown">
+          <img src={this.state.fakeuser.avatar} className="user-image" alt="User Image"/>
+          <span className="hidden-xs">{this.state.fakeuser.nickname}</span>
+        </a>
+      );
+    }
+    var fakeuserInfoDiv = (<ul className="control-sidebar-menu"><li></li></ul>);
+    if (this.state.fakeuser !== null) {
+      fakeuserInfoDiv = (
+        <ul className="control-sidebar-heading">
+          <div className="box box-primary">
+            <div className="box-body box-profile">
+              <img className="profile-user-img img-responsive img-circle" src={this.state.fakeuser.avatar} alt="User profile picture" />
+              <h3 className="profile-username text-center">{this.state.fakeuser.nickname}</h3>
+              <p className="text-muted text-center">{this.state.fakeuser.mobile}</p>
+              <a href="#" className="btn btn-primary btn-block"><b>Profile</b></a>
+            </div>
+          </div>
+        </ul>
+      );
+    }
     return (
       <div className="wrapper">
         <div className="main-header">
@@ -32,31 +63,29 @@ var Layout = React.createClass({
             </a>
             <div className="navbar-custom-menu">
               <ul className="nav navbar-nav">
-                <li className="dropdown user user-menu">
-                  <a href="#" className="dropdown-toggle" data-toggle="dropdown">
-                    <img src="http://cdn.likeorz.com/default_avatar.jpg?imageView2/5/w/80" className="user-image" alt="User Image"/>
-                    <span className="hidden-xs">{this.state.email}</span>
-                  </a>
+                <li className="dropdown user-menu messages-menu">
+                  {selectFakeUserDiv}
                   <ul className="dropdown-menu">
-                    <li className="user-header">
-                      <img src="http://cdn.likeorz.com/default_avatar.jpg?imageView2/5/w/80" className="img-circle" alt="User Image"/>
-                      <p>
-                        <span>Alexander Pierce - Web Developer</span>
-                        <small>Member since Nov. 2012</small>
-                      </p>
-                    </li>
-                    <li className="user-body">
-                      <div className="col-xs-4 text-center">
-                        <a href="#">Followers</a>
-                      </div>
-                    </li>
-                    <li className="user-footer">
-                      <div className="pull-left">
-                        <a href="#" className="btn btn-default btn-flat">Profile</a>
-                      </div>
-                      <div className="pull-right">
-                        <a href="#" className="btn btn-default btn-flat">Sign out</a>
-                      </div>
+                    <li className="header">Select a fake user</li>
+                    <li>
+                      <ul className="menu">
+                        {this.state.fakeusers.map(function (fake) {
+                          return (
+                            <li key={'fk_'+fake.user_id} onClick={this.selectFakeUser.bind(this, fake)}>
+                              <a href="#">
+                                <div className="pull-left">
+                                  <img src={fake.avatar} className="img-circle" alt="User Image" />
+                                </div>
+                                <h4>
+                                  {fake.nickname}
+                                  <small><i className="fa fa-info"></i> {fake.user_id}</small>
+                                </h4>
+                                <p>{fake.mobile}</p>
+                              </a>
+                            </li>
+                          );
+                        }, this)}
+                      </ul>
                     </li>
                   </ul>
                 </li>
@@ -85,6 +114,7 @@ var Layout = React.createClass({
               <li><NavItemLink to="postlist"><i className="fa fa-camera"></i>Posts</NavItemLink></li>
               <li><NavItemLink to="userlist"><i className="fa fa-users"></i>Users</NavItemLink></li>
               <li><NavItemLink to="feedback"><i className="fa fa-coffee"></i>Feedback</NavItemLink></li>
+              <li><NavItemLink to="report"><i className="fa fa-thumbs-o-down"></i>Report</NavItemLink></li>
               <li><a href="http://monitor.likeorz.com" target="_blank"><i className="fa fa-heartbeat"></i>Monitor</a></li>
               <li><NavItemLink to="taggroup"><i className="fa fa-tags"></i>Tags</NavItemLink></li>
               <li><NavItemLink to="brandlist"><i className="fa fa-registered"></i>Partners</NavItemLink></li>
@@ -112,39 +142,13 @@ var Layout = React.createClass({
 
         <aside className="control-sidebar control-sidebar-dark">
           <ul className="nav nav-tabs nav-justified control-sidebar-tabs">
-            <li className="active"><a href="#control-sidebar-home-tab" data-toggle="tab"><i className="fa fa-home"></i></a></li>
+            <li className="active"><a href="#control-sidebar-home-tab" data-toggle="tab"><i className="fa fa-user"></i></a></li>
             <li><a href="#control-sidebar-settings-tab" data-toggle="tab"><i className="fa fa-gears"></i></a></li>
           </ul>
           <div className="tab-content">
             <div className="tab-pane active" id="control-sidebar-home-tab">
-              <h3 className="control-sidebar-heading">Recent Activity</h3>
-              <ul className="control-sidebar-menu">
-                <li>
-                  <a href="javascript::;">
-                    <i className="menu-icon fa fa-birthday-cake bg-red"></i>
-                    <div className="menu-info">
-                      <h4 className="control-sidebar-subheading">Langdon's Birthday</h4>
-                      <p>Will be 23 on April 24th</p>
-                    </div>
-                  </a>
-                </li>
-              </ul>
-
-              <h3 className="control-sidebar-heading">Tasks Progress</h3>
-              <ul className="control-sidebar-menu">
-                <li>
-                  <a href="javascript::;">
-                    <h4 className="control-sidebar-subheading">
-                      Custom Template Design
-                      <span className="label label-danger pull-right">70%</span>
-                    </h4>
-                    <div className="progress progress-xxs">
-                      <div className="progress-bar progress-bar-danger" style={{'width': '70%'}}></div>
-                    </div>
-                  </a>
-                </li>
-              </ul>
-
+              <h3 className="control-sidebar-heading">Fake user info</h3>
+              {fakeuserInfoDiv}
             </div>
             <div className="tab-pane" id="control-sidebar-stats-tab">Stats Tab Content</div>
             <div className="tab-pane" id="control-sidebar-settings-tab">

@@ -12,6 +12,7 @@ var ActiveUsersStore = Reflux.createStore({
   		if (this.data.userlist.length === 0) {
         this.onFetchActiveUsers();
       }
+      return this.data;
   	},
     onFetchActiveUsers: function() {
       $.ajax({

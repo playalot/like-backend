@@ -5,7 +5,7 @@ import javax.inject.Inject
 import com.likeorz.dao._
 import com.likeorz.models._
 import com.likeorz.silhouettes.MobileProvider
-import com.likeorz.utils.{ GenerateUtils, KeyUtils, RedisCacheClient }
+import com.likeorz.utils.{ GlobalConstants, GenerateUtils, KeyUtils, RedisCacheClient }
 import com.mohiva.play.silhouette.api.LoginInfo
 import play.api.Configuration
 import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfigProvider }
@@ -21,9 +21,6 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
-
-  val DEFAULT_AVATAR = configuration.getString("default.avatar").get
-  val DEFAULT_COVER = configuration.getString("default.cover").get
 
   val Country = Map(
     "BR" -> "55",
@@ -185,7 +182,7 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
             "likes" -> user.likes.toString))
           CachedUserInfo(user.nickname, user.avatar, user.cover, user.likes.toString)
         case None =>
-          CachedUserInfo("New Liker", DEFAULT_AVATAR, DEFAULT_COVER, "0")
+          CachedUserInfo("New Liker", GlobalConstants.DefaultAvatar, GlobalConstants.DefaultCover, "0")
       }
     } else {
       Future.successful(CachedUserInfo(fields.head, fields(1), fields(2), fields(3)))
@@ -195,7 +192,7 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
   override def getUserInfoFromCache(userId: Long): CachedUserInfo = {
     val fields = RedisCacheClient.hmget(KeyUtils.user(userId), "nickname", "avatar", "cover", "likes")
     if (fields.contains(null)) {
-      CachedUserInfo("New Liker", DEFAULT_AVATAR, DEFAULT_COVER, "0")
+      CachedUserInfo("New Liker", GlobalConstants.DefaultAvatar, GlobalConstants.DefaultCover, "0")
     } else {
       CachedUserInfo(fields.head, fields(1), fields(2), fields(3))
     }

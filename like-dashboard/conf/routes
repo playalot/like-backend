@@ -9,6 +9,12 @@ POST    /authenticate/credentials   controllers.Application.authenticate
 
 # API
 GET     /admin/email                controllers.Application.getEmail
+
+
+# Admin
+GET     /api/admin/fakeusers        controllers.AdminApiController.listFakeUsers
+
+
 GET     /api/stats                  controllers.Application.stats
 GET     /api/posts                  controllers.PostApiController.fetchPostList(ts: Option[Long] ?= None, filter: Option[String] ?= None)
 DELETE  /api/post/:id               controllers.PostApiController.deletePost(id: Long)
@@ -42,8 +48,10 @@ POST    /api/tag/group/:name        controllers.TagApiController.addTagGroup(nam
 
 GET     /api/unjudgedposts          controllers.PostApiController.getNotJudgedPosts(start: Option[Long] ?= None)
 POST    /api/judge/:id/:judge       controllers.PostApiController.judgePost(id: Long, judge: Long)
-GET     /api/feedback/:pg           controllers.FeedbackApiController.fetchFeedbackList(pg: Int, pageSize: Int = 100)
+GET     /api/feedback/:pg           controllers.FeedbackApiController.getFeedbackList(pg: Int, pageSize: Int = 100)
 DELETE  /api/feedback/:id           controllers.FeedbackApiController.deleteFeedback(id: Long)
+GET     /api/report/:pg             controllers.FeedbackApiController.getReportList(pg: Int, pageSize: Int = 100)
+DELETE  /api/report/:id             controllers.FeedbackApiController.deleteReport(id: Long)
 
 # Yeoman
 GET      /                          controllers.YeomanController.index

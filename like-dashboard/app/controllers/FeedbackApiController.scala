@@ -15,9 +15,10 @@ class FeedbackApiController @Inject() (
     val messagesApi: MessagesApi,
     val env: Environment[Admin, CookieAuthenticator],
     userService: UserService,
+    postService: PostService,
     infoService: InfoService) extends Silhouette[Admin, CookieAuthenticator] {
 
-  def fetchFeedbackList(page: Int, pageSize: Int) = SecuredAction.async {
+  def getFeedbackList(page: Int, pageSize: Int) = SecuredAction.async {
     for {
       feedbacks <- infoService.listFeedbacks(pageSize, page)
     } yield {
@@ -43,6 +44,41 @@ class FeedbackApiController @Inject() (
 
   def deleteFeedback(id: Long) = SecuredAction.async {
     infoService.deleteFeedback(id).map(_ => Ok)
+  }
+
+  def getReportList(page: Int, pageSize: Int) = SecuredAction.async {
+    for {
+      reports <- infoService.listReports(pageSize, page)
+      postMap <- postService.getPostsByIdsSimple(reports.map(_.postId)).map(list => list.map(x => x.id.get -> x).toMap)
+    } yield {
+      val jsonList = Json.toJson(reports.filter(r => postMap.contains(r.postId)).map { rp =>
+        val user = userService.getUserInfoFromCache(rp.userId)
+        val post = postMap(rp.postId)
+        Json.obj(
+          "id" -> rp.id,
+          "reason" -> rp.reason,
+          "created" -> rp.created,
+          "user" -> Json.obj(
+            "userId" -> rp.userId,
+            "nickname" -> user.nickname,
+            "avatar" -> QiniuUtil.resizeImage(user.avatar, 50),
+            "likes" -> user.likes
+          ),
+          "post" -> Json.obj(
+            "postId" -> post.id.get,
+            "image" -> QiniuUtil.resizeImage(post.content, 200, true),
+            "hidden" -> (post.score.get < 0)
+          )
+        )
+      })
+      Ok(Json.obj(
+        "reports" -> jsonList
+      ))
+    }
+  }
+
+  def deleteReport(id: Long) = SecuredAction.async {
+    infoService.deleteReport(id).map(_ => Ok)
   }
 
 }

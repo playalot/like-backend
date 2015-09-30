@@ -14,6 +14,7 @@ var StatsStore = Reflux.createStore({
       if (!this.stats.user) {
         this.onUpdateStats();
       }
+      return this.stats;
     },
     repeatSound: function(times) {
       if (times > 0) {

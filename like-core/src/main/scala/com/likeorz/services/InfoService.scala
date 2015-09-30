@@ -10,7 +10,7 @@ import play.api.libs.concurrent.Execution.Implicits._
 import scala.concurrent.Future
 
 class InfoService @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile]
-    with FeedbackComponent with InstallationComponent {
+    with FeedbackComponent with InstallationComponent with ReportsComponent {
 
   import driver.api._
 
@@ -19,11 +19,23 @@ class InfoService @Inject() (protected val dbConfigProvider: DatabaseConfigProvi
   }
 
   def listFeedbacks(pageSize: Int, page: Int): Future[Seq[Feedback]] = {
-    db.run(feedback.sortBy(_.created desc).drop(pageSize * page).take(pageSize).result)
+    db.run(feedback.sortBy(_.created.desc).drop(pageSize * page).take(pageSize).result)
   }
 
   def deleteFeedback(fbId: Long): Future[Int] = {
     db.run(feedback.filter(_.id === fbId).delete)
+  }
+
+  def addReport(report: Report): Future[Report] = {
+    db.run(reports returning reports.map(_.id) += report).map(id => report.copy(id = Some(id)))
+  }
+
+  def listReports(pageSize: Int, page: Int): Future[Seq[Report]] = {
+    db.run(reports.sortBy(_.created.desc).drop(pageSize * page).take(pageSize).result)
+  }
+
+  def deleteReport(rpId: Long): Future[Int] = {
+    db.run(reports.filter(_.id === rpId).delete)
   }
 
   def findInstallation(deviceType: String, userId: Long): Future[Option[Installation]] = {

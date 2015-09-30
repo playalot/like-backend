@@ -15,6 +15,7 @@ var PostListStore = Reflux.createStore({
       if (this.postlist.length === 0) {
         this.onFetchPostList();
       }
+      return this.postlist;
     },
     updateParams: function(v) {
       if (this.filter !== v) {

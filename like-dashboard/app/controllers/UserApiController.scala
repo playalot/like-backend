@@ -24,7 +24,6 @@ class UserApiController @Inject() (
     promoteService: PromoteService) extends Silhouette[Admin, CookieAuthenticator] {
 
   def fetchUserList(page: Int, pageSize: Int, filter: String) = SecuredAction.async {
-
     for {
       users <- userService.listUsers(pageSize, page, filter)
     } yield {

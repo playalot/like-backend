@@ -9,7 +9,6 @@ import play.api.libs.json.Json
 import play.api.mvc.Action
 import com.likeorz.models._
 import com.likeorz.services._
-import services.PushService
 import utils.{ HelperUtils, QiniuUtil }
 
 import scala.concurrent.Future

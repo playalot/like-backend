@@ -15,6 +15,8 @@ class LikeCoreModule extends AbstractModule with ScalaModule with AkkaGuiceSuppo
     bind[MongoDBService]
     bind[RedisService]
 
+    bind[PushService]
+
     // DB services
     bind[InfoService]
     bind[UserFollowService]
@@ -34,6 +36,7 @@ class LikeCoreModule extends AbstractModule with ScalaModule with AkkaGuiceSuppo
     bindActor[RecommendToAllEventSubscriber]("recommend-to-all-event-subscriber", RoundRobinPool(5).props)
     bindActor[RecommendToGroupEventSubscriber]("recommend-to-group-event-subscriber", RoundRobinPool(5).props)
 
+    bindActor[PushNotificationActor]("push-notification-actor")
   }
 
 }

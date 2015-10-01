@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import akka.actor.{ Actor, ActorLogging }
 import cn.jpush.api.JPushClient
-import cn.jpush.api.common.resp.{ APIRequestException, APIConnectionException }
+import cn.jpush.api.common.resp.{ APIConnectionException, APIRequestException }
 import cn.jpush.api.push.model.audience.Audience
 import cn.jpush.api.push.model.notification.{ IosNotification, Notification }
 import cn.jpush.api.push.model.{ Platform, PushPayload }

@@ -19,7 +19,6 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.libs.concurrent.Execution.Implicits._
 import com.likeorz.services._
-import services.PushService
 import utils.MemcachedCacheClient
 
 import scala.concurrent.{ Future, Await }

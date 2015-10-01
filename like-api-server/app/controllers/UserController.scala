@@ -12,7 +12,6 @@ import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.mvc.Action
 import com.likeorz.services._
-import services.PushService
 import utils.QiniuUtil
 
 import scala.concurrent.Future

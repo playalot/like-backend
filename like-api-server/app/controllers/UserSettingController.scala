@@ -7,7 +7,6 @@ import com.likeorz.services._
 import com.likeorz.utils.GlobalConstants.{ DefaultAvatar, DefaultCover }
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
-import services.PushService
 
 import scala.concurrent.Future
 

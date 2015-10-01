@@ -4,12 +4,11 @@ import javax.inject.Inject
 
 import com.likeorz.models.Notification
 import com.likeorz.push.JPushNotification
-import com.likeorz.services.{ UserService, UserFollowService, NotificationService }
+import com.likeorz.services.{PushService, UserService, UserFollowService, NotificationService}
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.libs.concurrent.Execution.Implicits._
-import services.PushService
 import utils.QiniuUtil
 
 import scala.concurrent.Future

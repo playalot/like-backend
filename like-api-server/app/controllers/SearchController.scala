@@ -61,7 +61,7 @@ class SearchController @Inject() (
       val entityArr = (entities.toSet + Entity(None, "BJD", "", "") + Entity(None, "手绘", "", "")).map { entity => Json.obj("tag" -> entity.name) }
       val tagArr = tags.filterNot(t => entities.exists(_.name == t)).map { tag => Json.obj("tag" -> tag) }
 
-      success(Messages("success.found"), Json.toJson(Random.shuffle(entityArr ++ tagArr)))
+      success(Messages("success.found"), Json.toJson(Seq(Json.obj("tag" -> "CICF")) ++ Random.shuffle(entityArr ++ tagArr)))
     }
   }
 

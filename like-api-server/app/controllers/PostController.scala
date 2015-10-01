@@ -13,7 +13,6 @@ import play.api.libs.concurrent.Execution.Implicits._
 import com.likeorz.event.{ LikeEventType, LikeEvent }
 import com.likeorz.models._
 import com.likeorz.services._
-import services.PushService
 import utils.{ NlpUtils, QiniuUtil }
 
 import scala.concurrent.Future
@@ -239,52 +238,48 @@ class PostController @Inject() (
 
   /** Add a mark to the post */
   def addMark(postId: Long) = (SecuredAction andThen BannedUserCheckAction).async(parse.json) { implicit request =>
-    if (request.userId == 8257L) {
-      Future.successful(error(4025, Messages("invalid.tagField")))
-    } else {
-      (request.body \ "tag").asOpt[String] match {
-        case Some(tag) =>
-          if (tag.length > 13)
-            Future.successful(error(4025, Messages("invalid.tagMaxLength")))
-          else if (tag.length < 1)
-            Future.successful(error(4025, Messages("invalid.tagMinLength")))
-          else if (NlpUtils.containSensitiveWord(tag)) {
-            Future.successful(error(4025, Messages("invalid.tagIllegal")))
-          } else
-            postService.getPostById(postId).flatMap {
-              case Some(post) =>
-                // mark event
-                eventBusService.publish(LikeEvent(None, LikeEventType.mark, "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag)))
-                for {
-                  nickname <- userService.getNickname(request.userId)
-                  mark <- postService.addMark(postId, post.userId, tag, request.userId)
-                  update <- postService.updatePostTimestamp(postId)
-                } yield {
-                  // Insert mark into mongodb
-                  mongoDBService.insertMarkForPost(postId, MarkDetail(mark.id.get, request.userId, mark.tagId, tag, Seq(request.userId)))
+    (request.body \ "tag").asOpt[String] match {
+      case Some(tag) =>
+        if (tag.length > 13)
+          Future.successful(error(4025, Messages("invalid.tagMaxLength")))
+        else if (tag.length < 1)
+          Future.successful(error(4025, Messages("invalid.tagMinLength")))
+        else if (NlpUtils.containSensitiveWord(tag)) {
+          Future.successful(error(4025, Messages("invalid.tagIllegal")))
+        } else
+          postService.getPostById(postId).flatMap {
+            case Some(post) =>
+              // mark event
+              eventBusService.publish(LikeEvent(None, LikeEventType.mark, "user", request.userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag)))
+              for {
+                nickname <- userService.getNickname(request.userId)
+                mark <- postService.addMark(postId, post.userId, tag, request.userId)
+                update <- postService.updatePostTimestamp(postId)
+              } yield {
+                // Insert mark into mongodb
+                mongoDBService.insertMarkForPost(postId, MarkDetail(mark.id.get, request.userId, mark.tagId, tag, Seq(request.userId)))
 
-                  if (request.userId != post.userId) {
-                    val notifyMarkUser = Notification(None, "MARK", post.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
-                    for {
-                      notify <- notificationService.insert(notifyMarkUser)
-                      count <- notificationService.countForUser(post.userId)
-                    } yield {
-                      // Send push notification
-                      pushService.sendPushNotificationViaJPush(JPushNotification(List(post.userId.toString), List(), Messages("notification.mark", nickname, tag), count))
-                      pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
-                    }
+                if (request.userId != post.userId) {
+                  val notifyMarkUser = Notification(None, "MARK", post.userId, request.userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
+                  for {
+                    notify <- notificationService.insert(notifyMarkUser)
+                    count <- notificationService.countForUser(post.userId)
+                  } yield {
+                    // Send push notification
+                    pushService.sendPushNotificationViaJPush(JPushNotification(List(post.userId.toString), List(), Messages("notification.mark", nickname, tag), count))
+                    pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
                   }
-                  success(Messages("success.mark"), Json.obj(
-                    "mark_id" -> mark.id.get,
-                    "tag" -> tag,
-                    "likes" -> 1,
-                    "is_liked" -> 1
-                  ))
                 }
-              case None => Future.successful(error(4024, Messages("invalid.postId")))
-            }
-        case None => Future.successful(error(4025, Messages("invalid.tagField")))
-      }
+                success(Messages("success.mark"), Json.obj(
+                  "mark_id" -> mark.id.get,
+                  "tag" -> tag,
+                  "likes" -> 1,
+                  "is_liked" -> 1
+                ))
+              }
+            case None => Future.successful(error(4024, Messages("invalid.postId")))
+          }
+      case None => Future.successful(error(4025, Messages("invalid.tagField")))
     }
   }
 

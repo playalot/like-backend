@@ -35,7 +35,7 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
   override def findByMobileLegacy(mobilePhoneNumber: String): Future[Option[User]] = db.run(users.filter(_.mobile === mobilePhoneNumber).result.headOption)
 
   override def findByMobileAndZone(mobilePhoneNumber: String, zone: String): Future[Option[User]] = {
-    val key = s"$zone $mobilePhoneNumber"
+    //    val key = s"$zone $mobilePhoneNumber"
     db.run(socials.filter(u => u.provider === MobileProvider.ID && u.key.endsWith(mobilePhoneNumber)).result.headOption).flatMap {
       case Some(social) => db.run(users.filter(_.id === social.userId).result.headOption)
       case None =>
@@ -103,7 +103,7 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
   override def searchByName(name: String): Future[Seq[User]] = {
     val query = (for {
       user <- users if user.nickname startsWith name.toLowerCase
-    } yield user).take(5)
+    } yield user).sortBy(_.likes.desc).take(5)
     db.run(query.result)
   }
 

@@ -6,8 +6,7 @@ import akka.actor.{ Actor, ActorLogging, Props }
 import com.likeorz.common.PushUnreadLikes
 import com.likeorz.push.JPushNotification
 import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
-import com.likeorz.services.{ UserService, NotificationService }
-import services.PushService
+import com.likeorz.services.{PushService, UserService, NotificationService}
 
 import scala.concurrent.Future
 

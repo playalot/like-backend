@@ -1,6 +1,6 @@
 package modules
 
-import actors.{ ClassificationActor, EventProducerActor }
+import actors.ClassificationActor
 import com.google.inject.{ Provides, AbstractModule }
 import com.likeorz.actors._
 import com.likeorz.silhouettes.MobileProvider
@@ -22,7 +22,7 @@ import play.api.Configuration
 import play.api.libs.ws.WSClient
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.concurrent.AkkaGuiceSupport
-import services.{ OnStartServiceImpl, OnStartService, PushServiceImpl, PushService }
+import services.{ OnStartServiceImpl, OnStartService }
 
 /**
  * The Guice module which wires all Silhouette dependencies.
@@ -32,7 +32,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
   override def configure(): Unit = {
     // Services start on application start
     bind[OnStartService].to[OnStartServiceImpl].asEagerSingleton()
-    bind[PushService].to[PushServiceImpl]
 
     // SilhouetteModule
     bind[CacheLayer].to[PlayCacheLayer]
@@ -42,7 +41,6 @@ class SilhouetteModule extends AbstractModule with ScalaModule with AkkaGuiceSup
     bind[Clock].toInstance(Clock())
     bindActor[ClassificationActor]("classification-actor")
     bindActor[PushNewLikesActor]("push-likes-actor")
-    bindActor[PushNotificationActor]("push-notification-actor")
   }
 
   /**

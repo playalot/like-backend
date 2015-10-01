@@ -65,7 +65,10 @@ var PostListStore = Reflux.createStore({
       var foundPost = _.find(this.postlist, function(post) {
           return post.id === id;
       });
+      console.log(this.postlist);
+      console.log(foundPost);
       if (foundPost) {
+        console.log(foundPost);
         var type = 'POST';
         if (foundPost.isRecommended === true) {
           type = 'DELETE';
@@ -116,6 +119,25 @@ var PostListStore = Reflux.createStore({
             });
             this.updateList(this.postlist);
           }.bind(this)
+        });
+      }
+    },
+    onAddMark: function(pid, tagName, uid) {
+      var foundPost = _.find(this.postlist, function(post) {
+          return post.id === pid;
+      });
+      if (foundPost) {
+        $.ajax({
+          url: '/api/post/'+pid+'/mark/'+tagName+'/'+uid,
+          type: 'POST',
+          success: function(data) {
+            console.log('add mark ' + tagName);
+            foundPost.marks.push(data);
+            this.updateList(this.postlist);
+          }.bind(this),
+          error: function(data) {
+            alert(data);
+          }
         });
       }
     },

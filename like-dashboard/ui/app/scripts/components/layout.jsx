@@ -1,6 +1,8 @@
 var $ = require('jquery');
+var _ = require('lodash');
 var React = require('react');
 var Router = require('react-router');
+var Cookie = require('react-cookie');
 var ReactRouterBootstrap = require('react-router-bootstrap');
 var RouteHandler = Router.RouteHandler;
 var NavItemLink = ReactRouterBootstrap.NavItemLink;
@@ -18,11 +20,23 @@ var Layout = React.createClass({
     }.bind(this));
     $.get('/api/admin/fakeusers', function(data){
       if (this.isMounted()) {
-        this.setState({ fakeusers: data, fakeuser: data[0]});
+        var fakeuserId = Cookie.load('fakeuserId');
+        var fakeuser = null;
+        if (fakeuserId) {
+          fakeuser = _.find(data, function(fk) {
+             return fk.user_id === fakeuserId;
+          });
+        }
+        if (fakeuser === null) {
+          fakeuser = data[0];
+          Cookie.save('fakeuserId', fakeuser.user_id);
+        }
+        this.setState({ fakeusers: data, fakeuser: fakeuser});
       }
     }.bind(this));
   },
   selectFakeUser: function(fake) {
+    Cookie.save('fakeuserId', fake.user_id);
     this.setState({fakeuser: fake});
   },
   render: function() {
@@ -72,7 +86,7 @@ var Layout = React.createClass({
                         {this.state.fakeusers.map(function (fake) {
                           return (
                             <li key={'fk_'+fake.user_id} onClick={this.selectFakeUser.bind(this, fake)}>
-                              <a href="#">
+                              <a>
                                 <div className="pull-left">
                                   <img src={fake.avatar} className="img-circle" alt="User Image" />
                                 </div>

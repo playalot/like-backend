@@ -66,7 +66,7 @@ class FeedbackApiController @Inject() (
           ),
           "post" -> Json.obj(
             "postId" -> post.id.get,
-            "image" -> QiniuUtil.resizeImage(post.content, 200, true),
+            "image" -> QiniuUtil.resizeImage(post.content, 200, isParsedFilename = true),
             "hidden" -> (post.score.get < 0)
           )
         )

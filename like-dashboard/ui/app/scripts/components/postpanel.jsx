@@ -1,5 +1,6 @@
 var React = require('react');
 var Link = require('react-router').Link;
+var Cookie = require('react-cookie');
 var Col = require('react-bootstrap').Col;
 var Tooltip = require('react-bootstrap').Tooltip;
 var ButtonToolbar = require('react-bootstrap').ButtonToolbar;
@@ -42,6 +43,13 @@ var PostPanel = React.createClass({
   toggleShowMarks: function() {
     this.setState({ showMarks: !this.state.showMarks});
   },
+  addMark: function() {
+    var tagName = prompt('Input tag name here');
+    if (tagName) {
+      var uid = Cookie.load('fakeuserId');
+      PostActions.addMark(this.props.post.id, tagName, uid);
+    }
+  },
   nothing: function() {
     console.log('nothing happened');
   },
@@ -52,7 +60,7 @@ var PostPanel = React.createClass({
       );
     }.bind(this));
 
-    var markPanel = '';
+    var markPanel = (<div className="thumb-pane"></div>);
     if (this.state.showMarks === true) {
       markPanel = (
         <div className="thumb-pane">
@@ -94,13 +102,14 @@ var PostPanel = React.createClass({
               <div className="post-caption">
                 <ButtonToolbar className="pull-left">
                   <OverlayTrigger overlay={tooltip} placement='top' delayShow={100} delayHide={100}>
-                    <span onClick={ this.toggleShowMarks } className="post-caption-btn btn btn-default btn-sm"><span className="glyphicon glyphicon-info-sign"></span></span>
+                    <span onClick={ this.toggleShowMarks } className="post-caption-btn btn btn-default btn-sm"><i className="fa fa-info-circle"></i></span>
                   </OverlayTrigger>
+                  <span onClick={ this.addMark } className="post-caption-btn btn btn-default btn-sm"><i className="fa fa-plus"></i></span>
                 </ButtonToolbar>
                 <ButtonToolbar className="pull-right">
-                  <span onClick={ this.toggleBlockPost } className={invisibleClass}><span className="glyphicon glyphicon glyphicon-eye-close"></span></span>
-                  <span onClick={ this.toggleRecommendPost } className={recommendClass}><span className="glyphicon glyphicon-bullhorn"></span></span>
-                  <span onClick={ this.deletePost } className="post-caption-btn btn btn-danger btn-sm"><span className="glyphicon glyphicon-trash"></span></span>
+                  <span onClick={ this.toggleBlockPost } className={invisibleClass}><i className="fa fa-eye-slash"></i></span>
+                  <span onClick={ this.toggleRecommendPost } className={recommendClass}><i className="fa fa-thumbs-o-up"></i></span>
+                  <span onClick={ this.deletePost } className="post-caption-btn btn btn-danger btn-sm"><i className="fa fa-trash"></i></span>
                 </ButtonToolbar>
                 <div className="clearfix"></div>
               </div>

@@ -133,6 +133,25 @@ var UserDetailStore = Reflux.createStore({
         });
       }
     },
+    onAddMark: function(pid, tagName, uid) {
+      var foundPost = _.find(this.userDetail.userPostlist, function(post) {
+          return post.id === pid;
+      });
+      if (foundPost) {
+        $.ajax({
+          url: '/api/post/'+pid+'/mark/'+tagName+'/'+uid,
+          type: 'POST',
+          success: function(data) {
+            console.log('add mark ' + tagName);
+            foundPost.marks.push(data);
+            this.updateList(this.userDetail.userPostlist);
+          }.bind(this),
+          error: function(data) {
+            alert(data);
+          }
+        });
+      }
+    },
     updateList: function(list){
       this.userDetail.userPostlist = list;
       this.trigger(this.userDetail);

@@ -30,7 +30,6 @@ var UserDetail = React.createClass({
     UserDetailActions.fetchUserPosts();
   },
   render: function() {
-    console.log(this.state.userDetail);
     if (this.state.userDetail.userPostlist) {
       return (
         <div className="content">

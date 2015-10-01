@@ -3,6 +3,8 @@ package controllers
 import javax.inject.Inject
 
 import com.likeorz.event.{ LikeEventType, LikeEvent }
+import com.likeorz.models.{ Notification, MarkDetail }
+import com.likeorz.push.JPushNotification
 import com.likeorz.services.store.MongoDBService
 import com.mohiva.play.silhouette.api.{ Silhouette, Environment }
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
@@ -10,7 +12,7 @@ import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
 import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
 import models.Admin
 import play.api.Configuration
-import play.api.i18n.MessagesApi
+import play.api.i18n.{ Messages, MessagesApi }
 import com.likeorz.services._
 import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits._
@@ -29,6 +31,7 @@ class PostApiController @Inject() (
     userService: UserService,
     postService: PostService,
     markService: MarkService,
+    pushService: PushService,
     notificationService: NotificationService,
     authInfoRepository: AuthInfoRepository,
     credentialsProvider: CredentialsProvider,
@@ -119,6 +122,46 @@ class PostApiController @Inject() (
         }
       case None => Future.successful(Ok("success.deleteMark"))
     }
+  }
+
+  def addMark(postId: Long, tag: String, userId: Long) = SecuredAction.async {
+    if (tag.trim.length > 13)
+      Future.successful(BadRequest("tag too long"))
+    else if (tag.trim.length < 1)
+      Future.successful(BadRequest("tag too short"))
+    else
+      postService.getPostById(postId).flatMap {
+        case Some(post) =>
+          // mark event
+          eventBusService.publish(LikeEvent(None, LikeEventType.mark, "user", userId.toString, Some("post"), Some(postId.toString), properties = Json.obj("tag" -> tag)))
+          for {
+            nickname <- userService.getNickname(userId)
+            mark <- postService.addMark(postId, post.userId, tag, userId)
+            update <- postService.updatePostTimestamp(postId)
+          } yield {
+            // Insert mark into mongodb
+            mongoDBService.insertMarkForPost(postId, MarkDetail(mark.id.get, userId, mark.tagId, tag, Seq(userId)))
+
+            if (userId != post.userId) {
+              val notifyMarkUser = Notification(None, "MARK", post.userId, userId, System.currentTimeMillis / 1000, Some(tag), Some(postId))
+              for {
+                notify <- notificationService.insert(notifyMarkUser)
+                count <- notificationService.countForUser(post.userId)
+              } yield {
+                // Send push notification
+                pushService.sendPushNotificationViaJPush(JPushNotification(List(post.userId.toString), List(), Messages("notification.mark", nickname, tag), count))
+                pushService.sendPushNotificationToUser(post.userId, Messages("notification.mark", nickname, tag), count)
+              }
+            }
+            Ok(Json.obj(
+              "mark_id" -> mark.id.get,
+              "tag" -> tag,
+              "likes" -> 1,
+              "is_liked" -> 1
+            ))
+          }
+        case None => Future.successful(BadRequest("post not found"))
+      }
   }
 
   def deletePost(postId: Long) = SecuredAction.async {

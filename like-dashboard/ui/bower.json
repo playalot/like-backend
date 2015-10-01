@@ -22,7 +22,6 @@
     "redmaterials": "0.0.1",
     "moment": "~2.10.6",
     "admin-lte": "2.3.0",
-    "ionicons": "*",
-    "react-cookie": "*"
+    "ionicons": "*"
   }
 }

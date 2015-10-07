@@ -10,7 +10,7 @@ resolvers += "nlpcn-mvn-repo" at "http://maven.nlpcn.org/"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
-val kamonVersion = "0.5.1"
+val kamonVersion = "0.5.2"
 val akkaVersion = "2.3.14"
 
 libraryDependencies ++= Seq(
@@ -28,7 +28,7 @@ libraryDependencies ++= Seq(
   "io.kamon"                  %% "kamon-statsd"         % kamonVersion,
   "io.kamon"                  %% "kamon-log-reporter"   % kamonVersion,
   "io.kamon"                  %% "kamon-system-metrics" % kamonVersion,
-  "org.aspectj"               %  "aspectjweaver"        % "1.8.6",
+  "org.aspectj"               %  "aspectjweaver"        % "1.8.7",
   "org.scalatest"             %% "scalatest"            % "2.2.5" % "test"
 )
 

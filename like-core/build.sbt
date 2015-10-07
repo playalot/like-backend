@@ -16,8 +16,8 @@ libraryDependencies ++= Seq(
   "org.mongodb"               %% "casbah"           % "2.8.2",
   "net.codingwell"            %% "scala-guice"      % "4.0.0",
   "org.scalaz"                %% "scalaz-core"      % "7.1.4",
-  "com.typesafe.play"         %% "play-slick"       % "1.1.0-RC2",
-  "com.typesafe.play"         %% "play-slick-evolutions"     % "1.1.0-RC2",
+  "com.typesafe.play"         %% "play-slick"       % "1.1.0-RC3",
+  "com.typesafe.play"         %% "play-slick-evolutions"     % "1.1.0-RC3",
   "com.mohiva"                %% "play-silhouette"           % "3.0.4",
   "com.mohiva"                %% "play-silhouette-testkit"   % "3.0.4"    % "test"
 )

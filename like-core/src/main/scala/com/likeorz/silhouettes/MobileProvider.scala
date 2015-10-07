@@ -21,7 +21,7 @@ class MobileProvider() extends Provider {
 
   def authenticateViaAvos(smsCode: SmsCode): Future[LoginInfo] = {
     val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
-    if ((smsCode.mobilePhoneNumber == "66600000166" || smsCode.mobilePhoneNumber == "66666666610") && smsCode.code == "666666") {
+    if (validateBackdoorSms(smsCode)) {
       // This is a demo account
       Future.successful(loginInfo)
     } else {
@@ -34,7 +34,7 @@ class MobileProvider() extends Provider {
 
   def authenticateViaMobIOS(smsCode: SmsCode): Future[LoginInfo] = {
     val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
-    if ((smsCode.mobilePhoneNumber == "66600000166" || smsCode.mobilePhoneNumber == "66666666610") && smsCode.code == "666666") {
+    if (validateBackdoorSms(smsCode)) {
       // This is a demo account
       Future.successful(loginInfo)
     } else {
@@ -47,7 +47,7 @@ class MobileProvider() extends Provider {
 
   def authenticateViaMobAndroid(smsCode: SmsCode): Future[LoginInfo] = {
     val loginInfo = LoginInfo(id, smsCode.mobilePhoneNumber)
-    if ((smsCode.mobilePhoneNumber == "66600000166" || smsCode.mobilePhoneNumber == "66666666610") && smsCode.code == "666666") {
+    if (validateBackdoorSms(smsCode)) {
       // This is a demo account
       Future.successful(loginInfo)
     } else {
@@ -56,6 +56,11 @@ class MobileProvider() extends Provider {
         case false => throw new AccessDeniedException("Invalid sms code")
       }
     }
+  }
+
+  private def validateBackdoorSms(smsCode: SmsCode): Boolean = {
+    (smsCode.mobilePhoneNumber.length == 10 || smsCode.mobilePhoneNumber.length == 11) &&
+      smsCode.mobilePhoneNumber.startsWith("666") && smsCode.code == "666666"
   }
 
 }

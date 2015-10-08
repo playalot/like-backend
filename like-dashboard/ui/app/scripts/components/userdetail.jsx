@@ -4,13 +4,14 @@ var Row = require('react-bootstrap').Row;
 var Modal = require('react-bootstrap').Modal;
 var UserDetailStore = require('../stores/userdetailstore');
 var UserDetailActions = require('../actions/userdetailactions');
+var FakeUserStore = require('../stores/fakeuserstore');
 var PostPanel = require('./postpanel');
 
 var UserDetail = React.createClass({
   contextTypes: {
     router: React.PropTypes.func
   },
-  mixins: [Reflux.connect(UserDetailStore, 'userDetail'), React.addons.LinkedStateMixin],
+  mixins: [Reflux.connect(UserDetailStore, 'userDetail'), Reflux.connect(FakeUserStore, 'fake'), React.addons.LinkedStateMixin],
   getInitialState: function() {
     return { filter: '', showModal: false, showImage: '' };
   },
@@ -44,7 +45,7 @@ var UserDetail = React.createClass({
             {this.state.userDetail.userPostlist.map(function (post) {
               var boundClick = this.open.bind(this, post.content);
               return (
-                <PostPanel key={'p_'+post.id} post={post} open={boundClick} showUser={false}/>
+                <PostPanel key={'p_'+post.id} post={post} open={boundClick} showUser={false} fakeuserId={this.state.fake.fakeuser.user_id}/>
               );
             }, this)}
           </Row>

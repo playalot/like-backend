@@ -43,7 +43,7 @@ var PostListStore = Reflux.createStore({
                 alert('no more');
               } else {
                 this.postlist = this.postlist.concat(data.posts);
-                this.timestamp = data.nextTimestamp;
+                this.timestamp = data.next;
                 this.trigger(this.postlist);
               }
           }
@@ -133,6 +133,56 @@ var PostListStore = Reflux.createStore({
           success: function(data) {
             console.log('add mark ' + tagName);
             foundPost.marks.push(data);
+            this.updateList(this.postlist);
+          }.bind(this),
+          error: function(data) {
+            alert(data);
+          }
+        });
+      }
+    },
+    onLike: function(pid, mark, uid) {
+      var foundPost = _.find(this.postlist, function(post) {
+          return post.id === pid;
+      });
+      if (foundPost) {
+        $.ajax({
+          url: '/api/mark/'+mark.markId+'/'+uid,
+          type: 'POST',
+          success: function(data) {
+            console.log(mark.markId + ' like by ' + uid);
+            var foundMark = _.find(foundPost.marks, function(m) {
+                return m.markId === mark.markId;
+            });
+            if (foundMark) {
+              foundMark.likedBy.push(uid);
+            }
+            this.updateList(this.postlist);
+          }.bind(this),
+          error: function(data) {
+            alert(data);
+          }
+        });
+      }
+    },
+    onUnlike: function(pid, mark, uid) {
+      var foundPost = _.find(this.postlist, function(post) {
+          return post.id === pid;
+      });
+      if (foundPost) {
+        $.ajax({
+          url: '/api/mark/'+mark.markId+'/'+uid,
+          type: 'DELETE',
+          success: function(data) {
+            console.log(mark.markId + ' unlike by ' + uid);
+            var foundMark = _.find(foundPost.marks, function(m) {
+                return m.markId === mark.markId;
+            });
+            if (foundMark) {
+              foundMark.likedBy = _.filter(foundMark.likedBy, function(l){
+                return l !== uid;
+              });
+            }
             this.updateList(this.postlist);
           }.bind(this),
           error: function(data) {

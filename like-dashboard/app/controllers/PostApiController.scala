@@ -46,25 +46,29 @@ class PostApiController @Inject() (
       if (ids.isEmpty) {
         Future.successful(Ok(Json.obj("posts" -> Json.arr())))
       } else {
-        postService.getPostsByIds(ids).flatMap { list =>
-          if (list.isEmpty) {
+        postService.getPostsByIdsSimple(ids).flatMap { posts =>
+          if (posts.isEmpty) {
             Future.successful(Ok(Json.obj("posts" -> Json.arr())))
           } else {
-            val sortedList = list.sortBy(-_._1.created)
-            val futures = sortedList.map { row =>
-              val post = row._1
-              val markIds = row._2.map(_._1)
+
+            val marksMap = mongoDBService.getPostMarksByIds(ids)
+
+            val sortedPosts = posts.sortBy(-_.created)
+
+            val futures = sortedPosts.map { post =>
 
               for {
-                userInfo <- userService.getUserInfo(post.userId)
                 isRecommended <- dashboardService.isPostRecommended(post.id.get)
                 isBlocked <- dashboardService.isPostBlocked(post.id.get)
               } yield {
-                val marksJson = row._2.sortBy(-_._3).map { fields =>
+                val marks = marksMap.getOrElse(post.id.get, Seq())
+                val userInfo = userService.getUserInfoFromCache(post.userId)
+                val marksJson = marks.map { mark =>
                   Json.obj(
-                    "markId" -> fields._1,
-                    "tag" -> fields._2,
-                    "likes" -> fields._3
+                    "markId" -> mark.markId,
+                    "tag" -> mark.tag,
+                    "likes" -> mark.likes.size,
+                    "likedBy" -> Json.toJson(mark.likes)
                   )
                 }
                 Json.obj(
@@ -85,7 +89,7 @@ class PostApiController @Inject() (
               }
             }
             Future.sequence(futures).map { posts =>
-              Ok(Json.obj("posts" -> Json.toJson(posts), "nextTimestamp" -> sortedList.last._1.created))
+              Ok(Json.obj("posts" -> Json.toJson(posts), "next" -> sortedPosts.last.created))
             }
           }
         }
@@ -154,14 +158,55 @@ class PostApiController @Inject() (
               }
             }
             Ok(Json.obj(
-              "mark_id" -> mark.id.get,
+              "markId" -> mark.id.get,
               "tag" -> tag,
               "likes" -> 1,
-              "is_liked" -> 1
+              "likedBy" -> Json.arr(userId)
             ))
           }
         case None => Future.successful(BadRequest("post not found"))
       }
+  }
+
+  def like(markId: Long, userId: Long) = SecuredAction.async {
+    markService.getMarkWithPostAuthor(markId).flatMap {
+      case Some((mark, postAuthor)) =>
+        // log event
+        eventBusService.publish(LikeEvent(None, "like", "user", userId.toString, Some("mark"), Some(markId.toString), properties = Json.obj("tag" -> mark.tagName)))
+        markService.like(mark, postAuthor, userId).map { _ =>
+          // Add like to mongodb
+          mongoDBService.likeMark(markId, mark.postId, userId)
+          if (mark.userId != userId) {
+            val notifyMarkUser = Notification(None, "LIKE", mark.userId, userId, System.currentTimeMillis / 1000, mark.tagName, Some(mark.postId))
+            notificationService.insert(notifyMarkUser)
+          }
+          if (postAuthor != mark.userId && postAuthor != userId) {
+            val notifyPostUser = Notification(None, "LIKE", postAuthor, userId, System.currentTimeMillis / 1000, mark.tagName, Some(mark.postId))
+            notificationService.insert(notifyPostUser)
+          }
+          Ok("success.like")
+        }
+      case None =>
+        Future.successful(BadRequest("invalid.markId"))
+    }
+  }
+
+  def unlike(markId: Long, userId: Long) = SecuredAction.async {
+    markService.getMarkWithPostAuthor(markId).flatMap {
+      case Some((mark, postAuthor)) =>
+        markService.unlike(mark, postAuthor, userId).map { rs =>
+          // Remove like from mongodb
+          if (rs == 1) {
+            mongoDBService.deleteMarkForPost(markId, mark.postId)
+          } else {
+            mongoDBService.unlikeMark(markId, mark.postId, userId)
+          }
+          notificationService.deleteLikeNotification(userId, mark.postId, mark.tagName.getOrElse(""))
+          Ok("success.unLike")
+        }
+      case None =>
+        Future.successful(BadRequest("invalid.markId"))
+    }
   }
 
   def deletePost(postId: Long) = SecuredAction.async {
@@ -195,7 +240,7 @@ class PostApiController @Inject() (
   def getNotJudgedPosts(startId: Option[Long]) = SecuredAction.async {
     dashboardService.getNotJudgedPosts(startId).map { results =>
       Ok(Json.toJson(
-        results.map(rs => Json.obj("id" -> rs._1, "image" -> QiniuUtil.resizeImage(rs._2, 600, true)))
+        results.map(rs => Json.obj("id" -> rs._1, "image" -> QiniuUtil.resizeImage(rs._2, 600, isParsedFilename = true)))
       ))
     }
   }

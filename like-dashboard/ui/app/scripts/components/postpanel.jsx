@@ -7,18 +7,20 @@ var ButtonToolbar = require('react-bootstrap').ButtonToolbar;
 var OverlayTrigger = require('react-bootstrap').OverlayTrigger;
 var PostActions = require('../actions/postactions');
 var Moment = require('moment');
+var _ = require('lodash');
 
 var PostPanel = React.createClass({
   propTypes: {
     post: React.PropTypes.object,
     open: React.PropTypes.func,
-    showUser: React.PropTypes.bool
+    showUser: React.PropTypes.bool,
+    fakeuserId: React.PropTypes.number
   },
   getDefaultProps: function() {
     return { showUser: true };
   },
   getInitialState: function() {
-    return { showMarks: true, showLikes: true };
+    return { showMarks: true };
   },
   deletePost: function() {
     if (confirm('Delete this post?')) {
@@ -40,26 +42,35 @@ var PostPanel = React.createClass({
       PostActions.deleteMark(this.props.post.id, mid);
     }
   },
+  toggleLikeMark: function(mark) {
+    console.log(mark);
+    if (_.includes(mark.likedBy, this.props.fakeuserId)) {
+      PostActions.unlike(this.props.post.id, mark, this.props.fakeuserId);
+    } else {
+      PostActions.like(this.props.post.id, mark, this.props.fakeuserId);
+    }
+  },
   toggleShowMarks: function() {
     this.setState({ showMarks: !this.state.showMarks});
-  },
-  toggleShowLikes: function() {
-    this.setState({ showLikes: !this.state.showLikes});
   },
   addMark: function() {
     var tagName = prompt('Input tag name here');
     if (tagName) {
-      var uid = Cookie.load('fakeuserId');
-      PostActions.addMark(this.props.post.id, tagName, uid);
+      PostActions.addMark(this.props.post.id, tagName, this.props.fakeuserId);
     }
   },
   nothing: function() {
     console.log('nothing happened');
   },
   render: function() {
+    var uid = parseInt(Cookie.load('fakeuserId'));
     var marks = this.props.post.marks.map(function (mark) {
+      var tagClass = 'post-mark-li';
+      if (_.includes(mark.likedBy, uid)) {
+        tagClass = 'post-mark-li liked';
+      }
       return (
-        <li key={'p_'+this.props.post.id+'_m_'+mark.markId} className="post-mark-li" onClick={ this.deleteMark.bind(this, mark.markId) } >{mark.tag}</li>
+        <li key={'p_'+this.props.post.id+'_m_'+mark.markId} className={tagClass} onClick={ this.toggleLikeMark.bind(this, mark) } >{mark.tag} <i className="fa fa-remove" onClick={ this.deleteMark.bind(this, mark.markId) }></i></li>
       );
     }.bind(this));
 
@@ -108,7 +119,6 @@ var PostPanel = React.createClass({
                     <span onClick={ this.toggleShowMarks } className="post-caption-btn btn btn-default btn-sm"><i className="fa fa-info-circle"></i></span>
                   </OverlayTrigger>
                   <span onClick={ this.addMark } className="post-caption-btn btn btn-default btn-sm"><i className="fa fa-plus"></i></span>
-                  <span onClick={ this.toggleLikes } className="post-caption-btn btn btn-default btn-sm"><i className="fa fa-heart-o"></i></span>
                 </ButtonToolbar>
                 <ButtonToolbar className="pull-right">
                   <span onClick={ this.toggleBlockPost } className={invisibleClass}><i className="fa fa-eye-slash"></i></span>

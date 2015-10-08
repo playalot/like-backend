@@ -122,13 +122,13 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def searchByTagAndTimestamp(name: String = "%", pageSize: Int, timestamp: Option[Long]): Future[Seq[Post]] = {
+  override def searchByTagAndTimestamp(name: String = "", pageSize: Int, timestamp: Option[Long]): Future[Seq[Post]] = {
 
     val jian = JianFan.f2j(name).toLowerCase
     val fan = JianFan.j2f(name).toLowerCase
 
     val query = if (timestamp.isDefined) {
-      sql"""SELECT DISTINCT m.post_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE (t.tag like '%#${jian}%' OR t.tag like '%#${fan}%') AND m.created<${timestamp.get} order by m.created desc limit $pageSize""".as[Long]
+      sql"""SELECT DISTINCT m.post_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE (t.tag like '%#${jian}%' OR t.tag like '%#${fan}%')  AND m.created<${timestamp.get} order by m.created desc limit $pageSize""".as[Long]
     } else {
       sql"""SELECT DISTINCT m.post_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' order by m.created desc limit $pageSize""".as[Long]
     }
@@ -436,8 +436,8 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   }
 
   override def getRecentPosts(pageSize: Int, timestamp: Option[Long], filter: Option[String]): Future[Seq[Long]] = {
-    if (filter.isDefined && filter.get.length > 0) {
-      val name = filter.get
+    if (filter.isDefined && filter.get.trim.length > 0) {
+      val name = filter.get.trim
 
       val jian = JianFan.f2j(name).toLowerCase
       val fan = JianFan.j2f(name).toLowerCase

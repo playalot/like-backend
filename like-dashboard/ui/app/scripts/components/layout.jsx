@@ -1,15 +1,19 @@
 var $ = require('jquery');
 var _ = require('lodash');
 var React = require('react');
+var Reflux = require('reflux');
 var Router = require('react-router');
 var Cookie = require('react-cookie');
 var ReactRouterBootstrap = require('react-router-bootstrap');
 var RouteHandler = Router.RouteHandler;
 var NavItemLink = ReactRouterBootstrap.NavItemLink;
+var FakeUserStore = require('../stores/fakeuserstore');
+var FakeUserActions = require('../actions/fakeuseractions');
 
 var Layout = React.createClass({
+  mixins: [Reflux.connect(FakeUserStore, 'fake')],
   getInitialState: function() {
-    return { email: 'Liker', fakeusers: [], fakeuser: null };
+    return { email: 'Liker' };
   },
   componentDidMount:function() {
     $.get('/admin/email', function(data){
@@ -18,52 +22,59 @@ var Layout = React.createClass({
         this.setState({ email: data , username: username});
       }
     }.bind(this));
-    $.get('/api/admin/fakeusers', function(data){
-      if (this.isMounted()) {
-        var fakeuserId = Cookie.load('fakeuserId');
-        var fakeuser = null;
-        if (fakeuserId) {
-          fakeuser = _.find(data, function(fk) {
-             return fk.user_id === fakeuserId;
-          });
-        }
-        if (fakeuser === null) {
-          fakeuser = data[0];
-          Cookie.save('fakeuserId', fakeuser.user_id);
-        }
-        this.setState({ fakeusers: data, fakeuser: fakeuser});
-      }
-    }.bind(this));
   },
   selectFakeUser: function(fake) {
-    Cookie.save('fakeuserId', fake.user_id);
-    this.setState({fakeuser: fake});
+    FakeUserActions.selectFakeUser(fake);
   },
   render: function() {
     var selectFakeUserDiv = (<a className="dropdown-toggle" data-toggle="dropdown">Select a fake user</a>);
-    if (this.state.fakeuser !== null) {
+    if (this.state.fake.fakeuser !== null) {
       selectFakeUserDiv = (
         <a className="dropdown-toggle" data-toggle="dropdown">
-          <img src={this.state.fakeuser.avatar} className="user-image" alt="User Image"/>
-          <span className="hidden-xs">{this.state.fakeuser.nickname}</span>
+          <img src={this.state.fake.fakeuser.avatar} className="user-image" alt="User Image"/>
+          <span className="hidden-xs">{this.state.fake.fakeuser.nickname}</span>
         </a>
       );
     }
     var fakeuserInfoDiv = (<ul className="control-sidebar-menu"><li></li></ul>);
-    if (this.state.fakeuser !== null) {
+    if (this.state.fake.fakeuser !== null) {
       fakeuserInfoDiv = (
         <ul className="control-sidebar-heading">
           <div className="box box-primary">
             <div className="box-body box-profile">
-              <img className="profile-user-img img-responsive img-circle" src={this.state.fakeuser.avatar} alt="User profile picture" />
-              <h3 className="profile-username text-center">{this.state.fakeuser.nickname}</h3>
-              <p className="text-muted text-center">{this.state.fakeuser.mobile}</p>
+              <img className="profile-user-img img-responsive img-circle" src={this.state.fake.fakeuser.avatar} alt="User profile picture" />
+              <h3 className="profile-username text-center">{this.state.fake.fakeuser.nickname}</h3>
+              <p className="text-muted text-center">{this.state.fake.fakeuser.mobile}</p>
               <a href="#" className="btn btn-primary btn-block"><b>Profile</b></a>
             </div>
           </div>
         </ul>
       );
     }
+    var fakeuserlist = (<ul className="menu"></ul>);
+    if (this.state.fake.fakeusers) {
+      fakeuserlist = (
+        <ul className="menu">
+        {this.state.fake.fakeusers.map(function (fake) {
+          return (
+            <li key={'fk_'+fake.user_id} onClick={this.selectFakeUser.bind(this, fake)}>
+              <a>
+                <div className="pull-left">
+                  <img src={fake.avatar} className="img-circle" alt="User Image" />
+                </div>
+                <h4>
+                  {fake.nickname}
+                  <small><i className="fa fa-info"></i> {fake.user_id}</small>
+                </h4>
+                <p>{fake.mobile}</p>
+              </a>
+            </li>
+          );
+        }, this)}
+      </ul>
+      );
+    }
+    
     return (
       <div className="wrapper">
         <div className="main-header">
@@ -82,24 +93,7 @@ var Layout = React.createClass({
                   <ul className="dropdown-menu">
                     <li className="header">Select a fake user</li>
                     <li>
-                      <ul className="menu">
-                        {this.state.fakeusers.map(function (fake) {
-                          return (
-                            <li key={'fk_'+fake.user_id} onClick={this.selectFakeUser.bind(this, fake)}>
-                              <a>
-                                <div className="pull-left">
-                                  <img src={fake.avatar} className="img-circle" alt="User Image" />
-                                </div>
-                                <h4>
-                                  {fake.nickname}
-                                  <small><i className="fa fa-info"></i> {fake.user_id}</small>
-                                </h4>
-                                <p>{fake.mobile}</p>
-                              </a>
-                            </li>
-                          );
-                        }, this)}
-                      </ul>
+                      {fakeuserlist}
                     </li>
                   </ul>
                 </li>

@@ -7,7 +7,9 @@ var PostActions = Reflux.createActions([
     'toggleRecommendPost',
     'toggleBlockPost',
     'deleteMark',
-    'addMark'
+    'addMark',
+    'like',
+    'unlike'
 ]);
 
 module.exports = PostActions;

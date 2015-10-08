@@ -5,10 +5,11 @@ var Modal = require('react-bootstrap').Modal;
 var Input = require('react-bootstrap').Input;
 var PostStore = require('../stores/poststore');
 var PostActions = require('../actions/postactions');
+var FakeUserStore = require('../stores/fakeuserstore');
 var PostPanel = require('./postpanel');
 
 var PostList = React.createClass({
-  mixins: [Reflux.connect(PostStore, 'postlist'), React.addons.LinkedStateMixin],
+  mixins: [Reflux.connect(PostStore, 'postlist'), Reflux.connect(FakeUserStore, 'fake'), React.addons.LinkedStateMixin],
   getInitialState: function() {
     return { filter: '', showModal: false, showImage: '' };
   },
@@ -16,7 +17,6 @@ var PostList = React.createClass({
     this.setState({ showModal: false });
   },
   open: function(img) {
-    console.log('show image: ' + img);
     var url = img.split('?')[0];
     this.setState({ showModal: true, showImage: url });
   },
@@ -24,7 +24,6 @@ var PostList = React.createClass({
     PostActions.fetchPostList();
   },
   clickFilter: function(e) {
-    console.log('click filter: ' + this.state.filter);
     PostActions.updateParams(this.state.filter.trim());
     PostActions.fetchPostList();
     e.preventDefault();
@@ -47,7 +46,7 @@ var PostList = React.createClass({
             {this.state.postlist.map(function (post) {
               var boundClick = this.open.bind(this, post.content);
               return (
-                <PostPanel key={'p_'+post.id} post={post} open={boundClick}/>
+                <PostPanel key={'p_'+post.id} post={post} open={boundClick} fakeuserId={this.state.fake.fakeuser.user_id}/>
               );
             }, this)}
           </Row>

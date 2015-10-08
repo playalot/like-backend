@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
+import com.likeorz.services.store.MongoDBService
 import com.mohiva.play.silhouette.api.{ Silhouette, Environment }
 import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
 import models.Admin
@@ -21,6 +22,7 @@ class UserApiController @Inject() (
     userService: UserService,
     postService: PostService,
     markService: MarkService,
+    mongoDBService: MongoDBService,
     promoteService: PromoteService) extends Silhouette[Admin, CookieAuthenticator] {
 
   def fetchUserList(page: Int, pageSize: Int, filter: String) = SecuredAction.async {
@@ -69,7 +71,7 @@ class UserApiController @Inject() (
   }
 
   def getUserPosts(id: Long, timestamp: Option[Long]) = SecuredAction.async {
-    val screenWidth = 300
+    val screenWidth = 600
     val pageSize = 48
     userService.findById(id).flatMap {
       case Some(user) =>
@@ -77,31 +79,35 @@ class UserApiController @Inject() (
           if (ids.isEmpty) {
             Future.successful(Ok(Json.obj("posts" -> Json.arr())))
           } else {
-            postService.getPostsByIds(ids).flatMap { list =>
-              if (list.isEmpty) {
+            postService.getPostsByIdsSimple(ids).flatMap { posts =>
+              if (posts.isEmpty) {
                 Future.successful(Ok(Json.obj("posts" -> Json.arr())))
               } else {
-                val sortedList = list.sortBy(-_._1.created)
-                val futures = sortedList.map { row =>
-                  val post = row._1
-                  val markIds = row._2.map(_._1)
+
+                val marksMap = mongoDBService.getPostMarksByIds(ids)
+
+                val sortedPosts = posts.sortBy(-_.created)
+
+                val futures = sortedPosts.map { post =>
 
                   for {
-                    userInfo <- userService.getUserInfo(post.userId)
                     isRecommended <- dashboardService.isPostRecommended(post.id.get)
                     isBlocked <- dashboardService.isPostBlocked(post.id.get)
                   } yield {
-                    val marksJson = row._2.sortBy(-_._3).map { fields =>
+                    val marks = marksMap.getOrElse(post.id.get, Seq())
+                    val userInfo = userService.getUserInfoFromCache(post.userId)
+                    val marksJson = marks.map { mark =>
                       Json.obj(
-                        "markId" -> fields._1,
-                        "tag" -> fields._2,
-                        "likes" -> fields._3
+                        "markId" -> mark.markId,
+                        "tag" -> mark.tag,
+                        "likes" -> mark.likes.size,
+                        "likedBy" -> Json.toJson(mark.likes)
                       )
                     }
                     Json.obj(
                       "id" -> post.id.get,
                       "type" -> post.`type`,
-                      "content" -> QiniuUtil.resizeImage(post.content, screenWidth),
+                      "content" -> QiniuUtil.squareImage(post.content, screenWidth),
                       "created" -> post.created,
                       "isRecommended" -> isRecommended,
                       "isBlocked" -> isBlocked,
@@ -116,7 +122,7 @@ class UserApiController @Inject() (
                   }
                 }
                 Future.sequence(futures).map { posts =>
-                  Ok(Json.obj("posts" -> Json.toJson(posts), "nextTimestamp" -> sortedList.last._1.created))
+                  Ok(Json.obj("posts" -> Json.toJson(posts), "next" -> sortedPosts.last.created))
                 }
               }
             }

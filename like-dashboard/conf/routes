@@ -27,6 +27,8 @@ DELETE  /api/post/:id/block         controllers.PostApiController.invisiblePost(
 GET     /api/post/:id/block         controllers.PostApiController.isPostInvisible(id: Long)
 GET     /api/post/:tag/count        controllers.PostApiController.countPostLikes(tag: String)
 POST    /api/post/:id/mark/:tag/:uid    controllers.PostApiController.addMark(id: Long, tag: String, uid: Long)
+POST    /api/mark/:id/:uid          controllers.PostApiController.like(id: Long, uid: Long)
+DELETE  /api/mark/:id/:uid          controllers.PostApiController.unlike(id: Long, uid: Long)
 
 GET     /api/brands/:pg             controllers.BrandApiController.fetchBrandList(pg: Int, pageSize: Int ?= 50, filter: String ?= "")
 POST    /api/brand/:id/upload       controllers.BrandApiController.uploadBrandImageToQiniu(id: Long)

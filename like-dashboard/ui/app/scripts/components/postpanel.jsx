@@ -18,7 +18,7 @@ var PostPanel = React.createClass({
     return { showUser: true };
   },
   getInitialState: function() {
-    return { showMarks: true };
+    return { showMarks: true, showLikes: true };
   },
   deletePost: function() {
     if (confirm('Delete this post?')) {
@@ -42,6 +42,9 @@ var PostPanel = React.createClass({
   },
   toggleShowMarks: function() {
     this.setState({ showMarks: !this.state.showMarks});
+  },
+  toggleShowLikes: function() {
+    this.setState({ showLikes: !this.state.showLikes});
   },
   addMark: function() {
     var tagName = prompt('Input tag name here');
@@ -105,6 +108,7 @@ var PostPanel = React.createClass({
                     <span onClick={ this.toggleShowMarks } className="post-caption-btn btn btn-default btn-sm"><i className="fa fa-info-circle"></i></span>
                   </OverlayTrigger>
                   <span onClick={ this.addMark } className="post-caption-btn btn btn-default btn-sm"><i className="fa fa-plus"></i></span>
+                  <span onClick={ this.toggleLikes } className="post-caption-btn btn btn-default btn-sm"><i className="fa fa-heart-o"></i></span>
                 </ButtonToolbar>
                 <ButtonToolbar className="pull-right">
                   <span onClick={ this.toggleBlockPost } className={invisibleClass}><i className="fa fa-eye-slash"></i></span>

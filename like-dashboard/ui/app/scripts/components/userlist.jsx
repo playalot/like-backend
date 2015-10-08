@@ -25,9 +25,9 @@ var UserList = React.createClass({
       return (
         <div className="content">
           <div className="page-header">
-            <form className="form-input-filter">
+            <form className="form-input-filter" onSubmit={this.clickFilter}>
               <div className="input-group">
-                <Input type='text' placeholder='Search Username' valueLink={this.linkState('filter')} />
+                <Input type='text' placeholder='Search Username or Mobile Number' valueLink={this.linkState('filter')} />
                 <span className="input-group-btn">
                   <button type="button" className="btn btn-info" onClick={this.clickFilter}>Filter</button>
                 </span>

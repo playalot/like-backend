@@ -198,10 +198,10 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
     }
   }
 
-  override def listUsers(pageSize: Int, page: Int, filter: String): Future[Seq[User]] = {
+  override def filterUsersByNameAndMobile(pageSize: Int, page: Int, filter: String): Future[Seq[User]] = {
     val query = if (filter.length > 0) {
       (for {
-        user <- users if user.nickname like s"%$filter%"
+        user <- users if (user.nickname like s"%$filter%") || (user.mobile startsWith filter)
       } yield user).sortBy(_.likes.desc).drop(pageSize * page).take(pageSize)
     } else {
       (for {

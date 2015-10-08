@@ -34,7 +34,7 @@ var PostList = React.createClass({
       return (
         <div className="content">
           <div className="page-header">
-            <form className="form-input-filter">
+            <form className="form-input-filter" onSubmit={this.clickFilter}>
               <div className="input-group">
                 <Input type='text' placeholder='Search by Tag' valueLink={this.linkState('filter')} />
                 <span className="input-group-btn">

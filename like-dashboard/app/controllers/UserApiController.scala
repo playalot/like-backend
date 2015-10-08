@@ -25,7 +25,7 @@ class UserApiController @Inject() (
 
   def fetchUserList(page: Int, pageSize: Int, filter: String) = SecuredAction.async {
     for {
-      users <- userService.listUsers(pageSize, page, filter)
+      users <- userService.filterUsersByNameAndMobile(pageSize, page, filter)
     } yield {
       val jsonList = Json.toJson(users.map { user =>
         Json.obj(

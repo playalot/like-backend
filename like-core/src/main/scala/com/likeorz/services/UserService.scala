@@ -43,7 +43,7 @@ trait UserService {
 
   def getUserInfoFromCache(userId: Long): CachedUserInfo
 
-  def listUsers(pageSize: Int, page: Int, filter: String): Future[Seq[User]]
+  def filterUsersByNameAndMobile(pageSize: Int, page: Int, filter: String): Future[Seq[User]]
 
   def getActiveUserIds(timerange: Long): Seq[(Long, Long)]
 }

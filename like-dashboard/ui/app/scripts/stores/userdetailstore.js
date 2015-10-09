@@ -9,18 +9,18 @@ var UserDetailStore = Reflux.createStore({
     userDetail: {
       userId: 0,
       timestamp: '',
-      userInfo: {count:{}},
-      userPostlist: []
+      user: null,
+      postlist: []
     },
-
     getInitialState: function() {
       return this.userDetail;
     },
     onUpdateUserId: function(userId) {
       if (this.userDetail.userId !== userId) {
           this.userDetail.userId = userId;
-          this.userDetail.timestamp = '';
           this.onFetchUserDetailInfo();
+          this.userDetail.timestamp = '';
+          this.userDetail.postlist = [];
           this.onFetchUserPosts();
       }
     },
@@ -31,7 +31,7 @@ var UserDetailStore = Reflux.createStore({
           context: this,
           success: function(data) {
               console.log('fetch user detail info complete');
-              this.userDetail.userInfo = data;
+              this.userDetail.user = data;
               this.trigger(this.userDetail);
           }
       });
@@ -50,7 +50,7 @@ var UserDetailStore = Reflux.createStore({
               alert('no more');
             }  else {
               console.log('fetch user posts complete');
-              this.userDetail.userPostlist = this.userDetail.userPostlist.concat(data.posts);
+              this.userDetail.postlist = this.userDetail.postlist.concat(data.posts);
               this.userDetail.timestamp = data.next;
               this.trigger(this.userDetail);
             }
@@ -69,14 +69,14 @@ var UserDetailStore = Reflux.createStore({
         type: 'DELETE',
         success: function() {
           console.log('delete post ' + id);
-          this.updateList(_.filter(this.userDetail.userPostlist, function(post){
+          this.updateList(_.filter(this.userDetail.postlist, function(post){
             return post.id !== id;
           }));
         }.bind(this)
       });
     },
     onToggleRecommendPost: function(id) {
-      var foundPost = _.find(this.userDetail.userPostlist, function(post) {
+      var foundPost = _.find(this.userDetail.postlist, function(post) {
           return post.id === id;
       });
       if (foundPost) {
@@ -90,13 +90,13 @@ var UserDetailStore = Reflux.createStore({
           success: function() {
             console.log('toggle recommend post ' + id);
             foundPost.isRecommended = !foundPost.isRecommended;
-            this.updateList(this.userDetail.userPostlist);
+            this.updateList(this.userDetail.postlist);
           }.bind(this)
         });
       }
     },
     onToggleBlockPost: function(id) {
-      var foundPost = _.find(this.userDetail.userPostlist, function(post) {
+      var foundPost = _.find(this.userDetail.postlist, function(post) {
             return post.id === id;
       });
       if (foundPost) {
@@ -110,13 +110,13 @@ var UserDetailStore = Reflux.createStore({
           success: function() {
             console.log('toggle block post ' + id);
             foundPost.isBlocked = !foundPost.isBlocked;
-            this.updateList(this.userDetail.userPostlist);
+            this.updateList(this.userDetail.postlist);
           }.bind(this)
         });
       }
     },
     onDeleteMark: function(pid, mid) {
-      var foundPost = _.find(this.userDetail.userPostlist, function(post) {
+      var foundPost = _.find(this.userDetail.postlist, function(post) {
           return post.id === pid;
       });
       if (foundPost) {
@@ -128,13 +128,13 @@ var UserDetailStore = Reflux.createStore({
             foundPost.marks = _.filter(foundPost.marks, function(mark){
               return mark.markId !== mid;
             });
-            this.updateList(this.userDetail.userPostlist);
+            this.updateList(this.userDetail.postlist);
           }.bind(this)
         });
       }
     },
     onAddMark: function(pid, tagName, uid) {
-      var foundPost = _.find(this.userDetail.userPostlist, function(post) {
+      var foundPost = _.find(this.userDetail.postlist, function(post) {
           return post.id === pid;
       });
       if (foundPost) {
@@ -144,7 +144,7 @@ var UserDetailStore = Reflux.createStore({
           success: function(data) {
             console.log('add mark ' + tagName);
             foundPost.marks.push(data);
-            this.updateList(this.userDetail.userPostlist);
+            this.updateList(this.userDetail.postlist);
           }.bind(this),
           error: function(data) {
             alert(data);
@@ -153,7 +153,7 @@ var UserDetailStore = Reflux.createStore({
       }
     },
     onLike: function(pid, mark, uid) {
-      var foundPost = _.find(this.userDetail.userPostlist, function(post) {
+      var foundPost = _.find(this.userDetail.postlist, function(post) {
           return post.id === pid;
       });
       if (foundPost) {
@@ -168,7 +168,7 @@ var UserDetailStore = Reflux.createStore({
             if (foundMark) {
               foundMark.likedBy.push(uid);
             }
-            this.updateList(this.userDetail.userPostlist);
+            this.updateList(this.userDetail.postlist);
           }.bind(this),
           error: function(data) {
             alert(data);
@@ -177,7 +177,7 @@ var UserDetailStore = Reflux.createStore({
       }
     },
     onUnlike: function(pid, mark, uid) {
-      var foundPost = _.find(this.userDetail.userPostlist, function(post) {
+      var foundPost = _.find(this.userDetail.postlist, function(post) {
           return post.id === pid;
       });
       if (foundPost) {
@@ -194,7 +194,7 @@ var UserDetailStore = Reflux.createStore({
                 return l !== uid;
               });
             }
-            this.updateList(this.userDetail.userPostlist);
+            this.updateList(this.userDetail.postlist);
           }.bind(this),
           error: function(data) {
             alert(data);
@@ -203,7 +203,7 @@ var UserDetailStore = Reflux.createStore({
       }
     },
     updateList: function(list){
-      this.userDetail.userPostlist = list;
+      this.userDetail.postlist = list;
       this.trigger(this.userDetail);
     }
 });

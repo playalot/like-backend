@@ -246,7 +246,7 @@ class UserController @Inject() (
   def subscribeTag(tagId: Long) = SecuredAction.async { implicit request =>
     tagService.getTagById(tagId).flatMap {
       case Some(tag) =>
-        if (tag.group > 0) {
+        if (tag.group >= 0) {
           tagService.subscribeTag(request.userId, tagId).map(_ => success(Messages("success.subscribeTag")))
         } else {
           Future.successful(error(4058, Messages("failed.subscribeTag")))

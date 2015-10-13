@@ -38,6 +38,7 @@ class UserController @Inject() (
           countFavorite <- if (request.userId.isDefined && request.userId.get == id) postService.countFavoriteForUser(id) else Future.successful(0L)
           countLikes <- markService.countLikesForUser(id)
           isFollowing <- if (request.userId.isDefined) userService.isFollowing(request.userId.get, id) else Future.successful(0)
+          isBlocked <- if (request.userId.isDefined) userService.isBlocking(request.userId.get, id) else Future.successful(false)
         } yield {
           success(Messages("success.found"), Json.obj(
             "user_id" -> id.toString,
@@ -47,6 +48,7 @@ class UserController @Inject() (
             "cover" -> QiniuUtil.getSizedImage(user.cover, getScreenWidth),
             "likes" -> countLikes,
             "is_following" -> isFollowing,
+            "is_blocked" -> isBlocked,
             // Todo change after v1.1.1
             "count" -> Json.obj(
               "post" -> countPosts,

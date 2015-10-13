@@ -158,6 +158,10 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
     }
   }
 
+  override def isBlocking(fromId: Long, toId: Long): Future[Boolean] = {
+    db.run(blocks.filter(f => f.userId === fromId && f.blockedUserId === toId).result.headOption).map(_.isDefined)
+  }
+
   override def block(fromId: Long, toId: Long): Future[Int] = {
     db.run(blocks.filter(b => b.userId === fromId && b.blockedUserId === toId).result.headOption).flatMap {
       case Some(block) => Future.successful(0)

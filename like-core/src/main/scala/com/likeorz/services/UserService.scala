@@ -25,6 +25,8 @@ trait UserService {
 
   def isFollowing(fromId: Long, toId: Long): Future[Int]
 
+  def isBlocking(fromId: Long, toId: Long): Future[Boolean]
+
   def getNickname(userId: Long): Future[String]
 
   def searchByName(name: String): Future[Seq[User]]

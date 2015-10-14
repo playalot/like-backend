@@ -136,6 +136,7 @@ class NotificationController @Inject() (
                 )
               },
               "tags" -> notification.tagName.toSeq,
+              "mark_id" -> notification.markId,
               "timestamp" -> notification.updated
             )
           }

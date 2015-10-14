@@ -26,7 +26,7 @@ var Brands = React.createClass({
       return (
         <div className="content">
           <p>
-            <a href="/#/brand/edit"><Button bsStyle='success'>Create new brand</Button></a>
+            <a href="/#/brand/add"><Button bsStyle='success'>Create new brand</Button></a>
           </p>
             {this.state.brandlist.map(function (brand) {
                 var promoteBtn = <a className="btn btn-sm btn-default" onClick={this.togglePromoteBrand.bind(this, brand.id)}>Promote</a>;
@@ -40,7 +40,7 @@ var Brands = React.createClass({
                     <Col className="col" xs={4} sm={4} lg={4}><span>{brand.description}</span></Col>
                     <col xs={4} sm={4} lg={4}>
                       <ButtonToolbar>
-                        <a href={'/#/brand/edit?id='+brand.id} className="btn btn-info btn-sm">Edit</a>
+                        <a href={'/#/brand/'+brand.id+'/edit'} className="btn btn-info btn-sm">Edit</a>
                         {promoteBtn}
                         <a className="btn btn-danger btn-sm" onClick={this.deleteBrand.bind(this, brand.id)}>Delete</a>
                       </ButtonToolbar>

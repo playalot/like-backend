@@ -13,7 +13,7 @@ var BrandForm = React.createClass({
   },
   getInitialState: function() {
     return {
-      id: this.context.router.getCurrentQuery().id,
+      id: this.context.router.getCurrentParams().brandId,
       name: '',
       avatar: '',
       description : '',
@@ -39,6 +39,7 @@ var BrandForm = React.createClass({
     }
   },
   uploadFile: function(id) {
+    console.log(this.state.data);
     if (this.state.data) {
       $.ajax({
         url: '/api/brand/'+id+'/upload',  //Server script to process data
@@ -50,19 +51,17 @@ var BrandForm = React.createClass({
         success: function (res) {
           console.log(res);
           this.setState({avatar: res});
+          location.reload();
         }.bind(this)
       });
     }
   },
   onDropFile: function(files) {
     // Create a formdata object and add the files
-    var data = new FormData();
+    var formData = new FormData();
     var file = files[0];
-    // $.each(files, function(key, value) {
-    data.append(file.name, file);
-    console.log('Received files: ', file.name);
-    // });
-    this.setState({data: data, file: file.name});
+    formData.append("file", file);
+    this.setState({data: formData, file: file.name});
   },
   submitForm: function() {
     console.log('submit update');
@@ -102,7 +101,7 @@ var BrandForm = React.createClass({
         }.bind(this)
       });
     }
-    this.transitionTo('brandlist');
+    return false;
   },
   render: function() {
     var text = 'Drop brand image here, or click to select file to upload.';

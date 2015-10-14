@@ -9,7 +9,7 @@ import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
 import com.qiniu.storage.UploadManager
 import com.qiniu.util.Auth
 import models.Admin
-import play.api.{ Logger, Play }
+import play.api.{ Configuration, Logger, Play }
 import play.api.i18n.MessagesApi
 import play.api.libs.json._
 import play.api.libs.concurrent.Execution.Implicits._
@@ -21,6 +21,7 @@ import scala.concurrent.Future
 class BrandApiController @Inject() (
     val messagesApi: MessagesApi,
     val env: Environment[Admin, CookieAuthenticator],
+    configuration: Configuration,
     dashboardService: DashboardService,
     userService: UserService,
     postService: PostService,
@@ -67,10 +68,10 @@ class BrandApiController @Inject() (
       })
   }
 
-  val QiniuAccessKey = Play.current.configuration.getString("qiniu.accesskey").get
-  val QiniuSecretKey = Play.current.configuration.getString("qiniu.secretkey").get
+  val QiniuAccessKey = configuration.getString("qiniu.accesskey").get
+  val QiniuSecretKey = configuration.getString("qiniu.secretkey").get
 
-  val DefaultBucket = Play.current.configuration.getString("qiniu.bucket").get
+  val DefaultBucket = configuration.getString("qiniu.bucket").get
 
   val QiniuUploadManager = new UploadManager()
   val QiniuAuth = Auth.create(QiniuAccessKey, QiniuSecretKey)
@@ -80,22 +81,17 @@ class BrandApiController @Inject() (
   }
 
   def uploadBrandImageToQiniu(id: Long) = SecuredAction.async(parse.multipartFormData) { implicit request =>
+    println(request.body)
     val file = request.body.files.head.ref
     promoteService.getEntity(id).map {
       case Some(entity) =>
-        val key = if (entity.avatar == "") {
-          val key = "entity_" + id + "_" + (System.currentTimeMillis() / 1000) + ".jpg"
-          val data = scala.io.Source.fromFile(file.file).map(_.toByte).toArray
-          val res = QiniuUploadManager.put(data, key, QiniuAuth.uploadToken(DefaultBucket))
-          promoteService.updateEntity(entity.copy(avatar = key))
-          key
+        val key = if (entity.avatar.trim == "") {
+          "entity_" + id + "_" + (System.currentTimeMillis() / 1000) + ".jpg"
         } else {
-          val key = entity.avatar
-          val data = scala.io.Source.fromFile(file.file).map(_.toByte).toArray
-          val res = QiniuUploadManager.put(data, key, QiniuAuth.uploadToken(DefaultBucket, entity.avatar))
-          Logger.info(res.bodyString())
-          key
+          entity.avatar
         }
+        QiniuUploadManager.put(file.file, key, QiniuAuth.uploadToken(DefaultBucket, key))
+        promoteService.updateEntity(entity.copy(avatar = key))
         Ok(key)
       case None => BadRequest
     }

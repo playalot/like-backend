@@ -6,6 +6,7 @@ var Input = require('react-bootstrap').Input;
 var Modal = require('react-bootstrap').Modal;
 var Tab = require('react-bootstrap').Tab;
 var Tabs = require('react-bootstrap').Tabs;
+var ButtonToolbar = require('react-bootstrap').ButtonToolbar;
 var UserDetailStore = require('../stores/userdetailstore');
 var UserDetailActions = require('../actions/userdetailactions');
 var FakeUserStore = require('../stores/fakeuserstore');
@@ -30,6 +31,11 @@ var UserDetail = React.createClass({
     console.log('show image: ' + img);
     var url = img.split('?')[0];
     this.setState({ showModal: true, showImage: url });
+  },
+  destroy: function() {
+    if (confirm('Are you sure to delete this user??? The user will never be recovered again!')) {
+      UserDetailActions.destroy(this.context.router.getCurrentParams().userId);
+    }
   },
   fetchMorePosts: function() {
     UserDetailActions.fetchUserPosts();
@@ -84,7 +90,10 @@ var UserDetail = React.createClass({
                     </div>
                     <div className="form-group">
                       <div className="col-sm-offset-2 col-sm-10">
-                        <button type="submit" className="btn btn-danger">Submit</button>
+                        <ButtonToolbar>
+                          <button type="submit" className="btn btn-primary">Submit</button>
+                          <button className="btn btn-danger" onClick={this.destroy}><i className="fa fa-exclamation"></i>Destroy</button>
+                        </ButtonToolbar>
                       </div>
                     </div>
                   </form>

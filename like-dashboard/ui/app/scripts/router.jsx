@@ -30,7 +30,8 @@ var routes = (
 		<Route name="report" handler={Report} />
 		<Route name="judgeposts" path="/judge" handler={JudgePosts} />
 		<Route name="brand" handler={BrandList} />
-		<Route name="brandedit" path="/brand/edit" handler={BrandForm} />
+		<Route name="brandedit" path="/brand/:brandId/edit" handler={BrandForm} />
+		<Route name="brandadd" path="/brand/add" handler={BrandForm} />
 		<Redirect from="/" to="home" />
 		<DefaultRoute handler={Home} />
 	</Route>

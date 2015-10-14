@@ -5,7 +5,7 @@ import javax.inject.Inject
 import com.likeorz.dao.{ SocialAccountsComponent, UsersComponent }
 import com.likeorz.models.{ SocialAccount, User }
 import com.likeorz.silhouettes.MobileProvider
-import com.likeorz.utils.{ KeyUtils, RedisCacheClient, GenerateUtils }
+import com.likeorz.utils.{ GlobalConstants, KeyUtils, RedisCacheClient, GenerateUtils }
 import play.api.db.slick.{ HasDatabaseConfigProvider, DatabaseConfigProvider }
 import play.api.libs.concurrent.Execution.Implicits._
 import slick.driver.JdbcProfile
@@ -69,6 +69,13 @@ class UserSettingService @Inject() (protected val dbConfigProvider: DatabaseConf
         RedisCacheClient.hset(KeyUtils.user(id), "cover", cover)
         true
       } else { false }
+    }
+  }
+
+  def unregister(id: Long): Future[Int] = {
+    db.run(socials.filter(_.userId === id).delete).flatMap { _ =>
+      db.run(users.filter(_.id === id).map(u => (u.nickname, u.avatar, u.cover, u.mobile, u.email))
+        .update((GlobalConstants.DefaultNickname, GlobalConstants.DefaultAvatar, GlobalConstants.DefaultCover, null, null)))
     }
   }
 

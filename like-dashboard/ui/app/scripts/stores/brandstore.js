@@ -36,21 +36,7 @@ var BrandStore = Reflux.createStore({
     onReloadBrandList: function() {
       this.brandlist = [];
       this.page = 0;
-      var sourceUrl = '/api/brands/' + this.page;
-      $.ajax({
-          url: sourceUrl,
-          dataType: 'json',
-          context: this,
-          success: function(data) {
-              console.log('fetch complete');
-              this.brandlist = this.brandlist.concat(data.brands);
-              this.page = this.page + 1;
-              if (data.brands.length === 0 && this.page > 0) {
-                alert('no more');
-              }
-              this.trigger(this.brandlist);
-          }
-      });
+      this.onFetchBrandList();
     },
     onDeleteBrand: function(id) {
       $.ajax({

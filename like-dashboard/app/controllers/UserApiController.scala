@@ -20,6 +20,7 @@ class UserApiController @Inject() (
     val env: Environment[Admin, CookieAuthenticator],
     dashboardService: DashboardService,
     userService: UserService,
+    userSettingService: UserSettingService,
     postService: PostService,
     markService: MarkService,
     mongoDBService: MongoDBService,
@@ -56,6 +57,8 @@ class UserApiController @Inject() (
           Ok(Json.obj(
             "userId" -> id,
             "nickname" -> user.nickname,
+            "mobile" -> user.mobile,
+            "email" -> user.email,
             "avatar" -> QiniuUtil.resizeImage(user.avatar, 150),
             "cover" -> QiniuUtil.resizeImage(user.cover, 300),
             "likes" -> countLikes,
@@ -149,6 +152,19 @@ class UserApiController @Inject() (
       "users" -> userJson,
       "total" -> userJson.length
     ))
+  }
+
+  def unregisterUser(id: Long) = SecuredAction.async {
+    userService.findById(id).flatMap {
+      case Some(user) =>
+        println(user)
+        userSettingService.unregister(id).map { rs =>
+          println(rs)
+          if (rs == 1) Ok
+          else BadRequest
+        }
+      case None => Future.successful(NotFound)
+    }
   }
 
 }

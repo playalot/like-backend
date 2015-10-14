@@ -26,5 +26,5 @@ trait PromoteService {
 
   def deleteEntity(entityId: Long): Future[Int]
 
-  def updateEntity(entity: Entity): Future[Int]
+  def updateEntity(entity: Entity): Future[Entity]
 }

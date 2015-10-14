@@ -61,8 +61,8 @@ class PromoteServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConf
     } yield e
   }
 
-  override def updateEntity(entity: Entity): Future[Int] = {
-    db.run(entities.filter(_.id === entity.id).update(entity))
+  override def updateEntity(entity: Entity): Future[Entity] = {
+    db.run(entities.filter(_.id === entity.id).update(entity)).map(_ => entity)
   }
 
 }

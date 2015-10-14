@@ -5,7 +5,7 @@ import javax.inject.Inject
 import com.likeorz.dao._
 import com.likeorz.models._
 import com.likeorz.silhouettes.MobileProvider
-import com.likeorz.utils.{ GlobalConstants, GenerateUtils, KeyUtils, RedisCacheClient }
+import com.likeorz.utils._
 import com.mohiva.play.silhouette.api.LoginInfo
 import play.api.Configuration
 import play.api.db.slick.{ DatabaseConfigProvider, HasDatabaseConfigProvider }
@@ -18,6 +18,7 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
     with UsersComponent with SocialAccountsComponent
     with FollowsComponent with BlocksComponent
     with MarksComponent with UserInfoComponent
+    with PostsComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -80,6 +81,22 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
           number
         }
     }
+  }
+
+  override def refreshUserCount(id: Long): Future[Unit] = {
+    Future.sequence(Seq(
+      db.run(follows.filter(_.fromId === id).length.result).map { number =>
+        RedisCacheClient.hset(KeyUtils.user(id), "following", number.toString)
+        number
+      },
+      db.run(follows.filter(_.toId === id).length.result).map { number =>
+        RedisCacheClient.hset(KeyUtils.user(id), "followers", number.toString)
+        number
+      },
+      db.run(posts.filter(_.userId === id).length.result).map { number =>
+        RedisCacheClient.hset(KeyUtils.user(id), "posts", number.toString)
+        number
+      })).map(_ => ())
   }
 
   override def findBySocial(providerId: String, providerKey: String): Future[Option[SocialAccount]] = {

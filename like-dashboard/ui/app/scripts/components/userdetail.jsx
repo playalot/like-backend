@@ -32,6 +32,9 @@ var UserDetail = React.createClass({
     var url = img.split('?')[0];
     this.setState({ showModal: true, showImage: url });
   },
+  refreshUserCount: function() {
+    UserDetailActions.refreshUserCount(this.context.router.getCurrentParams().userId);
+  },
   destroy: function() {
     if (confirm('Are you sure to delete this user??? The user will never be recovered again!')) {
       UserDetailActions.destroy(this.context.router.getCurrentParams().userId);
@@ -49,7 +52,8 @@ var UserDetail = React.createClass({
             <img src={this.state.userDetail.user.avatar} width="100" height="100" className="img-circle img-corona" alt="user-avatar" />
       			<span className="user-profile">
       				<h2 className="block">{this.state.userDetail.user.nickname} <small>{this.state.userDetail.user.likes} likes</small></h2>
-      				<small>{this.state.userDetail.user.count.posts} posts | {this.state.userDetail.user.count.followers} followers | {this.state.userDetail.user.count.following} following</small>
+      				<small>{this.state.userDetail.user.count.posts} posts | {this.state.userDetail.user.count.followers} followers | {this.state.userDetail.user.count.following} following {this.state.userDetail.user.count.favorites} favorites</small>
+              <span onClick={ this.refreshUserCount } className="btn btn-sm"><i className="fa fa-refresh"></i></span>
       			</span>
           </div>
           <Row>

@@ -101,16 +101,16 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     }
   }
 
-  override def searchByTag(page: Int = 0, pageSize: Int = 18, name: String = "%"): Future[Seq[Post]] = {
+  override def searchByTag(page: Int, pageSize: Int, name: String = ""): Future[Seq[Post]] = {
     val offset = pageSize * page
 
     val jian = JianFan.f2j(name.trim).toLowerCase
     val fan = JianFan.j2f(name.trim).toLowerCase
 
     val query = if (jian == fan) {
-      sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id where m.tag_id in (SELECT id FROM tag WHERE tag LIKE '%#${jian}%') order by p.created desc limit $offset,$pageSize""".as[Long]
+      sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id where p.score >= 0 AND m.tag_id in (SELECT id FROM tag WHERE tag LIKE '%#${jian}%') order by p.created desc limit $offset,$pageSize""".as[Long]
     } else {
-      sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id where m.tag_id in (SELECT id FROM tag WHERE tag LIKE '%#${jian}%' OR tag like '%#${fan}%') order by p.created desc limit $offset,$pageSize""".as[Long]
+      sql"""SELECT DISTINCT p.id FROM post p INNER JOIN mark m ON p.id=m.post_id where p.score >= 0 AND m.tag_id in (SELECT id FROM tag WHERE tag LIKE '%#${jian}%' OR tag like '%#${fan}%') order by p.created desc limit $offset,$pageSize""".as[Long]
     }
     FutureUtils.timedFuture("search tag: " + name) {
       db.run(query).flatMap { postIds =>
@@ -128,15 +128,15 @@ class PostServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
     val fan = JianFan.j2f(name).toLowerCase
 
     val query = if (timestamp.isDefined) {
-      sql"""SELECT DISTINCT m.post_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE (t.tag like '%#${jian}%' OR t.tag like '%#${fan}%')  AND m.created<${timestamp.get} order by m.created desc limit $pageSize""".as[Long]
+      sql"""SELECT DISTINCT m.post_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE (t.tag like '%#${jian}%' OR t.tag like '%#${fan}%') AND m.created<${timestamp.get} order by m.created desc limit ${pageSize + 10}""".as[Long]
     } else {
-      sql"""SELECT DISTINCT m.post_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' order by m.created desc limit $pageSize""".as[Long]
+      sql"""SELECT DISTINCT m.post_id FROM mark m INNER JOIN tag t ON m.tag_id=t.id WHERE t.tag like '%#${jian}%' OR t.tag like '%#${fan}%' order by m.created desc limit ${pageSize + 10}""".as[Long]
     }
 
     db.run(query).flatMap { postIds =>
       val q = (for {
         post <- posts if post.id inSet postIds
-      } yield post).sortBy(_.created.desc)
+      } yield post).filter(_.score >= 0).sortBy(_.created.desc).take(pageSize)
       db.run(q.result)
     }
   }

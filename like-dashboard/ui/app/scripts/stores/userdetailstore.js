@@ -57,6 +57,18 @@ var UserDetailStore = Reflux.createStore({
           }
       });
     },
+    onRefreshUserCount: function() {
+      $.ajax({
+          url: '/api/user/'+this.userDetail.userId+'/refresh',
+          type: 'POST',
+          success: function(data) {
+            location.reload();
+          },
+          error: function() {
+            alert('error!');
+          }
+      });
+    },
     onDestroy: function() {
       $.ajax({
           url: '/api/user/'+this.userDetail.userId+'/register',

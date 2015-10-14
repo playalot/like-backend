@@ -37,6 +37,8 @@ trait UserService {
 
   def countFollowing(id: Long): Future[Long]
 
+  def refreshUserCount(id: Long): Future[Unit]
+
   def block(fromId: Long, toId: Long): Future[Int]
 
   def unBlock(fromId: Long, toId: Long): Future[Int]

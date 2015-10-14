@@ -50,9 +50,10 @@ class UserApiController @Inject() (
       case Some(user) =>
         for {
           countFollowers <- userService.countFollowers(id)
-          countFriends <- userService.countFollowing(id)
+          countFollowing <- userService.countFollowing(id)
           countPosts <- postService.countPostsForUser(id)
           countLikes <- markService.countLikesForUser(id)
+          countFavorite <- postService.countFavoriteForUser(id)
         } yield {
           Ok(Json.obj(
             "userId" -> id,
@@ -64,13 +65,18 @@ class UserApiController @Inject() (
             "likes" -> countLikes,
             "count" -> Json.obj(
               "posts" -> countPosts,
-              "following" -> countFriends,
-              "followers" -> countFollowers
+              "following" -> countFollowing,
+              "followers" -> countFollowers,
+              "favorites" -> countFavorite
             )
           ))
         }
       case None => Future.successful(NotFound)
     }
+  }
+
+  def refreshUserCache(id: Long) = SecuredAction.async {
+    userService.refreshUserCount(id).map(_ => Ok)
   }
 
   def getUserPosts(id: Long, timestamp: Option[Long]) = SecuredAction.async {

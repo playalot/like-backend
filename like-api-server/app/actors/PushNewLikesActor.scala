@@ -23,7 +23,6 @@ class PushNewLikesActor @Inject() (
   def receive = {
     case PushUnreadLikes =>
       log.debug("Start push likes to users")
-      Thread.sleep(scala.util.Random.nextInt(15) * 1000)
       FutureUtils.seqFutures(RedisCacheClient.zrevrangeWithScores(KeyUtils.newLikes, 0, Long.MaxValue)) { kv =>
         val userId = kv._1
         val newLikes = kv._2.toInt

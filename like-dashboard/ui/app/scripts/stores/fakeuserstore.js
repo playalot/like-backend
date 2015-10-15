@@ -36,6 +36,12 @@ var FakeUserStore = Reflux.createStore({
       this.fake.fakeuser = fk;
       this.trigger(this.fake);
     },
+    onCreateFakeUser: function() {
+      $.post('/api/admin/fakeuser/add', function(fk){
+        this.fake.fakeusers.push(fk);
+        this.trigger(this.fake);
+      }.bind(this));
+    },
 });
 
 module.exports = FakeUserStore;

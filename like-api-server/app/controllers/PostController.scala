@@ -132,6 +132,7 @@ class PostController @Inject() (
             "post_id" -> id,
             "type" -> post.`type`,
             "content" -> QiniuUtil.getSizedImage(post.content, 960),
+            "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
             "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
             "raw_image" -> QiniuUtil.getRaw(post.content),
             "description" -> post.description,

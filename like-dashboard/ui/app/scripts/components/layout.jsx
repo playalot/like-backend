@@ -26,6 +26,11 @@ var Layout = React.createClass({
   selectFakeUser: function(fake) {
     FakeUserActions.selectFakeUser(fake);
   },
+  createFakeUser: function() {
+    if (confirm('Create a new fake user?')) {
+      FakeUserActions.createFakeUser();
+    }
+  },
   render: function() {
     var selectFakeUserDiv = (<a className="dropdown-toggle" data-toggle="dropdown">Select a fake user</a>);
     if (this.state.fake.fakeuser !== null) {
@@ -91,7 +96,7 @@ var Layout = React.createClass({
                 <li className="dropdown user-menu messages-menu">
                   {selectFakeUserDiv}
                   <ul className="dropdown-menu">
-                    <li className="header">Select a fake user</li>
+                    <li className="header">Select a fake user <span className="btn btn-sm" onClick={this.createFakeUser}><i className="fa fa-plus"></i></span></li>
                     <li>
                       {fakeuserlist}
                     </li>

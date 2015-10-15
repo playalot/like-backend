@@ -13,7 +13,7 @@ GET     /admin/email                controllers.Application.getEmail
 
 # Admin
 GET     /api/admin/fakeusers        controllers.AdminApiController.listFakeUsers
-
+POST    /api/admin/fakeuser/add     controllers.AdminApiController.createFakeUser
 
 GET     /api/stats                  controllers.Application.stats
 GET     /api/posts                  controllers.PostApiController.fetchPostList(ts: Option[Long] ?= None, filter: Option[String] ?= None)

@@ -9,6 +9,7 @@ var Home = require('./components/home');
 var PostList = require('./components/postlist');
 var UserList = require('./components/userlist');
 var ActiveUsers = require('./components/activeusers');
+var BannedUsers = require('./components/bannedusers');
 var UserDetail = require('./components/userdetail');
 var TagGroup = require('./components/taggroup');
 var JudgePosts = require('./components/judgeposts');
@@ -25,6 +26,7 @@ var routes = (
 		<Route name="user" handler={UserList} />
 		<Route name="userdetail" path="/user/:userId" handler={UserDetail} />
 		<Route name="activeusers" path="/activeusers" handler={ActiveUsers} />
+		<Route name="bannedusers" path="/bannedusers" handler={BannedUsers} />
 		<Route name="taggroup" path="/tags" handler={TagGroup} />
 		<Route name="feedback" handler={Feedback} />
 		<Route name="report" handler={Report} />

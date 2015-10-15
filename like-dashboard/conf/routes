@@ -41,11 +41,14 @@ POST    /api/brand/:id/promote      controllers.BrandApiController.promoteBrand(
 
 GET     /api/users/$pg<[0-9]+>      controllers.UserApiController.fetchUserList(pg: Int, pageSize: Int ?= 50, filter: String ?= "")
 GET     /api/users/active           controllers.UserApiController.getActiveUsers(duration: Long ?= 86400)
+GET     /api/users/banned           controllers.UserApiController.getBannedUsers
 GET     /api/user/:id/info          controllers.UserApiController.getUserInfo(id: Long)
+POST    /api/user/:id/refresh       controllers.UserApiController.refreshUserCache(id: Long)
 GET     /api/user/:id/posts         controllers.UserApiController.getUserPosts(id: Long, ts: Option[Long] ?= None)
 POST    /api/user/:id/update        controllers.UserApiController.updateUserInfo(id: Long)
 DELETE  /api/user/:id/register      controllers.UserApiController.unregisterUser(id: Long)
-POST    /api/user/:id/refresh       controllers.UserApiController.refreshUserCache(id: Long)
+POST    /api/user/:id/ban           controllers.UserApiController.banUser(id: Long)
+DELETE  /api/user/:id/ban           controllers.UserApiController.removeBanUser(id: Long)
 
 GET     /api/tag/group/:id          controllers.TagApiController.getTagsForGroup(id: Long, page: Int, size: Int = 500)
 GET     /api/tag/groups             controllers.TagApiController.getGroupedTags

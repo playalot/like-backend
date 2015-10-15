@@ -238,4 +238,8 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
     }.toSeq
   }
 
+  override def getBannedUserIds: Set[Long] = {
+    RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong)
+  }
+
 }

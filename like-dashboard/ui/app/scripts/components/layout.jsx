@@ -134,6 +134,7 @@ var Layout = React.createClass({
               <li className="treeview">
                 <a href="#"><i className="fa fa-ellipsis-h"></i> <span>Other</span> <i className="fa fa-angle-left pull-right"></i></a>
                 <ul className="treeview-menu">
+                  <li><NavItemLink to="bannedusers">Banned Users</NavItemLink></li>
                   <li><NavItemLink to="activeusers">Active Users</NavItemLink></li>
                   <li><NavItemLink to="judgeposts">Judge Posts</NavItemLink></li>
                 </ul>

@@ -17,7 +17,7 @@ var ActiveUserList = React.createClass({
               <tbody>
                 {this.state.activeusers.userlist.map(function (user) {
                   return (
-                    <tr key={'u_'+user.id}><td>{user.id}</td><td><a href={'/user/'+user.id}><img src={user.avatar} className="img-circle"/></a></td><td>{user.nickname}</td><td>{Moment.unix(user.lastSeen).fromNow()}</td><td>{user.likes}</td></tr>
+                    <tr key={'u_'+user.id}><td>{user.id}</td><td><a href={'/#/user/'+user.id}><img src={user.avatar} className="img-circle"/></a></td><td>{user.nickname}</td><td>{Moment.unix(user.lastSeen).fromNow()}</td><td>{user.likes}</td></tr>
                   );
                 })}
                 <tr></tr>

@@ -101,10 +101,12 @@ object RedisCacheClient {
     }
   }
 
-  def sadd(key: String, members: Seq[String]) = {
-    withJedisClient[Long] { client =>
-      client.sadd(key, members: _*)
-    }
+  def sadd(key: String, members: Seq[String]): Long = {
+    withJedisClient { client => client.sadd(key, members: _*) }
+  }
+
+  def srem(key: String, members: Seq[String]): Long = {
+    withJedisClient { client => client.srem(key, members: _*) }
   }
 
   def smembers(key: String) = {

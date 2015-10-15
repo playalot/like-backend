@@ -50,4 +50,7 @@ trait UserService {
   def filterUsersByNameAndMobile(pageSize: Int, page: Int, filter: String): Future[Seq[User]]
 
   def getActiveUserIds(timerange: Long): Seq[(Long, Long)]
+
+  def getBannedUserIds: Set[Long]
+
 }

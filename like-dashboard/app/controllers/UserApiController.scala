@@ -3,6 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import com.likeorz.services.store.MongoDBService
+import com.likeorz.utils.{ KeyUtils, RedisCacheClient }
 import com.mohiva.play.silhouette.api.{ Silhouette, Environment }
 import com.mohiva.play.silhouette.impl.authenticators.CookieAuthenticator
 import models.Admin
@@ -181,6 +182,58 @@ class UserApiController @Inject() (
       "users" -> userJson,
       "total" -> userJson.length
     ))
+  }
+
+  def getBannedUsers = SecuredAction {
+    val userJson = userService.getBannedUserIds.map { userId =>
+      val user = userService.getUserInfoFromCache(userId)
+      Json.obj(
+        "id" -> userId,
+        "nickname" -> user.nickname,
+        "avatar" -> QiniuUtil.resizeImage(user.avatar, 50),
+        "likes" -> user.likes
+      )
+    }
+    Ok(Json.obj("users" -> userJson))
+  }
+
+  def banUser(id: Long) = SecuredAction.async {
+
+    userService.findById(id).map {
+      case Some(user) =>
+        val rs = RedisCacheClient.sadd(KeyUtils.bannedUsers, Seq(id.toString))
+        if (rs > 0) {
+          val user = userService.getUserInfoFromCache(id)
+          Ok(Json.obj(
+            "id" -> id,
+            "nickname" -> user.nickname,
+            "avatar" -> QiniuUtil.resizeImage(user.avatar, 50),
+            "likes" -> user.likes
+          ))
+        } else {
+          BadRequest
+        }
+      case None => NotFound
+    }
+  }
+
+  def removeBanUser(id: Long) = SecuredAction.async {
+    userService.findById(id).map {
+      case Some(user) =>
+        val rs = RedisCacheClient.srem(KeyUtils.bannedUsers, Seq(id.toString))
+        if (rs > 0) {
+          val user = userService.getUserInfoFromCache(id)
+          Ok(Json.obj(
+            "id" -> id,
+            "nickname" -> user.nickname,
+            "avatar" -> QiniuUtil.resizeImage(user.avatar, 50),
+            "likes" -> user.likes
+          ))
+        } else {
+          BadRequest
+        }
+      case None => NotFound
+    }
   }
 
   def unregisterUser(id: Long) = SecuredAction.async {

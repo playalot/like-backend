@@ -94,6 +94,7 @@ class PostController @Inject() (
             success(Messages("success.publish"), Json.obj(
               "post_id" -> post.id.get,
               "content" -> QiniuUtil.getSizedImage(post.content, screenWidth),
+              "thumbnail" -> QiniuUtil.getThumbnailImage(post.content),
               "preview" -> QiniuUtil.getSizedImage(post.content, screenWidth),
               "type" -> post.`type`,
               "description" -> post.description,

@@ -5,6 +5,7 @@ var Col = require('react-bootstrap').Col;
 var Odometer = require('../widgets/odometer');
 var StatsStore = require('../stores/statsstore');
 var StatsActions = require('../actions/statsactions');
+var NumberCard = require('../widgets/numbercard');
 
 var Home = React.createClass({
   mixins: [Reflux.connect(StatsStore, 'stats')],
@@ -77,6 +78,11 @@ var Home = React.createClass({
                     <h5 className="description-header"><Odometer value={ this.state.stats.comment } /></h5>
                     <span className="description-text">TOTAL COMMENTS</span>
                   </div>
+                </div>
+              </Row>
+              <Row>
+                <div className="col-md-3 col-sm-6 col-xs-12">
+                  <NumberCard url={'/api/stats/today/posts'} color={'red'} icon={'file-photo-o'} title={'Today Posts'} number={1000} />
                 </div>
               </Row>
               </div>

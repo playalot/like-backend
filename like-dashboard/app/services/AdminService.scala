@@ -2,8 +2,9 @@ package services
 
 import javax.inject.Inject
 
-import com.likeorz.dao.{ UsersComponent, UserInfoComponent, RecommendsComponent }
+import com.likeorz.dao.{ PostsComponent, UsersComponent, UserInfoComponent, RecommendsComponent }
 import com.likeorz.models.{ UserInfo, User, Recommend }
+import com.likeorz.utils.TimeUtils
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.services.IdentityService
@@ -22,7 +23,7 @@ class AdminService @Inject() (
   protected val dbConfigProvider: DatabaseConfigProvider) extends IdentityService[Admin]
     with HasDatabaseConfigProvider[JdbcProfile]
     with AdminsComponent with RecommendsComponent
-    with UsersComponent {
+    with UsersComponent with PostsComponent {
 
   import driver.api._
 
@@ -47,6 +48,10 @@ class AdminService @Inject() (
   def stats: Future[Map[String, Long]] = {
     val query = sql"""SELECT table_name, table_rows FROM information_schema.tables WHERE table_schema = DATABASE()""".as[(String, Long)]
     db.run(query).map(_.toMap)
+  }
+
+  def postsCountToday: Future[Int] = {
+    db.run(posts.filter(p => p.created > TimeUtils.startOfDay).length.result)
   }
 
   def listFakeUsers: Future[Seq[User]] = {

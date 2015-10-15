@@ -40,6 +40,12 @@ class Application @Inject() (
     }
   }
 
+  def postCountToday = SecuredAction.async { implicit request =>
+    adminService.postsCountToday.map { count =>
+      Ok(Json.toJson(count))
+    }
+  }
+
   def getEmail = SecuredAction { implicit request =>
     Ok(request.identity.email)
   }

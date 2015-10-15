@@ -16,6 +16,7 @@ GET     /api/admin/fakeusers        controllers.AdminApiController.listFakeUsers
 POST    /api/admin/fakeuser/add     controllers.AdminApiController.createFakeUser
 
 GET     /api/stats                  controllers.Application.stats
+GET     /api/stats/today/posts      controllers.Application.postCountToday
 GET     /api/posts                  controllers.PostApiController.fetchPostList(ts: Option[Long] ?= None, filter: Option[String] ?= None)
 DELETE  /api/post/:id               controllers.PostApiController.deletePost(id: Long)
 DELETE  /api/mark/:id               controllers.PostApiController.deleteMark(id: Long)

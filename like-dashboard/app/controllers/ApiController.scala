@@ -33,40 +33,4 @@ class ApiController @Inject() (
     configuration: Configuration,
     clock: Clock) extends Silhouette[Admin, CookieAuthenticator] {
 
-  /**
-   * Display the paginated list of computers.
-   *
-   * @param page Current page number (starts from 0)
-   */
-  def list(page: Int) = SecuredAction.async { implicit request =>
-    val posts = dashboardService.list(page = page)
-    implicit val postFormat = Json.format[Post]
-    posts.map { page =>
-      val items = page.items.map { item =>
-        val marks = item._2.map { mark =>
-          Json.obj(
-            "markId" -> mark._1,
-            "tag" -> mark._2,
-            "likes" -> mark._3
-          )
-        }
-        Json.obj(
-          "userId" -> item._1.userId,
-          "postId" -> item._1.id,
-          "postUrl" -> QiniuUtil.resizeImage(item._1.content, 300),
-          "marks" -> Json.toJson(marks)
-        )
-      }
-      Ok(Json.obj(
-        "posts" -> Json.toJson(items),
-        "page" -> Json.obj(
-          "currentPage" -> page.page,
-          "total" -> page.total,
-          "prev" -> page.prev,
-          "next" -> page.next,
-          "pageSize" -> 36
-        )))
-    }
-  }
-
 }

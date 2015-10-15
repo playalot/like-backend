@@ -2,7 +2,7 @@ package com.likeorz.services
 
 import javax.inject.Inject
 
-import com.likeorz.models.{ Tag => Tg, UserTag, TagGroup, User, UserInfo }
+import com.likeorz.models.{ Tag => Tg, UserTag, TagGroup, UserInfo }
 import com.likeorz.dao._
 import com.likeorz.utils.{ RedisCacheClient, KeyUtils }
 import play.api.Configuration
@@ -18,6 +18,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     with TagsComponent with MarksComponent
     with UsersComponent with UserInfoComponent
     with UserTagsComponent with TagGroupsComponent
+    with PostsComponent
     with HasDatabaseConfigProvider[JdbcProfile] {
 
   import driver.api._
@@ -26,19 +27,24 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
 
   override def suggestTagsForUser(userId: Long): Future[(Seq[String], Seq[String])] = {
 
-    val mostUsedQuery = marks.filter(_.userId === userId).map(_.tagId).groupBy(x => x).map(x => (x._1, x._2.length)).sortBy(_._2.desc).map(_._1).take(20)
+    //    val mostUsedQuery = marks.filter(_.userId === userId).map(_.tagId).groupBy(x => x).map(x => (x._1, x._2.length)).sortBy(_._2.desc).map(_._1).take(20)
+    //    val recentUsedQuery = marks.filter(_.userId === userId).sortBy(_.created.desc).map(_.tagId).take(5)
+    //    mostUsedQuery.result.statements.foreach(println)
+    //    recentUsedQuery.result.statements.foreach(println)
+    val mostUsedQuery = (for {
+      (mark, post) <- marks join posts on (_.postId === _.id) if mark.userId === userId && post.userId === userId
+    } yield mark.tagName).groupBy(x => x).map(x => (x._1, x._2.length)).sortBy(_._2.desc).map(_._1).take(20)
 
-    val recentUsedQuery = marks.filter(_.userId === userId).sortBy(_.created.desc).map(_.tagId).take(5)
+    val recentUsedQuery = (for {
+      (mark, post) <- marks join posts on (_.postId === _.id) if mark.userId === userId && post.userId === userId
+    } yield mark).sortBy(_.created.desc).map(_.tagName).distinct.take(10)
 
     for {
       recommendTags <- db.run(sql"""SELECT tag FROM recommend_tags""".as[String])
-      mostUsedIds <- db.run(mostUsedQuery.result)
-      recentUsedIds <- db.run(recentUsedQuery.result)
-      tags <- db.run(tags.filter(_.id inSet (mostUsedIds.toSet ++ recentUsedIds)).result)
+      mostUsedTags <- db.run(mostUsedQuery.result)
+      recentUsedTags <- db.run(recentUsedQuery.result)
     } yield {
-      val (t1, t2) = tags.partition(t => recentUsedIds.contains(t.id.get))
-      val result = t1.map(_.name) ++ t2.map(_.name)
-      //      (result, recommendTags.toSeq.filterNot(result.contains(_)))
+      val result = recentUsedTags ++ mostUsedTags.filterNot(t => recentUsedTags.contains(t))
       if (result.size < 20) (result ++ recommendTags.toSeq.take(20 - result.size), recommendTags.toSeq.take(20 - result.size))
       else (result, Seq())
     }
@@ -47,7 +53,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   override def autoComplete(name: String): Future[Seq[Tg]] = {
     val query = (for {
       tag <- tags if tag.name startsWith name.toLowerCase
-    } yield tag).take(5)
+    } yield tag).sortBy(_.usage.desc).take(5)
     db.run(query.result)
   }
 
@@ -56,10 +62,7 @@ class TagServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     if (pool.nonEmpty) {
       Future.successful(Random.shuffle(pool).take(num))
     } else {
-      val query = (for {
-        tag <- tags
-      } yield tag).sortBy(_.usage.desc).take(120)
-      db.run(query.result).map { tags =>
+      db.run(tags.sortBy(_.usage.desc).take(120).result).map { tags =>
         Random.shuffle(tags.map(_.name)).take(num)
       }
     }

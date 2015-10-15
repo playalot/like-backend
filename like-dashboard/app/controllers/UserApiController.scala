@@ -75,6 +75,29 @@ class UserApiController @Inject() (
     }
   }
 
+  def updateUserInfo(id: Long) = SecuredAction.async(parse.json) { implicit request =>
+    val nickname = (request.body \ "nickname").asOpt[String]
+    val email = (request.body \ "email").asOpt[String]
+    val mobile = (request.body \ "mobile").asOpt[String]
+    userService.findById(id).flatMap {
+      case Some(user) =>
+        var updatedUser = user
+        if (nickname.isDefined) {
+          updatedUser = updatedUser.copy(nickname = nickname.get)
+        }
+        if (email.isDefined) {
+          updatedUser = updatedUser.copy(email = email)
+        }
+        if (mobile.isDefined) {
+          updatedUser = updatedUser.copy(mobile = mobile)
+        }
+        userSettingService.updateUserInfo(updatedUser).map { u =>
+          Ok
+        }
+      case None => Future.successful(NotFound)
+    }
+  }
+
   def refreshUserCache(id: Long) = SecuredAction.async {
     userService.refreshUserCount(id).map(_ => Ok)
   }

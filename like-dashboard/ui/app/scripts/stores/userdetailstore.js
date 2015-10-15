@@ -24,6 +24,10 @@ var UserDetailStore = Reflux.createStore({
           this.onFetchUserPosts();
       }
     },
+    onChangeForm: function(user) {
+      this.userDetail.user = user;
+      this.trigger(this.userDetail);
+    },
     onFetchUserDetailInfo: function() {
       $.ajax({
           url: '/api/user/' + this.userDetail.userId + '/info',
@@ -73,6 +77,20 @@ var UserDetailStore = Reflux.createStore({
       $.ajax({
           url: '/api/user/'+this.userDetail.userId+'/register',
           type: 'DELETE',
+          success: function(data) {
+            location.reload();
+          },
+          error: function() {
+            alert('error!');
+          }
+      });
+    },
+    onUpdateUserInfo: function(userdata) {
+      $.ajax({
+          url: '/api/user/'+this.userDetail.userId+'/update',
+          type: 'POST',
+          data: JSON.stringify(userdata),
+          contentType:"application/json",
           success: function(data) {
             location.reload();
           },

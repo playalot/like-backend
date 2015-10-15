@@ -45,7 +45,7 @@ var Layout = React.createClass({
               <img className="profile-user-img img-responsive img-circle" src={this.state.fake.fakeuser.avatar} alt="User profile picture" />
               <h3 className="profile-username text-center">{this.state.fake.fakeuser.nickname}</h3>
               <p className="text-muted text-center">{this.state.fake.fakeuser.mobile}</p>
-              <a href="#" className="btn btn-primary btn-block"><b>Profile</b></a>
+              <a href={'/#/user/'+this.state.fake.fakeuser.user_id} className="btn btn-primary btn-block"><b>Profile</b></a>
             </div>
           </div>
         </ul>
@@ -74,7 +74,7 @@ var Layout = React.createClass({
       </ul>
       );
     }
-    
+
     return (
       <div className="wrapper">
         <div className="main-header">

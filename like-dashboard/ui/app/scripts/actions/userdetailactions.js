@@ -5,7 +5,9 @@ var UserDetailActions = Reflux.createActions([
     'fetchUserPosts',
     'updateUserId',
     'destroy',
-    'refreshUserCount'
+    'updateUserInfo',
+    'refreshUserCount',
+    'changeForm'
 ]);
 
 module.exports = UserDetailActions;

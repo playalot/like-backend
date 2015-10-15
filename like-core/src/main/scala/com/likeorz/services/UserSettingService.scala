@@ -72,6 +72,10 @@ class UserSettingService @Inject() (protected val dbConfigProvider: DatabaseConf
     }
   }
 
+  def updateUserInfo(user: User): Future[User] = {
+    db.run(users.filter(_.id === user.id.get).update(user)).map(_ => user)
+  }
+
   def unregister(id: Long): Future[Int] = {
     db.run(socials.filter(_.userId === id).delete).flatMap { _ =>
       db.run(users.filter(_.id === id).map(u => (u.nickname, u.avatar, u.cover, u.mobile, u.email))

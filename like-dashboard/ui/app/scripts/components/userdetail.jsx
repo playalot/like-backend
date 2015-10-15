@@ -18,7 +18,7 @@ var UserDetail = React.createClass({
   },
   mixins: [Reflux.connect(UserDetailStore, 'userDetail'), Reflux.connect(FakeUserStore, 'fake'), React.addons.LinkedStateMixin],
   getInitialState: function() {
-    return { filter: '', showModal: false, showImage: '' };
+    return { filter: '', showModal: false, showImage: ''};
   },
   componentWillMount: function() {
     console.log(this.context.router.getCurrentParams().userId);
@@ -33,7 +33,36 @@ var UserDetail = React.createClass({
     this.setState({ showModal: true, showImage: url });
   },
   refreshUserCount: function() {
-    UserDetailActions.refreshUserCount(this.context.router.getCurrentParams().userId);
+    UserDetailActions.refreshUserCount();
+  },
+  changeNickname: function(event) {
+    var user = this.state.userDetail.user;
+    user.nickname = event.target.value;
+    UserDetailActions.changeForm(user);
+  },
+  changeEmail: function(event) {
+    var user = this.state.userDetail.user;
+    user.email = event.target.value;
+    UserDetailActions.changeForm(user);
+  },
+  changeMobile: function(event) {
+    var user = this.state.userDetail.user;
+    user.mobile = event.target.value;
+    UserDetailActions.changeForm(user);
+  },
+  updateUserInfo: function() {
+    var data = {};
+    if (this.state.userDetail.user.nickname.trim() !== '') {
+      data.nickname = this.state.userDetail.user.nickname.trim();
+    }
+    if (this.state.userDetail.user.email.trim() !== '') {
+      data.email = this.state.userDetail.user.email.trim();
+    }
+    if (this.state.userDetail.user.mobile.trim() !== '') {
+      data.mobile = this.state.userDetail.user.mobile.trim();
+    }
+    console.log(data);
+    UserDetailActions.updateUserInfo(data);
   },
   destroy: function() {
     if (confirm('Are you sure to delete this user??? The user will never be recovered again!')) {
@@ -44,7 +73,6 @@ var UserDetail = React.createClass({
     UserDetailActions.fetchUserPosts();
   },
   render: function() {
-    console.log(this.state.userDetail);
     if (this.state.userDetail.user) {
       return (
         <div className="content">
@@ -77,25 +105,25 @@ var UserDetail = React.createClass({
                     <div className="form-group">
                       <label for="inputName" className="col-sm-2 control-label">Nickname</label>
                       <div className="col-sm-10">
-                        <input type="text" className="form-control" placeholder="Nickname" value={this.state.userDetail.user.nickname}/>
+                        <input type="text" className="form-control" placeholder="Nickname" value={this.state.userDetail.user.nickname} onChange={this.changeNickname} />
                       </div>
                     </div>
                     <div className="form-group">
                       <label for="inputEmail" className="col-sm-2 control-label">Email</label>
                       <div className="col-sm-10">
-                        <input type="email" className="form-control" placeholder="Email" value={this.state.userDetail.user.email}/>
+                        <input type="email" className="form-control" placeholder="Email" value={this.state.userDetail.user.email} onChange={this.changeEmail} />
                       </div>
                     </div>
                     <div className="form-group">
                       <label for="inputMobile" className="col-sm-2 control-label">Mobile</label>
                       <div className="col-sm-10">
-                        <input type="text" className="form-control" id="inputName" placeholder="Mobile" value={this.state.userDetail.user.mobile} />
+                        <input type="text" className="form-control" id="inputName" placeholder="Mobile" value={this.state.userDetail.user.mobile} onChange={this.changeMobile} />
                       </div>
                     </div>
                     <div className="form-group">
                       <div className="col-sm-offset-2 col-sm-10">
                         <ButtonToolbar>
-                          <button type="submit" className="btn btn-primary">Submit</button>
+                          <button className="btn btn-primary" onClick={this.updateUserInfo}>Submit</button>
                           <button className="btn btn-danger" onClick={this.destroy}><i className="fa fa-exclamation"></i>Destroy</button>
                         </ButtonToolbar>
                       </div>

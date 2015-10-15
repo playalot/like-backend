@@ -43,6 +43,7 @@ GET     /api/users/$pg<[0-9]+>      controllers.UserApiController.fetchUserList(
 GET     /api/users/active           controllers.UserApiController.getActiveUsers(duration: Long ?= 86400)
 GET     /api/user/:id/info          controllers.UserApiController.getUserInfo(id: Long)
 GET     /api/user/:id/posts         controllers.UserApiController.getUserPosts(id: Long, ts: Option[Long] ?= None)
+POST    /api/user/:id/update        controllers.UserApiController.updateUserInfo(id: Long)
 DELETE  /api/user/:id/register      controllers.UserApiController.unregisterUser(id: Long)
 POST    /api/user/:id/refresh       controllers.UserApiController.refreshUserCache(id: Long)
 

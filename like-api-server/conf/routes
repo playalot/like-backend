@@ -10,7 +10,7 @@ GET     /status                                     controllers.Application.stat
 # Auth
 POST    /v1/sendSmsCode                             controllers.AuthController.sendSmsCode
 POST    /v1/authenticate/mobile                     controllers.AuthController.mobileAuthenticateViaAvos
-POST    /v1/authenticate/mobile/mob                 controllers.AuthController.mobileAuthenticateViaMobIOS
+POST    /v1/authenticate/mobile/mob                 controllers.AuthController.mobileAuthenticateViaMob
 POST    /v1/authenticate/mobile/ios                 controllers.AuthController.mobileAuthenticateViaMobIOS
 POST    /v1/authenticate/mobile/android             controllers.AuthController.mobileAuthenticateViaMobAndroid
 POST    /v1/authenticate/:provider                  controllers.AuthController.socialAuthenticate(provider: String)

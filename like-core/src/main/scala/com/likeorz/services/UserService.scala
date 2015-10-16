@@ -53,4 +53,5 @@ trait UserService {
 
   def getBannedUserIds: Set[Long]
 
+  def getBlockedUserIdsForUser(userId: Long): Future[Seq[Long]]
 }

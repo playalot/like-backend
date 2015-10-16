@@ -293,7 +293,9 @@ class FeedController @Inject() (
         if (ids.isEmpty) {
           Future.successful(success(Messages("success.found"), Json.obj("posts" -> Json.arr())))
         } else {
-          postService.getPostsByIdsSimple(ids).map(_.sortBy(-_.created)).map { posts =>
+          // Donnot show banned user posts
+          val bannedUsers = RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong)
+          postService.getPostsByIdsSimple(ids).map(_.filterNot(p => bannedUsers.contains(p.userId)).sortBy(-_.created)).map { posts =>
             if (posts.isEmpty) {
               success(Messages("success.found"), Json.obj("posts" -> Json.arr()))
             } else {
@@ -362,17 +364,21 @@ class FeedController @Inject() (
 
       futureFeeds.flatMap { results =>
         val (feedsMap, nextTimestamp) = results
-        FutureUtils.timedFuture("getPostsByIds") {
-          postService.getPostsByIdsSimple(feedsMap.keySet.toSeq)
-        } map { posts =>
+
+        for {
+          blockedUsers <- if (request.userId.isDefined) userService.getBlockedUserIdsForUser(request.userId.get) else Future.successful(Seq())
+          posts <- postService.getPostsByIdsSimple(feedsMap.keySet.toSeq)
+        } yield {
           if (posts.isEmpty) {
             success(Messages("success.found"), Json.obj("posts" -> Json.arr()))
           } else {
 
-            val userBlacklist = RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong)
+            val bannedUsers = RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong) ++ blockedUsers
+
+            println(bannedUsers)
 
             // Filter bad posts and author who is in blacklist
-            val filteredPosts = posts.filter(p => p.score.getOrElse(0) >= 0 && !userBlacklist.contains(p.userId))
+            val filteredPosts = posts.filter(p => p.score.getOrElse(0) >= 0 && !bannedUsers.contains(p.userId))
 
             // Get marks for posts from mongodb
             val marksMap = mongoDBService.getPostMarksByIds(filteredPosts.map(_.id.get))

@@ -242,4 +242,8 @@ class UserServiceImpl @Inject() (configuration: Configuration, protected val dbC
     RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong)
   }
 
+  override def getBlockedUserIdsForUser(userId: Long): Future[Seq[Long]] = {
+    db.run(blocks.filter(_.userId === userId).map(_.blockedUserId).result)
+  }
+
 }

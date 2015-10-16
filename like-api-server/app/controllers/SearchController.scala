@@ -5,7 +5,7 @@ import javax.inject.Inject
 import com.likeorz.event.{ LikeEventType, LikeEvent }
 import com.likeorz.models.Entity
 import com.likeorz.services.store.MongoDBService
-import com.likeorz.utils.GlobalConstants
+import com.likeorz.utils.{ KeyUtils, RedisCacheClient, GlobalConstants }
 import play.api.cache.Cached
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.json.Json
@@ -69,7 +69,7 @@ class SearchController @Inject() (
   def searchTag(name: String, page: Int) = UserAwareAction.async { implicit request =>
     if (request.userId.isDefined && page == 0) {
       eventBusService.publish(LikeEvent(None, LikeEventType.search, "user", request.userId.get.toString, properties = Json.obj("query" -> name)))
-      // Subscribe tag when user search
+      // Subscribe tag when user do a search
       tagService.getTagByName(name).map {
         case Some(tag) =>
           if (tag.group >= 0 && tag.usage >= 10) tagService.subscribeTag(request.userId.get, tag.id.get)
@@ -117,7 +117,7 @@ class SearchController @Inject() (
     val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
     if (request.userId.isDefined && ts.isEmpty) {
       eventBusService.publish(LikeEvent(None, LikeEventType.search, "user", request.userId.get.toString, properties = Json.obj("query" -> tag)))
-      // Subscribe tag when user search
+      // Subscribe tag when user do a search
       tagService.getTagByName(tag).map {
         case Some(tag) =>
           if (tag.group >= 0 && tag.usage >= 10) tagService.subscribeTag(request.userId.get, tag.id.get)
@@ -126,12 +126,15 @@ class SearchController @Inject() (
     }
     for {
       entityOpt <- if (ts.isEmpty) promoteService.getEntitybyName(tag) else Future.successful(None)
+      blockedUsers <- if (request.userId.isDefined) userService.getBlockedUserIdsForUser(request.userId.get) else Future.successful(Seq())
       posts <- postService.searchByTagAndTimestamp(tag, GlobalConstants.GridPageSize, ts)
     } yield {
       // Get marks for posts from mongodb
       val marksMap = mongoDBService.getPostMarksByIds(posts.map(_.id.get))
 
-      val postsJson = posts.map { post =>
+      val bannedUsers = RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong) ++ blockedUsers
+
+      val postsJson = posts.filterNot(p => bannedUsers.contains(p.userId)).map { post =>
         val user = userService.getUserInfoFromCache(post.userId)
         val marks = marksMap.getOrElse(post.id.get, Seq())
         val marksJson = marks.map { mark =>
@@ -184,6 +187,7 @@ class SearchController @Inject() (
       val screenWidth = scala.math.min(960, (getScreenWidth * 1.5).toInt)
       for {
         hotUsers <- if (ts.isEmpty) tagService.hotUsersForTag(tag, 15) else Future.successful(Seq())
+        blockedUsers <- if (request.userId.isDefined) userService.getBlockedUserIdsForUser(request.userId.get) else Future.successful(Seq())
         posts <- postService.searchByTagAndTimestamp(tag, GlobalConstants.GridPageSize, ts)
       } yield {
         val hotUsersJson = Json.toJson(hotUsers.map { user =>
@@ -197,7 +201,9 @@ class SearchController @Inject() (
         // Get marks for posts from mongodb
         val marksMap = mongoDBService.getPostMarksByIds(posts.map(_.id.get))
 
-        val postsJson = posts.map { post =>
+        val bannedUsers = RedisCacheClient.smembers(KeyUtils.bannedUsers).map(_.toLong) ++ blockedUsers
+
+        val postsJson = posts.filterNot(p => bannedUsers.contains(p.userId)).map { post =>
           val user = userService.getUserInfoFromCache(post.userId)
           val marks = marksMap.getOrElse(post.id.get, Seq())
           val marksJson = marks.map { mark =>

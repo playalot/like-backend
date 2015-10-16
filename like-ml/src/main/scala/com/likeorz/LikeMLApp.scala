@@ -28,6 +28,7 @@ object LikeMLApp {
         case "UserAddTag"         => UserTagsJob.addTagForAllUser(28)
         case "CategoryCache"      => UserCategories.buildCategoryCache(30)
         case "Rebuild-UserCounts" => RebuildCacheJob.rebuildUserCountsCache()
+        case "Rebuild-UserLikes"  => RebuildCacheJob.rebuildUserLikes()
         case "Rebuild-PostMarks"  => RebuildCacheJob.rebuildMarkCache()
         case "Update-UserDBLikes" => RebuildCacheJob.updateDBUserLikes()
         case "RebuildTagUsage"    => RebuildIntervalCountJob.rebuildTagUsageCountCache()

@@ -17,7 +17,7 @@ object SyncPostToMongoDB {
 
     var count = 0
 
-    val posts = sql"select id, created from post".foreach { rs =>
+    sql"select id, created from post".foreach { rs =>
       val postId = rs.long("id")
       val created = rs.long("created")
 

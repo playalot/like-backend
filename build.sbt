@@ -3,7 +3,7 @@ organization in ThisBuild := "com.likeorz"
 scalaVersion in ThisBuild := "2.11.7"
 
 scalacOptions in ThisBuild ++= Seq(
-  "-target:jvm-1.7",
+  "-target:jvm-1.8",
   "-encoding", "UTF-8",
   "-deprecation",
   "-feature",
@@ -15,9 +15,9 @@ scalacOptions in ThisBuild ++= Seq(
   "-Ywarn-dead-code"
 )
 
-lazy val likeCore = (project in file("like-core"))
+lazy val likeCore = project in file("like-core")
 
-lazy val likeAkkaCommon = (project in file("like-akka-common"))
+lazy val likeAkkaCommon = project in file("like-akka-common")
 
 lazy val likeApiServer = (project in file("like-api-server"))
   .dependsOn(likeCore, likeAkkaCommon)
@@ -26,6 +26,9 @@ lazy val likeApiServer = (project in file("like-api-server"))
 lazy val likeDashboard = (project in file("like-dashboard"))
   .dependsOn(likeCore)
   .enablePlugins(PlayScala, SbtWeb)
+
+lazy val likeBrochure = (project in file("like-brochure"))
+  .enablePlugins(PlayScala)
 
 lazy val likeWebsite = (project in file("like-website"))
   .dependsOn(likeCore)

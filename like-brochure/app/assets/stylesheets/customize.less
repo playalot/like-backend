@@ -1,0 +1,961 @@
+
+/*------------------------------------------------------------------
+[TABLE OF CONTENTS]
+
+1. Buttons / .btn
+2. Menu Bar / #menu-bar
+3. Header / header
+4. About / #about
+5. Features / #features
+6. Detailed Info / #detailed
+8. Screenshots / #screenshots
+9. Reviews / #reviews
+10. Download / #download
+12. Footer / footer
+13. Owl Carousel / .owl-carousel
+14. Media Queries / @media
+-------------------------------------------------------------------*/
+
+body{
+  font-family: "幼圆", "Helvetica Neue","Hiragino Sans GB","Heiti SC","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+  font-weight: 300;
+  font-size: 16px;
+  background-color: #fff;
+  -webkit-font-smoothing: antialiased;
+}
+h2, h3, h4{
+  color: #2d3b40;
+  font-weight: 300;
+}
+h1{
+  margin-top: 60px;
+  font-weight: 100;
+  font-size: 62px;
+  color: #fff;
+}
+h2{
+  font-size: 44px;
+  text-align: center;
+  margin: 0 0 22px;
+  padding-bottom: 16px;
+}
+h2:after{
+  content: '';
+  display: block;
+  margin: 0 auto;
+  width: 180px;
+  border-bottom: 1px solid;
+  border-color: #bcc8cc;
+  position: relative;
+  top: 16px;
+}
+h3{
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+h4{
+  font-size: 20px;
+  margin: 10px 0;
+}
+section, footer{
+  padding: 80px 0;
+  background-color: #fff;
+  overflow: hidden;
+}
+p{
+  margin-top: 0;
+}
+.icon{
+  font-size: 64px;
+}
+.subtitle{
+  font-family: Merriweather, serif;
+  font-size: 17px;
+  font-weight: 300;
+  font-style: italic;
+  text-align: center;
+  max-width: 320px;
+  margin: 0 auto;
+  margin-bottom: 60px;
+}
+a{
+  color: #8a9599;
+}
+a:hover{
+  color: #576266;
+  cursor: pointer;
+}
+a:active, a:focus, a:hover, input:focus, button:focus{
+  outline: 0;
+  text-decoration: none;
+}
+input{
+  font-size: 18px;
+  min-height: 60px;
+  border-radius: 40px;
+  line-height: 24px;
+  padding: 16px 30px 20px;
+  border: none;
+  margin-bottom: 10px;
+  background-color: #e9f0f2;
+  -webkit-transition: background-color 0.2s;
+  transition: background-color 0.2s;
+}
+input:focus{
+  background-color: #e4edf0;
+}
+.container {
+  max-width: 900px;
+}
+/**********************
+******1. Buttons****
+**********************/
+.btn{
+  color: #fff;
+  font-size: 18px;
+  min-height: 60px;
+  border-radius: 40px;
+  text-decoration: none;
+  display: inline-block;
+  line-height: 24px;
+  padding: 15px 25px 15px;
+  z-index: 1;
+  position: relative;
+  border: none;
+  transition: all .1s ease-in-out;
+}
+.btn:hover {
+  transition-duration: 0.21s;
+  transform: scale(1.1);
+}
+.btn-icon{
+  line-height: 32px;
+  padding: 16px 32px 20px;
+}
+.btn-icon .icon{
+  vertical-align: bottom;
+  font-size: 32px;
+  margin-right: 10px;
+  display: inline-block;
+}
+.btn-download{
+  min-width: 150px;
+  background-color: transparent;
+  border: solid 2px #ffffff;
+  margin-bottom: 80px;
+}
+.btn-download-andriod {
+  min-width: 150px;
+  background-color: transparent;
+  border: solid 2px #ff442c;
+  color: #ff442c;
+  margin-bottom: 80px;
+}
+.btn-download-andriod:hover {
+  color: #ff442c;
+}
+.btn-download-ios {
+  min-width: 150px;
+  background-color: #ff442c;
+  //border: solid 2px #ffffff;
+  margin-bottom: 80px;
+}
+.btn:before{
+  content: '';
+  display: block;
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  right: 1px;
+  z-index: -1;
+  border-radius: 40px;
+  -webkit-transition-property: top, bottom, left, right;
+  -webkit-transition-duration: 0.21s;
+  -webkit-transition-timing-function: ease-in-out;
+  transition-property: top, bottom, left, right;
+  transition-duration: 0.21s;
+  transition-timing-function: ease-in-out;
+}
+.btn:hover{
+  text-decoration: none;
+  color: #fff;
+}
+.btn:hover:before{
+  top: -3px;
+  bottom: -3px;
+  left: -3px;
+  right: -3px;
+}
+
+/**********************
+******2. Menu Bar****
+**********************/
+#menu-bar{
+  display: block;
+  width: 100%;
+  height: 100px;
+  padding: 10px 0;
+  color: #fff;
+  position: relative;
+  z-index: 2;
+}
+#menu-bar .logo{
+  font-size: 50px;
+  float: left;
+}
+#menu-bar .logo img{
+  margin-left: 10px;
+  position: relative;
+  top: 4px;
+  height: 48px;
+}
+.nav{
+  float: right;
+  padding: 0;
+}
+.nav ul{
+  margin: 0;
+}
+.nav li{
+  float: left;
+  list-style-type: none;
+  margin-left: 40px;
+  text-transform: uppercase;
+  position: relative;
+}
+.nav li a{
+  color: #fff;
+  font-size: 14px;
+}
+.nav li:after {
+  opacity: 0;
+  bottom: -8px;
+  content: '';
+  display: block;
+  width: 100%;
+  position: absolute;
+  bottom: -4px;
+  transition: all 0.2s;
+  border-bottom: 2px solid;
+}
+.nav li.current:after{
+  bottom: -8px;
+  opacity: 1;
+}
+.nav li:not(.current):hover:after {
+  opacity: 0.6;
+  bottom: -8px;
+}
+#nav{
+  margin: 25px 0 0;
+}
+#nav li a{
+  color: #fff;
+}
+#nav > ul > li:first-child{
+  display: none;
+}
+#nav li:after{
+  border-color: #ffffff;
+}
+#menu-bar-fixed{
+  display: block;
+  width: 100%;
+  height: 80px;
+  padding: 15px 0;
+  background-color: #d5e0e3;
+  position: fixed;
+  bottom: 0px;
+  z-index: 5;
+  opacity: 0;
+  transition: all 0.3s ease-out;
+}
+#show-nav, #hide-nav{
+  display: none;
+}
+#off-nav{
+  display: none;
+}
+
+/**********************
+******3. Header****
+**********************/
+header{
+  max-height: 900px;
+  position: relative;
+  overflow: hidden;
+}
+header .container{
+  max-width: 800px;
+  position: relative;
+  z-index: 3;
+}
+#header {
+  background-color: #ff442c;
+  background-size: cover;
+}
+.header-content {
+  background: url('../images/head@2x.png') no-repeat right bottom;
+  background-size: 90%;/**/
+  h5{
+    font-size: 13px;
+    color: white;
+    margin: 20px 25px 10px;
+  }
+}
+#header-img{
+  margin: 0 auto -400px;
+}
+div > a.btn:nth-of-type(2){
+  margin-left: 30px;
+}
+
+/**********************
+******4. About****
+**********************/
+#about{
+  background-color: #e9f0f2;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.circle-icon-lg{
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+  border-radius: 50%;
+  position: relative;
+}
+.circle-icon-lg:before{
+  content: '';
+  display: block;
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 1px;
+  right: 1px;
+  border-radius: 50%;
+  z-index: -1;
+  -webkit-transition-property: top, bottom, left, right;
+  -webkit-transition-duration: 0.2s;
+  -webkit-transition-timing-function: ease-in-out;
+  transition-property: top, bottom, left, right;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-in-out;
+}
+#about .img-circle:hover {
+  transform: scale(1.1);
+}
+#about .col-lg-3 .text {
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  top: 0;
+}
+#about .col-lg-3:hover .text {
+  top: 5px;
+}
+
+#about {
+  .img-circle {
+    border: solid 3px #ff442c;
+    width: 140px;
+    position: relative;
+    transition: all .2s ease-in-out;
+  }
+  .img-circle:before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 1px;
+    bottom: 1px;
+    left: 1px;
+    right: 1px;
+    z-index: -1;
+    -webkit-transition-property: top, bottom, left, right;
+    -webkit-transition-duration: 0.2s;
+    -webkit-transition-timing-function: ease-in-out;
+    transition-property: top, bottom, left, right;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+  }
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+  .avatar-1 {
+  }
+  .img-circle:hover {
+
+  }
+}
+
+/**********************
+******5. Features****
+**********************/
+#features {
+  h4{
+    color: #ff442c;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    font-size: 20px;
+  }
+  p {
+    color: #999999;
+    line-height: 24px;
+    font-size: 16px;
+    font-stretch: normal;
+    font-style: normal;
+    font-variant: normal;
+    font-weight: 300;
+    margin: 0;
+  }
+}
+#features .col-sm-4.left{
+  text-align: right;
+}
+#features .col-lg-4 .row{
+  margin-top: 70px;
+  margin-bottom: 70px;
+  min-height: 140px;
+  position: relative;
+  left: 0;
+  transition: all 0.3s;
+  -webkit-transition: all 0.3s;
+}
+#features .left .row:hover{
+  left: -5px;
+}
+#features .right .row:hover{
+  left: 5px;
+}
+.circle-icon-rspv {
+  margin-top: 25px;
+  width:100%;
+}
+.circle-icon-rspv:after {
+  content: "";
+  display: block;
+  width: 100%;
+  height:0;
+  padding-bottom: 100%;
+  padding-bottom: calc(100% - 4px);
+  border: 2px solid #ff442c;
+  -moz-border-radius: 50%;
+  -webkit-border-radius: 50%;
+  border-radius: 50%;
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+.circle-icon-rspv .icon {
+  float:left;
+  width:100%;
+  padding-top:50%;
+  line-height:1em;
+  margin-top:-0.5em;
+  text-align:center;
+  color:#ff442c;
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+.circle-icon-rspv:hover:after {
+  background-color: #ff442c;
+}
+.circle-icon-rspv:hover .icon{
+  color: #fff;
+}
+#features .left > .row:hover .circle-icon-rspv:after, #features .right > .row:hover .circle-icon-rspv:after {
+  background-color: #ff442c;
+}
+#features .left > .row:hover .icon, #features .right > .row:hover .icon{
+  color: #fff;
+}
+
+/**********************
+******8. Screenshots****
+**********************/
+#screenshots a{
+  display: block;
+}
+
+/**********************
+******9. Reviews****
+**********************/
+#reviews{
+  background: #ff442c url('../images/reviews.png') no-repeat bottom center;
+  background-size: cover;
+  text-align: center;
+  font-size: 18px;
+  color: #ffffff;
+}
+#reviews .avatar{
+  display: block;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 5px;
+  background-size: cover;
+  border-radius: 40px;
+}
+#reviews .owl-item:nth-child(1) .avatar, #reviews .owl-item:nth-child(3) .avatar{
+  background-image: url('../images/avatar1.jpg');
+}
+#reviews .owl-item:nth-child(2) .avatar{
+  background-image: url('../images/avatar2.jpg');
+}
+#reviews .item {
+  padding: 10px 90px;
+}
+#reviews .quote{
+  font-weight: 300;
+  font-size: 17px;
+  width: 80%;
+  max-width: 560px;
+  margin: 0 auto;
+  position: relative;
+  padding: 35px 0 20px;
+  line-height: 27px;
+}
+#reviews .quote:before, #reviews .quote:after{
+  content: '\f347';
+  font-size: 64px;
+  position: absolute;
+  color: #ffffff;
+  -moz-osx-font-smoothing: grayscale;
+  display: inline-block;
+  font-family: "Ionicons";
+  font-style: normal;
+  font-variant: normal;
+  font-weight: normal;
+  line-height: 1;
+  text-transform: none;
+}
+#reviews .quote:before{
+  left: -55px;
+  top: 0px;
+}
+#reviews .quote:after{
+  right: -55px;
+  bottom: 0px;
+  transform:rotate(180deg);
+  -ms-transform:rotate(180deg); /* IE 9 */
+  -webkit-transform:rotate(180deg); /* Opera, Chrome, and Safari */
+}
+#reviews .author .position{
+  font-size: 14px;
+  font-weight: 400;
+  color: #cccccc;
+}
+#reviews .author{
+  padding-top: 20px;
+}
+#reviews .author:before{
+  content: '';
+  display: block;
+  margin: 0 auto;
+  width: 180px;
+  border-bottom: 1px solid;
+  border-color: #dddddd;
+  position: relative;
+  bottom: 32px;
+}
+
+
+/**********************
+******10. Download****
+**********************/
+#download{
+  background-color: #e9f0f2;
+  position: relative;
+  overflow: hidden;
+}
+#download .download-buttons{
+  text-align: center;
+  margin-top: -30px;
+  position: relative;
+  z-index: 1;
+}
+#download h2 {
+  font-size: 22px;
+  margin-bottom: 36px;
+}
+#download .download-buttons a{
+  margin: 20px 15px 0;
+}
+
+/**********************
+******12. Footer****
+**********************/
+footer{
+  background-color: #ff442c;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: -4;
+  text-align: center;
+}
+footer h2{
+  color: #fff;
+  margin-bottom: 30px;
+}
+footer h2 img{
+  height: 48px;
+}
+footer #social-links{
+  margin: 0;
+}
+footer #social-links .icon{
+  color: #fff;
+  font-size: 32px;
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 60px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  opacity: 0.7;
+  line-height: 55px;
+  margin: 0 13px;
+  -webkit-transition: opacity 0.2s;
+  transition: opacity 0.2s;
+}
+footer #social-links .icon img {
+  width: 32px;
+  height: 32px;
+  margin-top: -6px;
+  margin-left: 0;
+}
+footer #social-links .icon:hover{
+  opacity: 1;
+}
+footer #social-links img {
+  width: 60px;
+  height: 60px;
+  margin-top: -12px;
+  margin-left: 12px;
+}
+footer .copyright{
+  font-size: 14px;
+  margin: 50px 0 0;
+  color: white;
+  font-weight: 500;
+}
+
+
+/**********************
+******13. Owl Carousel****
+**********************/
+.owl-theme .owl-controls{
+  margin-top: 40px;
+}
+.owl-theme .owl-controls .owl-page span{
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 2px #ff442c inset;
+  opacity: 1;
+  background: transparent;
+}
+.owl-theme .owl-controls .owl-page.active span, .owl-theme .owl-controls.clickable .owl-page:hover span{
+  background-color: #ff442c;
+}
+#screens-carousel.owl-carousel .owl-item .item{
+  margin: 0 15px;
+}
+
+/**********************
+******14. Media Queries****
+**********************/
+@media (max-width: 990px){
+  .nav li{
+    margin-left: 20px;
+  }
+  #features .icon {
+    font-size: 48px;
+  }
+  #menu-bar .logo img{
+    height: 32px;
+  }
+  #nav {
+    margin: 38px 0 0;
+  }
+  #about .col-sm-6 {
+    margin-top: 10px;
+  }
+  #about p {
+    margin: 8px auto;
+    max-width: 345px;
+  }
+  #about h3{
+    margin: 16px 0 8px;
+  }
+  #features .row .col-sm-4 .row .col-sm-3{
+    display: none;
+  }
+  #features .col-lg-4 .row{
+    position: static;
+    margin-top: 8px;
+  }
+  section{
+    padding: 60px 0;
+  }
+  h1 {
+    margin-top: 60px;
+    margin-bottom: 15px;
+  }
+  #header-btn{
+    //text-align: center;
+    margin: 0 0 60px;
+  }
+}
+@media (max-width: 767px) {
+  * {
+    text-align: center;
+  }
+  h1{
+    font-size: 56px;
+    margin-bottom: 50px;
+  }
+  #menu-bar{
+    padding: 15px 0;
+    height: auto;
+  }
+  #menu-bar .logo{
+    line-height: 42px;
+  }
+  .header-content {
+    background: url('../images/head@2x.png') no-repeat right bottom;
+    background-size: 67%;
+  }
+  #header-btn{
+    margin: 0 0 50px;
+    .btn {
+      min-height: 50px;
+      padding: 10px 25px;
+    }
+  }
+  #features h4 {
+    margin: 0;
+  }
+  #features p{
+    max-width: 345px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 4px;
+  }
+  #features img{
+    max-width: 50%;
+    margin: 25px auto -70%;
+  }
+  #features .col-lg-4 .row{
+    margin-top: 12px;
+    margin-bottom: 0;
+    min-height: 100px;
+  }
+  #reviews .quote {
+    font-size: 15px;
+    line-height: 17px;
+  }
+  #reviews .quote:before, #reviews .quote:after{
+    font-size: 36px;
+  }
+  #reviews .quote:before{
+    left: -25px;
+  }
+  #reviews .quote:after{
+    right: -25px;
+  }
+  #download-banner .text{
+    width: 100%;
+    margin: 0 0 20px;
+  }
+
+  /*Responsive navigation*/
+  #nav-fixed li{
+    position: relative;
+  }
+  #show-nav{
+    display: block;
+  }
+  #nav-fixed > ul{
+    height: auto;
+    display: none;
+    position: absolute;
+    width: 100%;
+    left: 0;
+    padding: 0;
+    background-color: #d5e0e3;
+    border-top: 1px solid #94a8ae;
+    padding: 8px 0;
+    z-index: 10;
+  }
+  #nav-fixed > ul > li{
+    width: 100%;
+    float: none;
+    margin: 0;
+  }
+  #nav-fixed > ul >li:after{
+    content: none;
+  }
+  #nav-fixed > ul >li.current{
+    background-color: #e4ebed;
+  }
+  #nav-fixed > ul >li:not(.current):hover{
+    background-color: rgba(228,235,237,.6);
+  }
+  #nav-fixed > ul > li > a{
+    font-size: 18px;
+    padding: 8px 0;
+    display: inline-block;
+    width: 100%;
+  }
+  #nav{
+    display: none;
+  }
+  #off-nav{
+    display: block;
+    position: absolute !important;
+    z-index: -1;
+    top: 266px;
+    width: 100%;
+    height: 260%;
+  }
+}
+@media (max-width: 530px) {
+  .header-content {
+    background: url('../images/head@2x.png') no-repeat right bottom;
+    background-size: 75%;
+  }
+  #header-btn {
+    margin: 0 0 20px;
+  }
+  #features img{
+    max-width: 60%;
+    margin: 25px auto -85%;
+  }
+  #about h3 {
+    font-size: 15px;
+    font-weight: 500;
+  }
+  #about p {
+    font-size: 10px;
+  }
+  #reviews .item {
+    padding: 10px 0;
+  }
+  #reviews .author {
+    padding-top: 0;
+    .name {
+      font-size: 15px;
+    }
+    .position {
+      color: #ffffff;
+      font-size: 12px;
+    }
+  }
+  #reviews .author:before {
+    bottom: 0;
+  }
+  #reviews .quote {
+    padding: 25px 0 20px;
+    font-size: 13px;
+    line-height: 14px;
+  }
+  #download .btn {
+    min-width: 200px;
+    padding: 15px 25px 15px;
+  }
+  h1{
+    font-size: 42px;
+    font-weight: 300;
+  }
+  h2{
+    font-size: 42px;
+  }
+  h4, .btn{
+    font-weight: 400;
+  }
+  section{
+    padding: 45px 0;
+  }
+  #menu-bar .logo{
+    line-height: 20px;
+  }
+  #menu-bar .logo img {
+    height: 33px;
+  }
+  #header-btn{
+    margin: 0 0 50px;
+  }
+  .subtitle{
+    margin-bottom: 45px;
+  }
+  footer #social-links .icon{
+    margin: 0 8px;
+  }
+}
+@media (min-width: 668px) and (max-width: 767px){
+  h1{
+    padding: 0 10%;
+  }
+}
+@media (min-width: 768px) and (max-width: 991px){
+  #features img{
+    max-width: 100%;
+    position: relative;
+    margin-top: 12px;
+  }
+}
+@media (min-width: 992px) and (max-width: 1199px){
+  .header-content {
+    min-height: 400px;
+  }
+  #header-img{
+    max-width: 90%;
+  }
+  #detailed img{
+    margin-top: 58px;
+  }
+}
+@media (min-width: 1200px){
+  .header-content {
+    min-height: 400px;
+  }
+  header{
+    //min-height: 700px;
+  }
+}
+@media (-webkit-max-device-pixel-ratio: 1), (max-resolution: 119.9dppx){
+  .ios .floating-phone{
+    background: url(../img/iPhone-isometric.png) no-repeat;
+    background-size: cover;
+  }
+  .android .floating-phone{
+    background: url(../img/Nexus-5.png) no-repeat;
+    background-size: cover;
+  }
+}
+@media (-webkit-min-device-pixel-ratio: 1.1), (min-resolution: 120dppx){
+  .ios .floating-phone{
+    background: url(../img/iPhone-isometric@2x.png) no-repeat;
+    background-size: cover;
+  }
+  .android .floating-phone{
+    background: url(../img/Nexus-5@2x.png) no-repeat;
+    background-size: cover;
+  }
+  header{
+    //background: #102129 url('../images/header@2x.jpg') no-repeat top center;
+    background-color: rgb(230, 47, 23);
+    background-size: cover;
+  }
+}
+@media (-webkit-min-device-pixel-ratio: 1.1) and (max-width: 399px), (min-resolution: 120dppx) and (max-width: 399px){
+  header{
+    background: #102129 url('../img/header-sm.jpg') no-repeat top center;
+    background-size: cover;
+
+  }
+}
+

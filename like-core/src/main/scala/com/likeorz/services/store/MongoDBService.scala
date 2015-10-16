@@ -99,6 +99,34 @@ class MongoDBService @Inject() (configuration: Configuration) {
     db("timeline").update(query, update, upsert = true)
   }
 
+  def insertTimelineFeedForUsers(timelineFeed: TimelineFeed, users: Seq[Long], limit: Int = 1000) = {
+    val query = MongoDBObject("_id" -> MongoDBObject("$in" -> users))
+    val update = MongoDBObject(
+      "$push" -> MongoDBObject(
+        "feeds" -> MongoDBObject(
+          "$each" -> MongoDBList(TimelineFeed.toDBObject(timelineFeed)),
+          "$sort" -> MongoDBObject("ts" -> -1),
+          "$slice" -> limit
+        )
+      )
+    )
+    db("timeline").update(query, update, upsert = true, multi = true)
+  }
+
+  def insertTimelineFeedForAllUsers(timelineFeed: TimelineFeed, limit: Int = 1000) = {
+    val query = MongoDBObject.empty
+    val update = MongoDBObject(
+      "$push" -> MongoDBObject(
+        "feeds" -> MongoDBObject(
+          "$each" -> MongoDBList(TimelineFeed.toDBObject(timelineFeed)),
+          "$sort" -> MongoDBObject("ts" -> -1),
+          "$slice" -> limit
+        )
+      )
+    )
+    db("timeline").update(query, update, upsert = true, multi = true)
+  }
+
   def removeTimelineFeedByPostId(postId: Long) = {
     val update = MongoDBObject(
       "$pull" -> MongoDBObject(

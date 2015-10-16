@@ -6,7 +6,6 @@ import akka.actor.{ ActorLogging, Actor }
 import com.likeorz.event.LikeEvent
 import com.likeorz.models.TimelineFeed
 import com.likeorz.services.store.MongoDBService
-import com.likeorz.utils.{ KeyUtils, RedisCacheClient }
 
 class RecommendToAllEventSubscriber @Inject() (mongoDBService: MongoDBService) extends Actor with ActorLogging {
 
@@ -19,10 +18,9 @@ class RecommendToAllEventSubscriber @Inject() (mongoDBService: MongoDBService) e
       // Remove all previous post from timeline
       mongoDBService.removeTimelineFeedByPostId(postId)
 
-      RedisCacheClient.zrange(KeyUtils.activeUsers, 0, Long.MaxValue).foreach { userId =>
-        val editorPickFeed = TimelineFeed(postId, TimelineFeed.TypeEditorPick)
-        mongoDBService.insertTimelineFeedForUser(editorPickFeed, userId.toLong)
-      }
+      val editorPickFeed = TimelineFeed(postId, TimelineFeed.TypeEditorPick)
+      mongoDBService.insertTimelineFeedForAllUsers(editorPickFeed)
+
     case _ => log.error("Invalid message")
   }
 

@@ -13,7 +13,7 @@ libraryDependencies ++= Seq(
   "joda-time"         %  "joda-time"      % "2.8.2",
   "org.joda"          %  "joda-convert"   % "1.8.1",
   "ch.qos.logback"    %  "logback-classic"% "1.1.3",
-  "mysql"             %  "mysql-connector-java" % "5.1.36",
+  "mysql"             %  "mysql-connector-java" % "5.1.37",
   "org.apache.spark"  %% "spark-core"     % "1.5.1",
   "org.apache.spark"  %% "spark-mllib"    % "1.5.1",
   "org.mongodb"       %% "casbah"         % "2.8.2",

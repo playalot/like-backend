@@ -9,7 +9,7 @@ resolvers +=  "NLPChina Releases" at "http://maven.ansj.org/"
 // Change this to another test framework if you prefer
 libraryDependencies ++= Seq(
   "cn.jpush.api"              %  "jpush-client"     % "3.2.7",
-  "mysql"                     %  "mysql-connector-java" % "5.1.36",
+  "mysql"                     %  "mysql-connector-java" % "5.1.37",
   "org.nlpcn"                 %  "nlp-lang"         % "1.0.2",
   "redis.clients"             %  "jedis"            % "2.7.3",
   "com.qiniu"                 %  "qiniu-java-sdk"   % "7.0.5",

@@ -8,7 +8,7 @@ addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.4.3")
 
 addSbtPlugin("com.twitter" % "scrooge-sbt-plugin" % "3.16.3")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.2")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.4")
 
 // Require GraphViz
 addSbtPlugin("com.gilt" % "sbt-dependency-graph-sugar" % "0.7.5-1")

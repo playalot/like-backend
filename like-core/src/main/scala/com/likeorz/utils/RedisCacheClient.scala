@@ -176,27 +176,23 @@ object RedisCacheClient {
   }
 
   def lrange(key: String, start: Long, end: Long): List[String] = {
-    withJedisClient[List[String]] { client =>
-      client.lrange(key, start, end).toList
-    }
+    withJedisClient { client => client.lrange(key, start, end).toList }
   }
 
   def zrevrange(key: String, start: Long, end: Long): List[String] = {
-    withJedisClient[List[String]] { client =>
-      client.zrevrange(key, start, end).toList
-    }
+    withJedisClient { client => client.zrevrange(key, start, end).toList }
   }
 
-  def zrevrangeWithScores(key: String, start: Long, end: Long): Map[String, Double] = {
-    withJedisClient[Map[String, Double]] { client =>
-      client.zrevrangeWithScores(key, start, end).map(p => (p.getElement -> p.getScore)).toMap
-    }
+  def zrevrangeWithScores(key: String, start: Long, end: Long): Seq[(String, Double)] = {
+    withJedisClient { client => client.zrevrangeWithScores(key, start, end).map(p => (p.getElement -> p.getScore)).toSeq }
   }
 
   def expire(key: String, seconds: Int): Long = {
-    withJedisClient[Long] { client =>
-      client.expire(key, seconds)
-    }
+    withJedisClient { client => client.expire(key, seconds) }
+  }
+
+  def rename(oldKey: String, newKey: String): Unit = {
+    withJedisClient { client => client.rename(oldKey, newKey) }
   }
 
   def withJedisClient[T](f: Jedis => T): T = {

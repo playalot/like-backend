@@ -26,7 +26,7 @@ class MarkController @Inject() (
     markService.getMarkWithPostAuthor(markId).flatMap {
       case Some((mark, postAuthor)) =>
         // log event
-        eventBusService.publish(LikeEvent(None, "like", "user", request.userId.toString, Some("mark"), Some(markId.toString), properties = Json.obj("tag" -> mark.tagName)))
+        eventBusService.publish(LikeEvent(None, LikeEventType.like, "user", request.userId.toString, Some("mark"), Some(markId.toString), properties = Json.obj("tag" -> mark.tagName)))
         markService.like(mark, postAuthor, request.userId).map { _ =>
           // Add like to mongodb
           mongoDBService.likeMark(markId, mark.postId, request.userId)

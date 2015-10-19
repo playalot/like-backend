@@ -84,14 +84,18 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
       case None =>
         db.run(likes += Like(mark.id.get, userId)).map { _ =>
           RedisCacheClient.zincrby(KeyUtils.postMark(mark.postId), 1, mark.identify)
-          // Increate user info cache
+          // Increase user info cache
           RedisCacheClient.hincrBy(KeyUtils.user(postAuthorId), "likes", 1)
           RedisCacheClient.zincrby(KeyUtils.newLikes, 1, postAuthorId.toString)
+          // Increase daily like rank
+          RedisCacheClient.zincrby(KeyUtils.likeRankToday, 1, postAuthorId.toString)
 
           if (postAuthorId != mark.userId) {
             RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", 1)
             // Increase like push cached which is to be pushed as notification to user
             RedisCacheClient.zincrby(KeyUtils.newLikes, 1, mark.userId.toString)
+            // Increase daily like rank
+            RedisCacheClient.zincrby(KeyUtils.likeRankToday, 1, mark.userId.toString)
           }
           ()
         }
@@ -101,22 +105,26 @@ class MarkServiceImpl @Inject() (protected val dbConfigProvider: DatabaseConfigP
   override def unlike(mark: Mark, postAuthor: Long, userId: Long): Future[Int] = {
     db.run(likes.filter(l => l.markId === mark.id.get && l.userId === userId).delete).map { result =>
       if (result > 0) {
-        var l = 0
+        var markDeleted = 0
         RedisCacheClient.zincrby(KeyUtils.postMark(mark.postId), -1, mark.identify)
         if (RedisCacheClient.zscore(KeyUtils.postMark(mark.postId), mark.identify).getOrElse(-1.0) <= 0) {
           RedisCacheClient.zrem(KeyUtils.postMark(mark.postId), mark.identify)
           RedisCacheClient.zincrby(KeyUtils.tagUsage, -1, mark.tagId.toString)
           db.run(marks.filter(_.id === mark.id).delete)
-          l = 1
+          markDeleted = 1
         }
         // Decreate user info cache
         RedisCacheClient.hincrBy(KeyUtils.user(postAuthor), "likes", -1)
         RedisCacheClient.zincrby(KeyUtils.newLikes, -1, postAuthor.toString)
+        // Decrease daily like rank
+        RedisCacheClient.zincrby(KeyUtils.likeRankToday, -1, postAuthor.toString)
         if (postAuthor != mark.userId) {
           RedisCacheClient.hincrBy(KeyUtils.user(mark.userId), "likes", -1)
           RedisCacheClient.zincrby(KeyUtils.newLikes, -1, mark.userId.toString)
+          // Decrease daily like rank
+          RedisCacheClient.zincrby(KeyUtils.likeRankToday, -1, mark.userId.toString)
         }
-        l
+        markDeleted
       } else {
         0
       }

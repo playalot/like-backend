@@ -56,5 +56,9 @@ object KeyUtils {
   // Track last user seen
   def activeUsers: String = "active_users"
 
+  def likeRankToday: String = "likes_rank_today"
+
+  def likeRankYesterday: String = "likes_rank_yesterday"
+
 }
 

@@ -16,7 +16,7 @@ import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Configuration
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{ DashboardService, AdminService }
+import services.{OnStartService, DashboardService, AdminService}
 
 /**
  * Created by Guan Guan
@@ -25,6 +25,9 @@ import services.{ DashboardService, AdminService }
 class AdminServiceModule extends AbstractModule with ScalaModule {
 
   override def configure() {
+    // Services start on application start
+    bind[OnStartService].asEagerSingleton()
+
     bind[DashboardService]
     bind[AdminService]
     bind[DelegableAuthInfoDAO[PasswordInfo]].to[AdminPasswordInfoDAO]

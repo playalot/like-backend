@@ -104,3 +104,5 @@ GET     /v1/notification/count                      controllers.NotificationCont
 POST    /v1/feedback                                controllers.InfoController.feedback
 POST    /v1/post/$id<[0-9]+>/report                 controllers.InfoController.report(id: Long)
 POST    /v1/installation                            controllers.InfoController.installation
+
+GET     /v1/rank/today                              controllers.InfoController.getLikeRankToday

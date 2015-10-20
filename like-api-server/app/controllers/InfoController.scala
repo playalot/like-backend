@@ -8,6 +8,7 @@ import com.likeorz.utils.{ KeyUtils, RedisCacheClient, AVOSUtils }
 import play.api.i18n.{ Messages, MessagesApi }
 import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.json.Json
+import utils.QiniuUtil
 
 import scala.concurrent.Future
 
@@ -69,14 +70,20 @@ class InfoController @Inject() (
       (userId, rankYesterday)
     }.toMap
 
-    val jsonArr = RedisCacheClient.zrevrangeWithScores(KeyUtils.likeRankToday, 0, 50).zipWithIndex.map { x =>
+    val jsonArr = RedisCacheClient.zrevrangeWithScores(KeyUtils.likeRankToday, 0, 49).zipWithIndex.map { x =>
       val userId = x._1._1.toLong
       val likes = x._1._2.toLong
       val rankToday = x._2 + 1
       val rankYesterday = rankYesterdayMap.getOrElse(userId, 100)
       val up = if (rankYesterday > rankToday) 1 else if (rankYesterday == rankToday) 0 else -1
+      val user = userService.getUserInfoFromCache(userId)
       Json.obj(
-        "user_id" -> userId,
+        "user" -> Json.obj(
+          "user_id" -> userId,
+          "nickname" -> user.nickname,
+          "avatar" -> QiniuUtil.getAvatar(user.avatar, "small"),
+          "likes" -> user.likes
+        ),
         "likes" -> likes,
         "rank" -> rankToday,
         "up" -> up

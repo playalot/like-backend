@@ -184,7 +184,7 @@ object RedisCacheClient {
   }
 
   def zrevrangeWithScores(key: String, start: Long, end: Long): Seq[(String, Double)] = {
-    withJedisClient { client => client.zrevrangeWithScores(key, start, end).map(p => (p.getElement -> p.getScore)).toSeq }
+    withJedisClient { client => client.zrevrangeWithScores(key, start, end).map(p => p.getElement -> p.getScore).toSeq.sortBy(-_._2) }
   }
 
   def expire(key: String, seconds: Int): Long = {

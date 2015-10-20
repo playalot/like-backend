@@ -53,7 +53,7 @@ class SearchController @Inject() (
     }
   }
 
-  def hotTags = Action.async {
+  def hotTags = UserAwareAction.async { implicit request =>
     for {
       entities <- promoteService.getPromoteEntities(2)
       tags <- tagService.hotTags(15)
@@ -61,7 +61,12 @@ class SearchController @Inject() (
       val entityArr = (entities.toSet + Entity(None, "BJD", "", "") + Entity(None, "手绘", "", "")).map { entity => Json.obj("tag" -> entity.name) }
       val tagArr = tags.filterNot(t => entities.exists(_.name == t)).map { tag => Json.obj("tag" -> tag) }
 
-      success(Messages("success.found"), Json.toJson(Random.shuffle(entityArr ++ tagArr)))
+      if (request.userId.isEmpty || request.userId.get.toString.startsWith("666")) {
+        // Display selected tags for demo account and guest user
+        success(Messages("success.found"), Json.toJson(Random.shuffle(Seq("高达", "海贼王", "BJD", "美食", "外设", "手绘", "摄影", "乐高", "旅行", "钢铁侠", "变形金刚").map { tag => Json.obj("tag" -> tag) })))
+      } else {
+        success(Messages("success.found"), Json.toJson(Random.shuffle(entityArr ++ tagArr)))
+      }
     }
   }
 

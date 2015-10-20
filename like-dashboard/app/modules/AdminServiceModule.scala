@@ -16,7 +16,7 @@ import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule
 import play.api.Configuration
 import play.api.libs.concurrent.Execution.Implicits._
-import services.{OnStartService, DashboardService, AdminService}
+import services.{ OnStartService, DashboardService, AdminService }
 
 /**
  * Created by Guan Guan

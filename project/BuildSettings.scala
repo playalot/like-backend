@@ -7,7 +7,7 @@ object BuildSettings{
 
     val scalatestVersion = "2.2.5"
 
-    val akkaVersion = "2.3.13"
+    val akkaVersion = "2.3.14"
 
     val sparkVersion = "1.5.0"
   }
